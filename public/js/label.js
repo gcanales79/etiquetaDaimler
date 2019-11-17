@@ -531,7 +531,7 @@ $(document).ready(function () {
                 data: {
                     labels: numSemana,
                     datasets: [{
-                        label: "Produccion Por Turno",
+                        label: "Production per Week",
                         data: datosSemana,
                         backgroundColor: [
                             "rgba(75, 192, 192, 0.2)",
