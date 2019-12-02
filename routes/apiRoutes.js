@@ -148,9 +148,10 @@ module.exports = function (app) {
     })
   });
 
+  //!Cambiar esto a Whatsapp
   app.post("/message", function (req, res) {
-    var telefonos = [process.env.GABRIEL_PHONE, process.env.TAMARA_PHONE];
-
+    var telefonos = [process.env.GABRIEL_PHONE, process.env.TAMARA_PHONE, process.env.GUS_PHONE];
+    /*
     //* Send messages thru SMS
     for (var i = 0; i < telefonos.length; i++) {
       client.messages.create({
@@ -163,14 +164,14 @@ module.exports = function (app) {
           console.log("Mensaje de texto: " + message.sid);
           res.json(message);
         });
-    }
+    }*/
 
     //* Send messages thru Whatsapp
-    /*for (var i = 0; i < telefonos.length; i++) {
+    for (var i = 0; i < telefonos.length; i++) {
       console.log("whatsapp:" + telefonos[i]);
       client.messages.create({
-        from: "whatsapp:+14155238886",
-        body: `Your {{rechazo}} code is {${req.body.serial}}`,
+        from: "whatsapp:" + process.env.TWILIO_PHONE,
+        body: "Salio una pieza con serial repetido. El serial es " +req.body.serial+".",
         to: "whatsapp:" + telefonos[i],  // Text this number
 
       })
@@ -178,15 +179,17 @@ module.exports = function (app) {
           console.log("Whatsapp:" + message.sid);
           res.json(message);
         });
-    }*/
+    }
 
 
   });
 
   //* Api for labels not on the database
+  //!Cambiar esto a Whatsapp
   app.post("/notfound", function (req, res) {
-    var telefonos = [process.env.GABRIEL_PHONE, process.env.TAMARA_PHONE];
+    var telefonos = [process.env.GABRIEL_PHONE, process.env.TAMARA_PHONE, process.env.GUS_PHONE];
     //console.log("Manda mensaje de no en base de datos")
+    /*
     //* Send messages thru SMS
     for (var i = 0; i < telefonos.length; i++) {
       client.messages.create({
@@ -200,13 +203,29 @@ module.exports = function (app) {
           console.log("Mensaje de texto: " + message.sid);
           res.json(message);
         });
+    }*/
+    //* Send messages thru Whatsapp
+    for (var i = 0; i < telefonos.length; i++) {
+      console.log("whatsapp:" + telefonos[i]);
+      client.messages.create({
+        from: "whatsapp:" + process.env.TWILIO_PHONE,
+        body: "Salio una pieza en GP12 que no estaba dada de alta en la base de datos. " +
+        "El serial es " +req.body.serial+".",
+        to: "whatsapp:" + telefonos[i],  // Text this number
+
+      })
+        .then(function (message) {
+          console.log("Whatsapp:" + message.sid);
+          res.json(message);
+        });
     }
   });
 
   //* Api for labels repeated in gp12
+  //!Cambiar esto a Whatsapp
   app.post("/repeatgp12", function (req, res) {
-    var telefonos = [process.env.GABRIEL_PHONE, process.env.TAMARA_PHONE];
-
+    var telefonos = [process.env.GABRIEL_PHONE, process.env.TAMARA_PHONE, process.env.GUS_PHONE];
+    /*
     //* Send messages thru SMS
     for (var i = 0; i < telefonos.length; i++) {
       client.messages.create({
@@ -218,6 +237,21 @@ module.exports = function (app) {
       })
         .then(function (message) {
           console.log("Mensaje de texto: " + message.sid);
+          res.json(message);
+        });
+    }*/
+
+     //* Send messages thru Whatsapp
+     for (var i = 0; i < telefonos.length; i++) {
+      console.log("whatsapp:" + telefonos[i]);
+      client.messages.create({
+        from: "whatsapp:" + process.env.TWILIO_PHONE,
+        body: "Salio una pieza en GP12 repetida. El serial es " +req.body.serial+".",
+        to: "whatsapp:" + telefonos[i],  // Text this number
+
+      })
+        .then(function (message) {
+          console.log("Whatsapp:" + message.sid);
           res.json(message);
         });
     }
