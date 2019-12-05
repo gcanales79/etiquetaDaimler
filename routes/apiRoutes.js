@@ -150,7 +150,7 @@ module.exports = function (app) {
 
   //!Cambiar esto a Whatsapp
   app.post("/message", function (req, res) {
-    var telefonos = [process.env.GABRIEL_PHONE, process.env.TAMARA_PHONE, process.env.GUS_PHONE];
+    var telefonos = [process.env.GABRIEL_PHONE, process.env.TAMARA_PHONE];
     /*
     //* Send messages thru SMS
     for (var i = 0; i < telefonos.length; i++) {
@@ -187,7 +187,7 @@ module.exports = function (app) {
   //* Api for labels not on the database
   //!Cambiar esto a Whatsapp
   app.post("/notfound", function (req, res) {
-    var telefonos = [process.env.GABRIEL_PHONE, process.env.TAMARA_PHONE, process.env.GUS_PHONE];
+    var telefonos = [process.env.GABRIEL_PHONE, process.env.TAMARA_PHONE];
     //console.log("Manda mensaje de no en base de datos")
     /*
     //* Send messages thru SMS
@@ -224,7 +224,7 @@ module.exports = function (app) {
   //* Api for labels repeated in gp12
   //!Cambiar esto a Whatsapp
   app.post("/repeatgp12", function (req, res) {
-    var telefonos = [process.env.GABRIEL_PHONE, process.env.TAMARA_PHONE, process.env.GUS_PHONE];
+    var telefonos = [process.env.GABRIEL_PHONE, process.env.TAMARA_PHONE];
     /*
     //* Send messages thru SMS
     for (var i = 0; i < telefonos.length; i++) {
