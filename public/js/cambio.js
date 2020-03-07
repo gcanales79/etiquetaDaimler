@@ -7,6 +7,9 @@ $("#cambiar").on("click", function (event) {
         serial: nuevoSerial,
         etiqueta_remplazada: serialRepetido
     }
+    var repeteadedSerial={
+        serial:serialRepetido,
+    }
     console.log("El dato nuevo es " + newSerial)
     console.log("Serial Repetido Length " + serialRepetido.length);
     console.log("Nuevo Serial length " + nuevoSerial.length);
@@ -18,36 +21,50 @@ $("#cambiar").on("click", function (event) {
     console.log("El NP nuevo es: " + numeroPartenuevo)
 
     if (serialRepetido.length === 22 && nuevoSerial.length === 22) {
-        if (numeroParterepetido === numeroPartenuevo) {
-            $.get("/api/" + nuevoSerial, function (data) {
+        if (serialRepetido !== nuevoSerial) {
+            if (numeroParterepetido === numeroPartenuevo) {
+                
+                $.get("/api/" + nuevoSerial, function (data) {
 
-                if (data) {
-                    console.log(data);
-                    $("#Respuesta").empty();
-                    etiquetaRepetida();
-                }
-                else {
-                    $.post("/api/cambioetiqueta", newSerial)
-                        .then(function () {
-                            $("#Respuesta").empty();
-                            etiquetaExitosa();
-                        });
+                    if (data) {
+                        console.log(data);
+                        $("#Respuesta").empty();
+                        etiquetaRepetida();
+                    }
+                    else {
+                        $.post("/api/cambioetiqueta", newSerial)
+                            .then(function () {
+                                $("#Respuesta").empty();
+                                etiquetaExitosa();
+                            });
+                        //Marca la etiqueta cambiada como repetida
+                        $.post("/api/repetido", repeteadedSerial)
+                        .then(repeteadedSerial);
 
 
-                }
+                    }
 
-            });
+                });
+            }
+            else {
+                //Si son de NP diferentes
+                $("#Respuesta").empty();
+                numeroParteIncorrecto();
+            }
         }
-        else {
-            $("#Respuesta").empty();
-            numeroParteIncorrecto();
+        else{
+            //Si son la misma etiqueta
+            $("#Respuesta").empty()
+            mismaEtiqueta();
         }
+
 
     }
     else {
+        //Si tiene menos de 22 digitos
         $("#Respuesta").empty();
         digitosIncorrectos();
-        
+
     }
 
 });
@@ -58,44 +75,44 @@ $(document).on("click", "#polskaHtml", function (event) {
     window.location.href = "./polska.html";
 });
 
-function digitosIncorrectos(){
+function digitosIncorrectos() {
     var newDiv = $("<div>")
-        var resultadoImagen = $("<img>")
-        resultadoImagen.attr("src", "./images/wrong.png");
-        resultadoImagen.attr("class", "resultadoImagen");
-        newDiv.text("One of the label has less that 22 digits. Please change");
-        newDiv.attr("class", "comentario");
-        $("#Respuesta").append(resultadoImagen);
-        $("#Respuesta").append(newDiv);
-        
+    var resultadoImagen = $("<img>")
+    resultadoImagen.attr("src", "./images/wrong.png");
+    resultadoImagen.attr("class", "resultadoImagen");
+    newDiv.text("One of the label has less that 22 digits. Please change // La etiqueta tiene menos de 22 digitos. Por favor cambiala");
+    newDiv.attr("class", "comentario");
+    $("#Respuesta").append(resultadoImagen);
+    $("#Respuesta").append(newDiv);
+
 }
 
 
-function numeroParteIncorrecto(){
+function numeroParteIncorrecto() {
     var newDiv = $("<div>")
-        var resultadoImagen = $("<img>")
-        resultadoImagen.attr("src", "./images/wrong.png");
-        resultadoImagen.attr("class", "resultadoImagen");
-        newDiv.text("The labels don't have the same Part Number. Please change");
-        newDiv.attr("class", "comentario");
-        $("#Respuesta").append(resultadoImagen);
-        $("#Respuesta").append(newDiv);
-        limpiarInput();
+    var resultadoImagen = $("<img>")
+    resultadoImagen.attr("src", "./images/wrong.png");
+    resultadoImagen.attr("class", "resultadoImagen");
+    newDiv.text("The labels don't have the same Part Number. Please change // Las etiquetas son de NP diferentes. Por favor cambialas");
+    newDiv.attr("class", "comentario");
+    $("#Respuesta").append(resultadoImagen);
+    $("#Respuesta").append(newDiv);
+    limpiarInput();
 };
 
-function etiquetaRepetida(){
+function etiquetaRepetida() {
     var newDiv = $("<div>")
-        var resultadoImagen = $("<img>")
-        resultadoImagen.attr("src", "./images/wrong.png");
-        resultadoImagen.attr("class", "resultadoImagen");
-        newDiv.text("The new label is already repeat. Don't use it and change the label");
-        newDiv.attr("class", "comentario");
-        $("#Respuesta").append(resultadoImagen);
-        $("#Respuesta").append(newDiv);
-        limpiarInput();
+    var resultadoImagen = $("<img>")
+    resultadoImagen.attr("src", "./images/wrong.png");
+    resultadoImagen.attr("class", "resultadoImagen");
+    newDiv.text("The new label is already repeat. Don't use it and change the label");
+    newDiv.attr("class", "comentario");
+    $("#Respuesta").append(resultadoImagen);
+    $("#Respuesta").append(newDiv);
+    limpiarInput();
 };
 
-function etiquetaExitosa(){
+function etiquetaExitosa() {
     var newDiv = $("<div>")
     var resultadoImagen = $("<img>")
     resultadoImagen.attr("src", "./images/good.png");
@@ -104,10 +121,22 @@ function etiquetaExitosa(){
     newDiv.attr("class", "comentariobueno");
     $("#Respuesta").append(resultadoImagen);
     $("#Respuesta").append(newDiv);
-        limpiarInput();
+    limpiarInput();
 };
 
-function limpiarInput(){
+function limpiarInput() {
     $("#serialEtiquetarepetida").val("");
     $("#serialEtiquetanueva").val("");
 }
+
+function mismaEtiqueta() {
+    var newDiv = $("<div>")
+    var resultadoImagen = $("<img>")
+    resultadoImagen.attr("src", "./images/wrong.png");
+    resultadoImagen.attr("class", "resultadoImagen");
+    newDiv.text("The labels are exactly the same. Please change // Las etiquetas son iguales. Por favor cambialas");
+    newDiv.attr("class", "comentario");
+    $("#Respuesta").append(resultadoImagen);
+    $("#Respuesta").append(newDiv);
+    limpiarInput();
+};
