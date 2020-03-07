@@ -355,6 +355,8 @@ module.exports = function (app) {
           [Op.gte]: fechainicial,
           [Op.lte]: fechafinal
         },
+        //Le agregue esto para que no cuente las cambiadas
+        etiqueta_remplazada:null,
         registro_auto:{
           [Op.eq]:1,
         },
