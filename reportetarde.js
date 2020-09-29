@@ -3,13 +3,18 @@ const axios = require("axios");
 
 
 if (moment().tz("America/Monterrey").isDST()) {
+  console.log("Es horario de verano")
   var horainicial = moment().subtract(1, "day").format("YYYY-MM-DD") + " 20:00:00"
   var horainicialx = moment(horainicial).format("X")
   var horafinal = moment().add(0, "day").format("YYYY-MM-DD") + " 04:00:00"
   var horafinalx = moment(horafinal).format("X")
   var dia = moment(horafinal).format("dddd")
+  if (dia != "Monday") {
+    reporte();
+  }
 }
 else {
+  console.log("No es horario de verano")
   var horainicial = moment().subtract(1, "day").format("YYYY-MM-DD") + " 21:00:00"
   var horainicialx = moment(horainicial).format("X")
   var horafinal = moment().add(0, "day").format("YYYY-MM-DD") + " 05:00:00"
@@ -18,9 +23,7 @@ else {
 
 }
 
-if (dia != "Monday") {
-  reporte();
-}
+
 
 function reporte() {
   console.log("https://shielded-stream-29921.herokuapp.com/produccionhora/" + horainicialx + "/" + horafinalx)
@@ -32,7 +35,7 @@ function reporte() {
         turno: "tarde"
       })
         .then(function (response) {
-          //console.log(response)
+          console.log(response.data)
         })
         .catch(function (err) {
           console.log(err)

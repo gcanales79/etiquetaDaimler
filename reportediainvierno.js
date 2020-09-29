@@ -11,10 +11,7 @@ if (moment().tz("America/Monterrey").isDST()) {
   var horafinalx = moment(horafinal).format("X")
   var dia = moment(horafinal).format("dddd");
   console.log(dia)
-  if (dia != "Sunday") {
-    reporte();
-    //console.log("Hello World")
-  }
+ 
 }
 else {
   console.log("No es horario de verano")
@@ -24,6 +21,10 @@ else {
   var horafinalx = moment(horafinal).format("X")
   var dia = moment(horafinal).format("dddd");
   //console.log(dia)
+  if (dia != "Sunday") {
+    reporte();
+    //console.log("Hello World")
+  }
 }
 
 

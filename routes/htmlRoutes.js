@@ -72,7 +72,7 @@ module.exports = function (app) {
 
   //Para cargar la pagina de registro manual
   app.get("/pruebas",isAuthenticated,function(req,res){
-    if(req.user.role==="admin"){
+    if(req.user.role === "admin" || req.user.role === "produccion"){
       res.status(200);
       res.render("pruebas",{
         title:"pruebas",
