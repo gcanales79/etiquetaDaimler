@@ -102,7 +102,7 @@ module.exports = function (app) {
             active_consulta: {
               Register: true,
             },
-            etiqueta: dbDaimler,
+            etiqueta: dbDaimler.map(dbDaimler=>dbDaimler.toJSON()),
           });
           //console.log(dbDaimler);
         });
@@ -126,7 +126,7 @@ module.exports = function (app) {
             active_consulta: {
               Register: true,
             },
-            etiqueta: dbDaimler,
+            etiqueta: dbDaimler.map(dbDaimler=>dbDaimler.toJSON()),
 
           });
           //console.log(dbDaimler)
