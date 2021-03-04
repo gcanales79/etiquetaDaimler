@@ -13,7 +13,6 @@ const Op = Sequelize.Op;
 
 
 
-
 module.exports = function (app) {
 
   // Using the passport.authenticate middleware with our local strategy.
