@@ -18,7 +18,7 @@ else {
     var horafinal = moment().add(0, "day").format("YYYY-MM-DD") + " 05:00:00"
     var horafinalx = moment(horafinal).format("X")
     var dia = moment(horafinal).format("dddd")
-    if (dia != "Monday") {
+    if (dia != "M") {
         reporte();
     }
 

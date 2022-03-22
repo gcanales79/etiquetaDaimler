@@ -10,6 +10,7 @@ var nodemailer = require("nodemailer");
 var crypto = require("crypto");
 const Sequelize = require('sequelize');
 const Op = Sequelize.Op;
+const sgMail = require("@sendgrid/mail");
 
 
 
@@ -418,7 +419,7 @@ module.exports = function (app) {
         //console.log("entro 1")
         crypto.randomBytes(20, function (err, buf) {
           var token = buf.toString('hex');
-          //console.log("El token es " + token)
+          console.log("El token es " + token)
           done(err, token);
         });
       },
@@ -429,7 +430,7 @@ module.exports = function (app) {
             email: req.body.email
           }
         }).then(data => {
-          //console.log(data)
+         // console.log(data)
           if (!data) {
             req.flash("error", "No hay cuenta con ese correo")
             return res.redirect("/")
@@ -452,32 +453,27 @@ module.exports = function (app) {
       },
       function (token, data, done) {
         //console.log("Entro 3")
-        var smtpTransport = nodemailer.createTransport({
-          service: 'Gmail',
-          auth: {
-            type:"OAuth2",
-            user: 'netzwerk.mty@gmail.com',
-            clientId:process.env.clientId,
-            clientSecret:process.env.clientSecret,
-            refreshToken:process.env.refreshToken,
-            accessToken:process.env.accessToken
-          }
-        });
-        var mailOptions = {
-          to: data.email,
-          from: 'netzwerk.mty@gmail.com',
-          subject: 'Restablecer contraseña',
-          text: 'Estas recibiendo este mensaje porque tu (o alguien mas) ha pedido restablecer tu contraseña de tu cuenta.\n\n' +
-            ' Por favor dale click en el siguiente link, o pega el link en tu navegador para completar el proceso:\n\n' +
-            'http://' + req.headers.host + '/reset/' + token + '\n\n' +
-            'Si tu no pediste restablecer tu contraseña, por favor ignora este correo y tu password no sufrira cambio.\n'
+        const msg = {
+          to: data.email, // Change to your recipient
+          from: "netzwerk.mty@gmail.com", // Change to your verified sender
+          //subject: 'Sending with SendGrid is Fun',
+          //text: 'and easy to do anywhere, even with Node.js',
+          //html: '<strong>and easy to do anywhere, even with Node.js</strong>',
+          template_id: "d-7bb2f1084d154cecb824ff2ef1632ffe",
+          dynamic_template_data: {
+            user: data.email,
+            link: `http://${req.headers.host}/recover-password/${token}`,
+          },
         };
-        smtpTransport.sendMail(mailOptions, function (err) {
-          console.log('mail sent');
-          req.flash('success', 'Un e-mail se ha mandado a ' + data.email + ' con las instrucciones a seguir.');
-          done(err, 'done');
-          //return res.redirect("/")
-        });
+        sgMail
+          .send(msg)
+          .then((email, err) => {
+            console.log("Email sent");
+            done(err, "done");
+          })
+          .catch((err) => {
+            console.log(err);
+          });
       }
     ], function (err) {
       //console.log("Hubo error")

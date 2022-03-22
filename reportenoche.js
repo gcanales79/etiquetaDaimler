@@ -8,7 +8,7 @@ if (moment().tz("America/Monterrey").isDST()) {
   var horafinal = moment().add(0, "day").format("YYYY-MM-DD") + " 12:00:00"
   var horafinalx = moment(horafinal).format("X")
   var dia = moment(horafinal).format("dddd")
-  if (dia != "Sunday") {
+  if (dia != "S") {
     reporte();
   }
 }
