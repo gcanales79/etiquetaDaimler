@@ -15,7 +15,7 @@ passport.use(new LocalStrategy(
       where: {
         email: email
       }
-    }).then(function(dbUser,err) {
+    }).then(async function(dbUser,err) {
       // If there's no user with the given email
       if (err) throw err;
       if (!dbUser) {
@@ -24,7 +24,7 @@ passport.use(new LocalStrategy(
         });
       }
       // If there is a user with the given email, but the password the user gives us is incorrect
-      else if (!dbUser.validPassword(password)) {
+      else if (!(await dbUser.validPassword(password))) {
         return done(null, false, {
           message: "El password es incorrecto"
         });
