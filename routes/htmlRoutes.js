@@ -185,7 +185,7 @@ module.exports = function (app) {
 
   //Load GP12 inspection page
   app.get("/gp12", isAuthenticated, function (req, res) {
-    console.log(req.user)
+    //console.log(req.user)
     if(req.user.role==="admin" || req.user.role==="inspector"){
     res.status(200);
     db.Daimler.findAll({
