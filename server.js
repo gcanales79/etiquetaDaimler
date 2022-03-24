@@ -32,7 +32,6 @@ app.use(session({
   resave: 'false',
   saveUninitialized: false,
   cookie: { 
-    secure:true,
     maxAge: 86400000 },
   store: new MemoryStore({
     checkPeriod: 86400000
