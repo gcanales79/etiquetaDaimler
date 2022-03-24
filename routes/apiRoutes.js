@@ -56,11 +56,13 @@ module.exports = function(app) {
           } else {
             if (user.role === "produccion" || user.role === "admin") {
               // res.cookie("usuario", req.user.email);
-              res.redirect("/produccion");
+            res.redirect("/produccion");
+            // res.send({alert:"success", redirect:"/produccion"})
             }
             if (user.role === "inspector") {
               // res.cookie("usuario", req.user.email);
               res.redirect("/gp12");
+            // res.send({alert:"success", redirect:"/gp12"})
             }
           }
         });

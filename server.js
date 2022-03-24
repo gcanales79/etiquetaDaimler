@@ -32,11 +32,8 @@ app.use(session({
   store: new MemoryStore({
     checkPeriod: 86400000
   }),
-  saveUninitialized: true,
+  saveUninitialized: false,
   resave: 'false',
-  httpOnly: "true",
-  sameSite:"none",
-  secure:true,
   secret: 'secret'
 }));
 app.use(flash());
