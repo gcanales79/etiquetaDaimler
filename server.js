@@ -28,8 +28,8 @@ app.set("trust proxy", 1);
 app.use(
   session({
     secret: "secret",
-    resave: false,
-    saveUninitialized: false,
+    resave: true,
+    saveUninitialized: true,
     cookie: {
       secure:process.env.NODE_ENV === "production",
       sameSite:process.env.NODE_ENV === "production"?"none":"lax",
