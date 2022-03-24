@@ -29,7 +29,7 @@ app.use(
   session({
     secret: "secret",
     resave: "false",
-    saveUninitialized: false,
+    saveUninitialized: true,
     cookie: {
       secure:process.env.NODE_ENV === "production",
       sameSite:process.env.NODE_ENV === "production"?"none":"lax",
