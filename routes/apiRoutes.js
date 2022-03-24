@@ -50,7 +50,7 @@ module.exports = function(app) {
           res.redirect("/")
         }
 
-        req.login(user, function(err) {
+        req.logIn(user, function(err) {
           if (err) {
             console.log(err);
           } else {

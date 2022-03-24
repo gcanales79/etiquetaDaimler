@@ -39,11 +39,18 @@ passport.use(new LocalStrategy(
 // Sequelize needs to serialize and deserialize the user
 // Just consider this part boilerplate needed to make it all work
 passport.serializeUser(function(user, cb) {
-  cb(null, user);
+  cb(null, user.id);
 });
 
-passport.deserializeUser(function(obj, cb) {
-  cb(null, obj);
+passport.deserializeUser(function(id, cb) {
+  db.User.findOne({
+    where:{
+      id:id
+    }
+  }).then(user=>{
+    cb(null, user);
+  })
+  
 });
 
 // Exporting our configured passport
