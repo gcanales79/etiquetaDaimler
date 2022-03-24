@@ -33,7 +33,7 @@ app.use(session({
     checkPeriod: 86400000
   }),
   saveUninitialized: true,
-  resave: 'true',
+  resave: 'false',
   httpOnly: "true",
   sameSite:"none",
   secure:true,

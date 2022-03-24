@@ -55,11 +55,11 @@ module.exports = function(app) {
             console.log(err);
           } else {
             if (user.role === "produccion" || user.role === "admin") {
-              res.cookie("usuario", req.user.email);
+              // res.cookie("usuario", req.user.email);
               res.redirect("/produccion");
             }
             if (user.role === "inspector") {
-              res.cookie("usuario", req.user.email);
+              // res.cookie("usuario", req.user.email);
               res.redirect("/gp12");
             }
           }
