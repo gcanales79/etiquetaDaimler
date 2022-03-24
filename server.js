@@ -26,15 +26,16 @@ app.use(bodyParser.urlencoded({ extended: false }));
 
 app.use(bodyParser.json());
 app.use(express.static("public"));
-app.use(cookieParser('secret'));
+// app.use(cookieParser('secret'));
 app.use(session({
+  secret: 'secret',
+  resave: 'false',
+  saveUninitialized: false,
   cookie: { maxAge: 86400000 },
   store: new MemoryStore({
     checkPeriod: 86400000
   }),
-  saveUninitialized: false,
-  resave: 'false',
-  secret: 'secret'
+  
 }));
 app.use(flash());
 
