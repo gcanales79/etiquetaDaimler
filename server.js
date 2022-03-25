@@ -32,9 +32,6 @@ app.use(express.static("public"));
 app.set("trust proxy", 1);
 app.use(
   session({
-    secret: "secret",
-    resave: false,
-    saveUninitialized: true,
     cookie: {
       secure:process.env.NODE_ENV === "production",
       sameSite:process.env.NODE_ENV === "production"?"none":"lax",
@@ -44,6 +41,8 @@ app.use(
     store: new MemoryStore({
       checkPeriod: 86400000,
     }),
+    secret: "secret",
+    saveUninitialized: true,
   })
 );
 app.use(flash());
