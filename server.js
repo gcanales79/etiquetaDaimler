@@ -40,6 +40,7 @@ app.use(
     cookie: {
       secure:process.env.NODE_ENV === "production",
       sameSite:process.env.NODE_ENV === "production"?"none":"lax",
+      httpOnly:false,
       maxAge: 86400000,
     },
     store: new MemoryStore({
