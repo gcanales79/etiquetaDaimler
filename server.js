@@ -1,7 +1,7 @@
 require("dotenv").config();
 var express = require("express");
 var bodyParser = require("body-parser");
-var cookieParser = require("cookie-parser");
+// var cookieParser = require("cookie-parser");
 var exphbs = require("express-handlebars");
 var twilio = require("twilio");
 //var helpers = require('handlebars-helpers')();
@@ -24,7 +24,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(express.static("public"));
 // app.use(cookieParser('secret'));
-app.set("trust proxy", 1);
+app.set("trust proxy", true);
 app.use(
   session({
     secret: "secret",
