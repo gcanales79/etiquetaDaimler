@@ -28,23 +28,20 @@ app.use(bodyParser.json());
 app.use(express.static("public"));
 // app.use(cookieParser('secret'));
 
+app.use(session({
+  cookie: { maxAge: 86400000 },
+  store: new MemoryStore({
+    checkPeriod: 86400000
+  }),
+  saveUninitialized: true,
+  resave: 'true',
+  httpOnly: "true",
+  sameSite:"none",
+  secure:true,
+  secret: 'secret'
+}));
 
-app.set("trust proxy", 1);
-app.use(
-  session({
-    cookie: {
-      secure:process.env.NODE_ENV === "production",
-      sameSite:process.env.NODE_ENV === "production"?"none":"lax",
-      httpOnly:false,
-      maxAge: 86400000,
-    },
-    store: new MemoryStore({
-      checkPeriod: 86400000,
-    }),
-    secret: "secret",
-    saveUninitialized: true,
-  })
-);
+
 app.use(flash());
 
 app.use(passport.initialize());
