@@ -42,7 +42,7 @@ app.use(
       checkPeriod: 86400000,
     }),
     resave:false,
-    secret: "secret",
+    secret: "keyboard cat",
     saveUninitialized: true,
   })
 );
