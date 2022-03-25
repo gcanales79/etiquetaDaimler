@@ -14,6 +14,7 @@ var db = require("./models");
 var axios = require("axios");
 var flash = require("connect-flash");
 var MemoryStore = require("memorystore")(session);
+const morgan=require("morgan")
 
 var app = express();
 //var sessionStore = new session.MemoryStore;
@@ -21,16 +22,13 @@ var PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(bodyParser.urlencoded({ extended: false }));
+app.use(morgan("dev"))
 
 app.use(bodyParser.json());
 app.use(express.static("public"));
 // app.use(cookieParser('secret'));
 
-app.use(cors({
-  origin:process.env.ORIGIN,
-  methods:["GET","POST","PUT","DELETE"],
-  credentials:true
-}))
+
 app.set("trust proxy", 1);
 app.use(
   session({
@@ -136,7 +134,6 @@ app.use(function(req, res, next) {
     "Origin, X-Requested-With, Content-Type, Accept, x-token,"
   );
   res.header("Access-Control-Allow-Methods", "PUT, POST, GET, DELETE, OPTIONS");
-  res.header('Access-Control-Allow-Credentials', true);
   next();
 });
 // END CORS

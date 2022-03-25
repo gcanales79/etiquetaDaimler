@@ -16,59 +16,58 @@ module.exports = function(app) {
   // Using the passport.authenticate middleware with our local strategy.
   // If the user has valid login credentials, send them to the members page.
   // Otherwise the user will be sent an error
-  // app.post("/api/login", passport.authenticate("local", { failureRedirect: "/", badRequestMessage: "Por favor llena la forma", failureFlash: true }), function (req, res) {
+  //  app.post("/login", passport.authenticate("local", { failureRedirect: "/", badRequestMessage: "Por favor llena la forma", failureFlash: true }), function (req, res) {
 
-  //   if (req.user.role === "produccion" || req.user.role === "admin") {
-  //     res.cookie("usuario",req.user.email)
-  //     res.redirect("/produccion");
+  //    if (req.user.role === "produccion" || req.user.role === "admin") {
+  //     //  res.cookie("usuario",req.user.email)
+  //     //  res.redirect("/produccion");
+  //     res.send({alert:"success", redirect:"/produccion"})
 
-  //   }
-  //   if (req.user.role === "inspector") {
-  //     res.cookie("usuario",req.user.email)
-  //     res.redirect("/gp12")
-  //   }
+  //    }
+  //    if (req.user.role === "inspector") {
+  //     //  res.cookie("usuario",req.user.email)
+  //     //  res.redirect("/gp12")
+  //     res.send({alert:"success", redirect:"/produccion"})
+  //    }
 
-  // })
+  //  })
 
-  app.post(
-    "/api/login",
-    function(req, res, next) {
-      passport.authenticate("local", function(err, user, info) {
-        // Since we're doing a POST with javascript, we can't actually redirect that post into a GET request
-        // So we're sending the user back the route to the members page because the redirect will happen on the front end
-        // They won't get this or even be able to access this page if they aren't authed
-        //console.log(req.user)
+  app.post("/login", function(req, res, next) {
+    passport.authenticate("local", function(err, user, info) {
+      // Since we're doing a POST with javascript, we can't actually redirect that post into a GET request
+      // So we're sending the user back the route to the members page because the redirect will happen on the front end
+      // They won't get this or even be able to access this page if they aren't authed
+      //console.log(req.user)
 
+      if (err) {
+        console.log(err);
+        // res.send({ message: "Error de Servidor", alert: "Error" });
+        res.redirect("/");
+      }
+      if (!user) {
+        console.log(info.message);
+        // res.send({ message: info.message, alert: "Error" });
+        res.redirect("/");
+      }
+
+      req.logIn(user, function(err) {
         if (err) {
           console.log(err);
-          // res.send({ message: "Error de Servidor", alert: "Error" });
-          res.redirect("/")
-        }
-        if (!user) {
-          console.log(info.message);
-          // res.send({ message: info.message, alert: "Error" });
-          res.redirect("/")
-        }
-
-        req.logIn(user, function(err) {
-          if (err) {
-            console.log(err);
-          } else {
-            if (user.role === "produccion" || user.role === "admin") {
-              // res.cookie("usuario", req.user.email);
+        } else {
+          if (user.role === "produccion" || user.role === "admin") {
+            // res.cookie("usuario", req.user.email);
             res.redirect("/produccion");
-            // res.send({alert:"success", redirect:"/produccion"})
-            }
-            if (user.role === "inspector") {
-              // res.cookie("usuario", req.user.email);
-              res.redirect("/gp12");
-            // res.send({alert:"success", redirect:"/gp12"})
-            }
+            //  res.send({alert:"success", redirect:"/produccion"})
           }
-        });
-      })(req, res, next);
-    }
-  );
+          if (user.role === "inspector") {
+            // res.cookie("usuario", req.user.email);
+            res.redirect("/gp12");
+            // res.send({alert:"success", redirect:"/gp12"}
+          }
+        }
+      });
+    })(req, res, next);
+  });
 
   app.post(
     "/api/signup",

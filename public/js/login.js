@@ -12,7 +12,6 @@ $(document).ready(function() {
       email: emailInput.val().trim(),
       password: passwordInput.val().trim(),
     };
-
     if (!userData.email || !userData.password) {
       return;
     }
@@ -34,7 +33,7 @@ $(document).ready(function() {
       if (data.alert === "success") {
         //window.location.replace(data);
         window.location.href = data.redirect;
-        // If there's an error, log the error
+        // If there's an error, log the errorrs
       }
     });
   }
