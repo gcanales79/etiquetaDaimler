@@ -7,6 +7,7 @@ var twilio = require("twilio");
 //var helpers = require('handlebars-helpers')();
 const moment = require("moment-timezone");
 var session = require("express-session");
+const cors=require("cors")
 // Requiring passport as we've configured it
 var passport = require("./config/passport");
 var db = require("./models");
@@ -24,7 +25,13 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(express.static("public"));
 // app.use(cookieParser('secret'));
-app.set("trust proxy", true);
+
+app.use(cors({
+  origin:process.env.ORIGIN,
+  methods:["GET","POST","PUT","DELETE"],
+  credentials:true
+}))
+app.set("trust proxy", 1);
 app.use(
   session({
     secret: "secret",
