@@ -128,7 +128,7 @@ $(document).ready(function () {
         $("#tablaDe6").empty();
         // Grab the last 6 scan labels
 
-        $.getJSON("/api/all/tabla/seisetiquetas", function (data) {
+        $.get("/api/all/tabla/seisetiquetas", function (data) {
             //console.log(data);
             // For each registry...
             for (var i = 0; i < data.length; i++) {
@@ -163,7 +163,7 @@ $(document).ready(function () {
             //console.log(hora)
             //console.log("La fecha inicial es: " + fechainicial + " o " + hora)
             //console.log("La fecha final es: " + fechafinal + " o " + horafinal)
-            $.getJSON("/produccionhora/" + fechainicial + "/" + fechafinal, function (data) {
+            $.get("/produccionhora/" + fechainicial + "/" + fechafinal, function (data) {
                 //console.log("De "+ fechainicial + " a " + fechafinal)
                 //console.log("A " + fechafinal)
                 //console.log("Lleva piezas " + data.count)
