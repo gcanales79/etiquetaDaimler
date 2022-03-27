@@ -35,7 +35,7 @@ app.use(
     cookie: {
       secure:process.env.NODE_ENV === "production",
       sameSite:process.env.NODE_ENV === "production"?"Strict":"lax",
-      httpOnly:false,
+      httpOnly:true,
       maxAge: 86400000,
     },
     store: new MemoryStore({
