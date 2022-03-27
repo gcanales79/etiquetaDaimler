@@ -34,7 +34,7 @@ app.use(
   session({
     cookie: {
       secure:process.env.NODE_ENV === "production",
-      sameSite:process.env.NODE_ENV === "production"?"none":"lax",
+      sameSite:process.env.NODE_ENV === "production"?"Strict":"lax",
       httpOnly:false,
       maxAge: 86400000,
     },
@@ -129,7 +129,7 @@ var syncOptions = { force: false };
 // CORS
 app.use(function(req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Credentials", true);
+  res.header("Access-Control-Allow-Credentials", true);
   res.header(
     "Access-Control-Allow-Headers",
     "Origin, X-Requested-With, Content-Type, Accept, x-token,"
