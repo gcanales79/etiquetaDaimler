@@ -11,7 +11,7 @@ var crypto = require("crypto");
 const Sequelize = require("sequelize");
 const Op = Sequelize.Op;
 const sgMail = require("@sendgrid/mail");
-
+var isAuthenticated = require("../config/middleware/isAuthenticated");
 
 
 module.exports = function(app) {
@@ -396,7 +396,7 @@ module.exports = function(app) {
   });
 
   //Get data between hour
-  app.get("/produccionhora/:fechainicial/:fechafinal", function(req, res) {
+  app.get("/produccionhora/:fechainicial/:fechafinal", isAuthenticated,function(req, res) {
     let fechainicial = moment
       .unix(req.params.fechainicial)
       .format("YYYY-MM-DD HH:mm:ss");
