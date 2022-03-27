@@ -328,7 +328,7 @@ module.exports = function(app) {
   });
 
   //To show the last 6 scan labels
-  app.get("/api/all/tabla/seisetiquetas", isAuthenticated, function(req, res) {
+  app.get("/api/all/tabla/seisetiquetas",function(req, res) {
     db.Daimler.findAll({
       where: {
         uso_etiqueta: {
@@ -396,7 +396,7 @@ module.exports = function(app) {
   });
 
   //Get data between hour
-  app.get("/produccionhora/:fechainicial/:fechafinal", isAuthenticated,function(req, res) {
+  app.get("/produccionhora/:fechainicial/:fechafinal",function(req, res) {
     let fechainicial = moment
       .unix(req.params.fechainicial)
       .format("YYYY-MM-DD HH:mm:ss");
