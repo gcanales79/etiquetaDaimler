@@ -33,7 +33,7 @@ app.set("trust proxy", 1);
 app.use(
   session({
     cookie: {
-      secure:process.env.NODE_ENV === "production",
+      secure:process.env.NODE_ENV === "production"?false:false,
       sameSite:process.env.NODE_ENV === "production"?"Strict":"lax",
       httpOnly:true,
       maxAge: 86400000,
