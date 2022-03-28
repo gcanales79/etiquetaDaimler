@@ -64,11 +64,13 @@ module.exports = function (app) {
   app.get("/consulta", isAuthenticated, function (req, res) {
     if (req.user.role === "admin") {
       res.status(200);
+      let jsfile = [{ jsfile: "/js/consulta.js" }];
       res.render("consulta", {
         title: "consulta",
         active_consulta: {
           Register: true,
         },
+        jsfile: jsfile,
       })
     }
     else{
@@ -80,11 +82,13 @@ module.exports = function (app) {
   app.get("/pruebas",isAuthenticated,function(req,res){
     if(req.user.role === "admin" || req.user.role === "produccion"){
       res.status(200);
+      let jsfile = [{ jsfile: "/js/pruebas.js" }];
       res.render("pruebas",{
         title:"pruebas",
         active_pruebas: {
           Register:true,
         },
+        jsfile: jsfile,
       })
     }
   })
@@ -103,11 +107,13 @@ module.exports = function (app) {
 
       })
         .then(function (dbDaimler) {
+          let jsfile = [{ jsfile: "/js/consulta.js" }];
           res.render("consulta", {
             title: "consulta",
             active_consulta: {
               Register: true,
             },
+            jsfile: jsfile,
             etiqueta: dbDaimler.map(dbDaimler=>dbDaimler.toJSON()),
           });
           //console.log(dbDaimler);
@@ -127,11 +133,15 @@ module.exports = function (app) {
 
       })
         .then(function (dbDaimler) {
+          let jsfile = [{ jsfile: "/js/tabla.js" }];
+          let jsarchivo=[{jarchivo:"https://cdn.datatables.net/1.10.20/js/jquery.dataTables.js"}]
           res.render("tabla", {
             title: "tabla",
             active_consulta: {
               Register: true,
             },
+            jsfile: jsfile,
+            jsarchivo:jsarchivo,
             etiqueta: dbDaimler.map(dbDaimler=>dbDaimler.toJSON()),
 
           });
@@ -147,11 +157,15 @@ module.exports = function (app) {
   app.get("/tabla", isAuthenticated, function (req, res) {
     if (req.user.role === "admin") {
       res.status(200);
+      let jsfile = [{ jsfile: "/js/tabla.js" }];
+      let jsarchivo=[{jsarchivo:"https://cdn.datatables.net/1.10.20/js/jquery.dataTables.js"}]
       res.render("tabla", {
         title: "tabla",
         active_consulta: {
           Register: true,
         },
+        jsfile: jsfile,
+        jsarchivo: jsarchivo
       });
     }
     else{
@@ -164,6 +178,7 @@ module.exports = function (app) {
     //console.log(res.locals.sessionFlash)
     let message=res.locals.sessionFlash
     console.log(message)
+    let jsfile = [{ jsfile: "/js/alta.js" }];
     if(req.user.role==="admin"){
       //console.log(res.locals.sessionFlash)
     //res.status(200);
@@ -173,6 +188,7 @@ module.exports = function (app) {
       active_alta: {
         Register: true,
       },
+      jsfile:jsfile,
       
       
     });
@@ -200,12 +216,14 @@ module.exports = function (app) {
 
     })
       .then(function (dbDaimler) {
+        let jsfile = [{ jsfile: "/js/gp12.js" }];
         res.render("gp12", {
           title: "gpq2",
           active_gp12: {
             Register: true,
           },
           etiqueta: dbDaimler,
+          jsfile: jsfile,
         });
       });
     }

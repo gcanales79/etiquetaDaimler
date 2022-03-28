@@ -89,6 +89,10 @@
   integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/momentjs/2.12.0/moment.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.21/moment-timezone.js"></script>
+{{#each jsarchivo}}
+<script type="text/javascript" charset="utf8" src="{{jsarchivo}}"></script>
+{{/each}}
+
 {{#each jsfile}}
 <script src="{{jsfile}}"></script>
 {{/each}}
