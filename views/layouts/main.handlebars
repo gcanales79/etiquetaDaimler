@@ -38,7 +38,8 @@
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link {{#if active_pruebas}}active{{/if}}" href=" /pruebas">Registro Manual</a> </li>
+          <a class="nav-link {{#if active_pruebas}}active{{/if}}" href=" /pruebas">Registro Manual</a>
+        </li>
         {{/ifCond}}
         {{#if admin}}
         <li class="nav-item dropdown">
@@ -88,7 +89,9 @@
   integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/momentjs/2.12.0/moment.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.21/moment-timezone.js"></script>
-
+{{#each jsfile}}
+<script src="{{jsfile}}"></script>
+{{/each}}
 
 
 

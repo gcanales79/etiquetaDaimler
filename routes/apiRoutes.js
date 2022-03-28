@@ -11,7 +11,7 @@ var crypto = require("crypto");
 const Sequelize = require("sequelize");
 const Op = Sequelize.Op;
 const sgMail = require("@sendgrid/mail");
-var isAuthenticated = require("../config/middleware/isAuthenticated");
+
 
 
 module.exports = function(app) {
@@ -59,14 +59,15 @@ module.exports = function(app) {
           console.log(err);
         } else {
           if (user.role === "produccion" || user.role === "admin") {
+          // console.log("Hello")
             // res.cookie("usuario", req.user.email);
-            res.redirect("/produccion");
-            //  res.send({alert:"success", redirect:"/produccion"})
+            // res.redirect("/produccion");
+            res.send({alert:"success", redirect:"/produccion"})
           }
           if (user.role === "inspector") {
             // res.cookie("usuario", req.user.email);
-            res.redirect("/gp12");
-            // res.send({alert:"success", redirect:"/gp12"}
+            // res.redirect("/gp12");
+            res.send({alert:"success", redirect:"/gp12"})
           }
         }
       });

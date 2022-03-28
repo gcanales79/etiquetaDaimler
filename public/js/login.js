@@ -24,12 +24,12 @@ $(document).ready(function() {
 
   // loginUser does a post to our "api/login" route and if successful, redirects us the the members page
   function loginUser(email, password) {
-    $.post("/api/login", {
+    $.post("/login", {
       email: email,
       password: password,
     }).then(function(data) {
-      console.log("Hello");
-      console.log(data);
+    // console.log("Hello");
+      // console.log(data);
       if (data.alert === "success") {
         //window.location.replace(data);
         window.location.href = data.redirect;

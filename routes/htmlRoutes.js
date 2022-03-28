@@ -16,8 +16,10 @@ module.exports = function (app) {
 
     })
       .then(function (dbDaimler) {
+        let jsfile = [{ jsfile: "/js/login.js" }];
         res.render("index", {
           title: "home",
+          jsfile: jsfile,
           active_home: {
             Register: true,
           },
@@ -39,12 +41,16 @@ module.exports = function (app) {
 
       })
         .then(function (dbDaimler) {
+          let jsfile = [{jsfile:"https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.3/Chart.js"},
+          { jsfile: "/js/label.js" }];
           res.render("produccion", {
             title: "produccion",
             active_produccion: {
               Register: true,
             },
             etiqueta: dbDaimler,
+            jsfile: jsfile,
+            
           });
         });
     }
