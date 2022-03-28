@@ -1,9 +1,9 @@
 $(document).ready(function () {
 
     getLast6();
-    produccionPorhora();
-    produccionTurnos();
-    produccionPorsemana();
+    // produccionPorhora();
+    // produccionTurnos();
+    // produccionPorsemana();
 
     $("#exampleModal").modal(
         {

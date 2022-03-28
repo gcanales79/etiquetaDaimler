@@ -11,6 +11,7 @@ var crypto = require("crypto");
 const Sequelize = require("sequelize");
 const Op = Sequelize.Op;
 const sgMail = require("@sendgrid/mail");
+var isAuthenticated = require("../config/middleware/isAuthenticated");
 
 
 
@@ -329,7 +330,7 @@ module.exports = function(app) {
   });
 
   //To show the last 6 scan labels
-  app.get("/api/all/tabla/seisetiquetas",function(req, res) {
+  app.get("/api/all/tabla/seisetiquetas",isAuthenticated,function(req, res) {
     db.Daimler.findAll({
       where: {
         uso_etiqueta: {
