@@ -167,13 +167,13 @@ $(document).ready(function() {
       //console.log("La fecha inicial es: " + fechainicial + " o " + hora)
       //console.log("La fecha final es: " + fechafinal + " o " + horafinal)
       $.get("/produccionhora/" + fechainicial + "/" + fechafinal, function(
-        data
+        datos
       ) {
         //console.log("De "+ fechainicial + " a " + fechafinal)
         //console.log("A " + fechafinal)
         //console.log("Lleva piezas " + data.count)
         //console.log("En la hora " + hora)
-
+        const { data } = datos;
         produccion.push({
           fecha: fechainicial,
           producidas: data.count,
@@ -479,7 +479,8 @@ $(document).ready(function() {
       $.when(
         $.get(
           "/produccionhora/" + fechaInicalDiax + "/" + fechaFinaldiax,
-          function(data) {
+          function(datos) {
+            const { data } = datos;
             datosTurno1.splice(i, 0, data.count);
             //console.log(datosTurno1)
             //graficaProduccion(datosTurno1, datosTurno2, datosTurno3)
@@ -488,7 +489,8 @@ $(document).ready(function() {
 
         $.get(
           "/produccionhora/" + fechaInicaltardex + "/" + fechaFinaltardex,
-          function(data) {
+          function(datos) {
+            const { data } = datos;
             datosTurno2.splice(i, 0, data.count);
             //console.log(datosTurno2)
             //graficaProduccion(datosTurno1, datosTurno2, datosTurno3)
@@ -497,7 +499,8 @@ $(document).ready(function() {
 
         $.get(
           "/produccionhora/" + fechaInicalnochex + "/" + fechaFinalnochex,
-          function(data) {
+          function(datos) {
+            const { data } = datos;
             datosTurno3.splice(i, 0, data.count);
             //console.log(datosTurno3)
             //graficaProduccion(datosTurno1, datosTurno2, datosTurno3)
@@ -537,8 +540,9 @@ $(document).ready(function() {
       //console.log(fechainicial)
       $.when(
         $.get("/produccionhora/" + fechainicial + "/" + fechafinal, function(
-          data
+          info
         ) {
+          const { data } = info;
           datos.push({
             semana: moment(fecha).week(),
             valor: data.count,

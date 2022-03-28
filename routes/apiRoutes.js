@@ -431,10 +431,15 @@ module.exports = function(app) {
       col: "serial",
     })
       .then((data) => {
-        res.json(data);
+        if(!data){
+          res.status(404).send({message:"Datos no encontrados",alert:"Error"})
+        }
+        else{
+          res.status(200).send({data:data,alert:"Success"})
+        }
       })
       .catch(function(err) {
-        console.log(err);
+        res.status(500).send({message:"Error de servidor",err:err,alert:"Error"})
       });
   });
 
