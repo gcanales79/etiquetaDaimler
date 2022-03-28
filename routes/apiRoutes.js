@@ -50,7 +50,7 @@ module.exports = function(app) {
         res.redirect("/");
       }
       if (!user) {
-        console.log(info.message);
+        console.log("Not user: " + info.message);
         // res.send({ message: info.message, alert: "Error" });
         res.redirect("/");
       }
