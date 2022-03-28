@@ -43,16 +43,10 @@ passport.serializeUser(function(user, cb) {
   cb(null, user.id);
 });
 
-passport.deserializeUser(function(id, cb) {
-  db.User.findOne({
-    where:{
-      id:id
-    }
-  }).then(user=>{
-    cb(null, user);
-  })
-  
+passport.deserializeUser(function (obj, cb) {
+  cb(null, obj);
 });
+
 
 // Exporting our configured passport
 module.exports = passport;
