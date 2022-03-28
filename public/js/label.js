@@ -128,8 +128,9 @@ $(document).ready(function () {
         $("#tablaDe6").empty();
         // Grab the last 6 scan labels
 
-        $.get("/api/all/tabla/seisetiquetas", function (data) {
+        $.get("/api/all/tabla/seisetiquetas", function (datos) {
             //console.log(data);
+            const {data}=datos;
             // For each registry...
             for (var i = 0; i < data.length; i++) {
                 // ...populate the results

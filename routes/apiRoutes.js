@@ -330,7 +330,7 @@ module.exports = function(app) {
   });
 
   //To show the last 6 scan labels
-  app.get("/api/all/tabla/seisetiquetas",isAuthenticated,function(req, res) {
+  app.get("/api/all/tabla/seisetiquetas",function(req, res) {
     db.Daimler.findAll({
       where: {
         uso_etiqueta: {
@@ -340,8 +340,15 @@ module.exports = function(app) {
       limit: 6,
       order: [["createdAt", "DESC"]],
     }).then(function(dbDaimler) {
-      res.json(dbDaimler);
+    // res.json(dbDaimler);
+    if(!dbDaimler){
+      res.status(404).send({message:"Datos no encontrados",alert:"Error"})
+    }else{
+      res.status(200).send({data:dbDaimler,alert:"Success"})
+    }
       //console.log(dbDaimler)
+    }).catch(err=>{
+      res.status(500).send({err:err,alert:"Error"})
     });
   });
 
