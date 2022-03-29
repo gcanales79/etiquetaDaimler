@@ -19,7 +19,8 @@ module.exports = function (sequelize, DataTypes) {
     registro_auto:{
       type:DataTypes.BOOLEAN,
       defaultValue:true,
-    }
+    },
+    
     
   });
 

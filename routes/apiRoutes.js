@@ -333,6 +333,9 @@ module.exports = function(app) {
   app.get("/api/all/tabla/seisetiquetas",function(req, res) {
     db.Daimler.findAll({
       where: {
+        id:{
+          [Op.gte]:350000
+        },
         uso_etiqueta: {
           [Op.eq]: "Produccion",
         },
@@ -396,6 +399,11 @@ module.exports = function(app) {
   //To show the last 6 scan labels
   app.get("/api/all/tabla/gp12seisetiquetas", function(req, res) {
     db.Daimler.findAll({
+      where:{
+        id:{
+          [Op.gte]:350000
+        }
+      },
       limit: 6,
       order: [["fecha_gp12", "DESC"]],
     }).then(function(dbDaimler) {
@@ -417,6 +425,9 @@ module.exports = function(app) {
     //console.log(req.params.fechafinal)
     db.Daimler.findAndCountAll({
       where: {
+        id:{
+          [Op.gte]:350000
+        },
         createdAt: {
           [Op.gte]: fechainicial,
           [Op.lte]: fechafinal,
