@@ -7,6 +7,7 @@ var twilio = require("twilio");
 //var helpers = require('handlebars-helpers')();
 const moment = require("moment-timezone");
 var session = require("express-session");
+var MySQLStore=require("express-mysql-session")(session)
 const cors=require("cors")
 // Requiring passport as we've configured it
 var passport = require("./config/passport");
@@ -30,22 +31,44 @@ app.use(express.static("public"));
 
 
 app.set("trust proxy", 1);
-app.use(
-  session({
-    cookie: {
-      secure:process.env.NODE_ENV === "production"?false:false,
-      sameSite:process.env.NODE_ENV === "production"?"Strict":"lax",
-      httpOnly:true,
-      maxAge: 86400000,
-    },
-    store: new MemoryStore({
-      checkPeriod: 86400000,
-    }),
-    resave:false,
-    secret: "keyboard cat",
-    saveUninitialized: true,
-  })
-);
+
+var options={
+  host:process.env.localHost,
+  port:3306,
+  user:process.env.userDatabase,
+  password:process.env.passwordDatabase,
+  database:process.env.Database
+}
+
+
+
+var sessionStore=new MySQLStore(options)
+
+app.use(session({
+  key:"session_cookie_name",
+  secret:"session_cookie_secret",
+  store:sessionStore,
+  resave:false,
+  saveUninitialized:false
+
+}))
+
+// app.use(
+//   session({
+//     cookie: {
+//       secure:process.env.NODE_ENV === "production"?false:false,
+//       sameSite:process.env.NODE_ENV === "production"?"Strict":"lax",
+//       httpOnly:true,
+//       maxAge: 86400000,
+//     },
+//     store: new MemoryStore({
+//       checkPeriod: 86400000,
+//     }),
+//     resave:false,
+//     secret: "keyboard cat",
+//     saveUninitialized: true,
+//   })
+// );
 app.use(flash());
 
 app.use(passport.initialize());
