@@ -16,7 +16,7 @@ module.exports = function (app) {
 
     })
       .then(function (dbDaimler) {
-        let jsfile = [{ jsfile: "/js/login.js" }];
+        let jsfile = [{jsfile:"/js/toastr.js"},{ jsfile: "/js/login.js" }];
         res.render("index", {
           title: "home",
           jsfile: jsfile,

@@ -13,8 +13,6 @@ const Op = Sequelize.Op;
 const sgMail = require("@sendgrid/mail");
 var isAuthenticated = require("../config/middleware/isAuthenticated");
 
-
-
 module.exports = function(app) {
   // Using the passport.authenticate middleware with our local strategy.
   // If the user has valid login credentials, send them to the members page.
@@ -35,8 +33,6 @@ module.exports = function(app) {
 
   //  })
 
-
-
   app.post("/login", function(req, res, next) {
     passport.authenticate("local", function(err, user, info) {
       // Since we're doing a POST with javascript, we can't actually redirect that post into a GET request
@@ -51,8 +47,8 @@ module.exports = function(app) {
       }
       if (!user) {
         console.log("Not user: " + info.message);
-        // res.send({ message: info.message, alert: "Error" });
-        res.redirect("/");
+        res.send({ message: info.message, alert: "Error" });
+        // res.redirect("/");
       }
 
       req.logIn(user, function(err) {
@@ -60,15 +56,15 @@ module.exports = function(app) {
           console.log(err);
         } else {
           if (user.role === "produccion" || user.role === "admin") {
-          // console.log("Hello")
+            // console.log("Hello")
             // res.cookie("usuario", req.user.email);
             // res.redirect("/produccion");
-            res.send({alert:"success", redirect:"/produccion"})
+            res.send({ alert: "success", redirect: "/produccion" });
           }
           if (user.role === "inspector") {
             // res.cookie("usuario", req.user.email);
             // res.redirect("/gp12");
-            res.send({alert:"success", redirect:"/gp12"})
+            res.send({ alert: "success", redirect: "/gp12" });
           }
         }
       });
@@ -330,11 +326,11 @@ module.exports = function(app) {
   });
 
   //To show the last 6 scan labels
-  app.get("/api/all/tabla/seisetiquetas",function(req, res) {
+  app.get("/api/all/tabla/seisetiquetas", function(req, res) {
     db.Daimler.findAll({
       where: {
-        id:{
-          [Op.gte]:410000
+        id: {
+          [Op.gte]: 410000,
         },
         uso_etiqueta: {
           [Op.eq]: "Produccion",
@@ -342,17 +338,21 @@ module.exports = function(app) {
       },
       limit: 6,
       order: [["createdAt", "DESC"]],
-    }).then(function(dbDaimler) {
-    // res.json(dbDaimler);
-    if(!dbDaimler){
-      res.status(404).send({message:"Datos no encontrados",alert:"Error"})
-    }else{
-      res.status(200).send({data:dbDaimler,alert:"Success"})
-    }
-      //console.log(dbDaimler)
-    }).catch(err=>{
-      res.status(500).send({err:err,alert:"Error"})
-    });
+    })
+      .then(function(dbDaimler) {
+        // res.json(dbDaimler);
+        if (!dbDaimler) {
+          res
+            .status(404)
+            .send({ message: "Datos no encontrados", alert: "Error" });
+        } else {
+          res.status(200).send({ data: dbDaimler, alert: "Success" });
+        }
+        //console.log(dbDaimler)
+      })
+      .catch((err) => {
+        res.status(500).send({ err: err, alert: "Error" });
+      });
   });
 
   //To add the date it was inspected in GP-12
@@ -399,10 +399,10 @@ module.exports = function(app) {
   //To show the last 6 scan labels
   app.get("/api/all/tabla/gp12seisetiquetas", function(req, res) {
     db.Daimler.findAll({
-      where:{
-        id:{
-          [Op.gte]:410000
-        }
+      where: {
+        id: {
+          [Op.gte]: 410000,
+        },
       },
       limit: 6,
       order: [["fecha_gp12", "DESC"]],
@@ -413,7 +413,7 @@ module.exports = function(app) {
   });
 
   //Get data between hour
-  app.get("/produccionhora/:fechainicial/:fechafinal",function(req, res) {
+  app.get("/produccionhora/:fechainicial/:fechafinal", function(req, res) {
     let fechainicial = moment
       .unix(req.params.fechainicial)
       .format("YYYY-MM-DD HH:mm:ss");
@@ -425,8 +425,8 @@ module.exports = function(app) {
     //console.log(req.params.fechafinal)
     db.Daimler.findAndCountAll({
       where: {
-        id:{
-          [Op.gte]:410000
+        id: {
+          [Op.gte]: 410000,
         },
         createdAt: {
           [Op.gte]: fechainicial,
@@ -442,15 +442,18 @@ module.exports = function(app) {
       col: "serial",
     })
       .then((data) => {
-        if(!data){
-          res.status(404).send({message:"Datos no encontrados",alert:"Error"})
-        }
-        else{
-          res.status(200).send({data:data,alert:"Success"})
+        if (!data) {
+          res
+            .status(404)
+            .send({ message: "Datos no encontrados", alert: "Error" });
+        } else {
+          res.status(200).send({ data: data, alert: "Success" });
         }
       })
       .catch(function(err) {
-        res.status(500).send({message:"Error de servidor",err:err,alert:"Error"})
+        res
+          .status(500)
+          .send({ message: "Error de servidor", err: err, alert: "Error" });
       });
   });
 

@@ -5,6 +5,7 @@ $(document).ready(function() {
   var emailInput = $("input#email-input");
   var passwordInput = $("input#password-input");
 
+
   // When the form is submitted, we validate there's an email and password entered
   loginForm.on("submit", function(event) {
     event.preventDefault();
@@ -29,12 +30,48 @@ $(document).ready(function() {
       password: password,
     }).then(function(data) {
     // console.log("Hello");
-      // console.log(data);
+      console.log(data);
+      
       if (data.alert === "success") {
         //window.location.replace(data);
         window.location.href = data.redirect;
         // If there's an error, log the errorrs
+      }else{
+        notificationToast(data.alert,data.message)
       }
     });
   }
+
+  function notificationToast(result, message) {
+    switch (result) {
+      case "Success":
+        /*$.notify(
+          {
+            icon: "far fa-check-circle",
+            message: message,
+          },
+          {
+            type: "success",
+          }
+        );*/
+        toastr.success(message);
+        break;
+      case "Error":
+        /*$.notify(
+          {
+            icon: "far fa-times-circle",
+            message: message,
+          },
+          {
+            type: "danger",
+          }
+        );*/
+        toastr.error(message);
+        break;
+    }
+  }
+
+
 });
+
+
