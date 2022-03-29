@@ -28,7 +28,8 @@ else {
 function reporte() {
     console.log("https://shielded-stream-29921.herokuapp.com/produccionhora/" + horainicialx + "/" + horafinalx)
     axios.get("https://shielded-stream-29921.herokuapp.com/produccionhora/" + horainicialx + "/" + horafinalx)
-        .then(data => {
+        .then(datos => {
+            const {data}=datos;
             console.log(data.data.count)
             axios.post("https://shielded-stream-29921.herokuapp.com/reporte", {
                 piezasProducidas: data.data.count,
