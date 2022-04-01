@@ -662,4 +662,133 @@ module.exports = function(app) {
       }
     );
   });
+
+  //Get all user
+  app.get("/get-all-users", isAuthenticated, (req, res) => {
+    db.User.findAll({
+      attributes: ["id", "email", "role"],
+    })
+      .then((usersList) => {
+        if (!usersList) {
+          res.send({ message: "No se encontraron usuarios", code: "404" });
+        } else {
+          res.send({ data: usersList, code: "200" });
+        }
+      })
+      .catch((err) => {
+        res.send({ message: "Error de servidor", code: "500", err: err });
+      });
+  });
+
+  //Add User
+  app.post("/add-user", isAuthenticated, (req, res) => {
+    const { email, password, role } = req.body;
+    db.User.create({
+      email: email,
+      password: password,
+      role: role,
+    })
+      .then((userCreated) => {
+        if (!userCreated) {
+          res.status(404).send({ code: "404", message: "Usuario no creado" });
+        } else {
+          res
+            .status(200)
+            .send({ code: "200", message: "Usuario creacdo exitosamente" });
+        }
+      })
+      .catch((err) => {
+        res
+          .status(500)
+          .send({ code: "500", message: "Error del servidor", err: err });
+      });
+  });
+
+  //Get user by id
+  app.get("/get-user/:id", isAuthenticated, (req, res) => {
+    const { id } = req.params;
+    db.User.findOne({
+      where: {
+        id: {
+          [Op.eq]: id,
+        },
+      },
+      attributes: ["id", "email", "role"],
+    })
+      .then((userStored) => {
+        if (!userStored) {
+          res
+            .status(400)
+            .send({ code: "400", message: "No se encontro ningún usuario" });
+        } else {
+          res.status(200).send({ code: "200", user: userStored });
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+        res.status(500).send({ code: "500", message: "Error de servidor" });
+      });
+  });
+
+  //Delete user by id
+  app.delete("/delete-user/:id", isAuthenticated, (req, res) => {
+    const { id } = req.params;
+    db.User.destroy({
+      where: {
+        id: {
+          [Op.eq]: id,
+        },
+      },
+    })
+      .then((userDeleted) => {
+        if (!userDeleted) {
+          res.status(404).send({ code: "404", message: "Usuario no borrado" });
+        } else {
+          res
+            .status(200)
+            .send({ code: "200", message: "Usuario borrado exitosamente" });
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+        res.status(500).send({ code: "200", message: "Error de servidor" });
+      });
+  });
+
+  //Edit User by in
+  app.put("/update-user/:id", isAuthenticated, (req, res) => {
+    const { id } = req.params;
+    const { email, password,role } = req.body;
+    db.User.update(
+      {
+        email:email,
+        password:password,
+        role:role
+      },
+      {
+        where: {
+          id: id,
+        },
+      }
+    )
+      .then((userStore) => {
+        // console.log(userStore);
+        if (userStore[0] === 0) {
+          res.status(404).send({
+            message: "Usuario no encontrado",
+            code: "404",
+          });
+        } else {
+            res.status(200).send({
+              message: "Usuario actualizado correctamente",
+              code: "200",
+            });
+          
+        }
+      })
+      .catch((err) => {
+        console.log(err)
+        res.status(500).send({ code:"500",message: "Error del servidor" });
+      });
+  });
 };

@@ -1,0 +1,47 @@
+<div class="modal fadeIn" id="modalUserCenter" role="dialog" aria-labelledby="exampleModalCenterTitle"
+    aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" id="modalUserDialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalUserLongTitle"></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="modalUserBody">
+                <form role="form" id="userForm">
+                    <div class="form-group" id="emailUserForm">
+                        <label for="email">Email</label>
+                        <input type="email" class="form-control" id="emailUser" aria-describedby="emailHelp"
+                            placeholder="Introducir Correo" required>
+                    </div>
+                    <div class="form-group" id="passwordUserForm">
+                        <label for="inputPassword">Contraseña</label>
+                        <input type="password" class="form-control" id="passwordUser" placeholder="Contraseña"
+                            required>
+                    </div>
+                    <div class="form-group" id="repeatPasswordUserForm">
+                        <label for="inputPassword">Repetir Contraseña</label>
+                        <input type="password" class="form-control" id="repeatPasswordUser" placeholder=" Repetir Contraseña"
+                            required>
+                    </div>
+                    <div class="form-group">
+                        <label class="my-1 mr-2" for="inlineFormCustomSelectPref">Rol</label>
+                        <select class="custom-select custom-select-sm" id="roleUser">
+                            <option selected value="produccion">produccion</option>
+                            <option value="inspector">inspector</option>
+                            <option value="admin">admin</option>
+                        </select>
+                    </div>
+
+
+                    <div class="col">
+                        <button type="submit" style="width: 100%" id="createUser" class="btn btn-primary"></button>
+                    </div>
+                </form>
+
+
+            </div>
+        </div>
+    </div>
+</div>

@@ -166,7 +166,7 @@ $(document).ready(function () {
         // Grab the last 6 scan labels
 
         $.getJSON("/api/all/tabla/gp12seisetiquetas", function (data) {
-            //console.log(data);
+            console.log(data);
             // For each registry...
             for (var i = 0; i < data.length; i++) {
                 // ...populate the results

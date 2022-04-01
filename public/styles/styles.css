@@ -1,58 +1,65 @@
-.comentario{
-  color:red;
+#content{
+  padding-bottom:80px;
+  margin-bottom:15px;
+}
+
+.container{
+  margin-bottom:30px;
+  padding-bottom:80px;
+}
+
+
+
+.comentario {
+  color: red;
   font-size: 30px;
-
 }
 
-.resultadoImagen{
-  height:30%;
-  width:30%;
+.resultadoImagen {
+  height: 30%;
+  width: 30%;
 }
 
-.comentariobueno{
-  color:green;
+.comentariobueno {
+  color: green;
   font-size: 30px;
-
 }
 
-.footer{
+.footer {
   position: fixed;
-  left:0;
-  bottom:0;
-  display: table-row;
-    width: 100%;
-    height: auto;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: auto;
   background-color: #1f1f23;
 }
 
-.check{
+
+
+.check {
   color: #c0e48e;
 }
 
-.ban{
+.ban {
   color: #ff6b6b;
 }
 
+@media screen and (max-width: 600px) {
+  h1 {
+    font-size: 4vw;
+  }
 
-@media screen and (max-width:600px){
+  h2 {
+    font-size: 4vw;
+  }
 
+  th {
+    font-size: 3vw;
+  }
 
-h1{
-  font-size:4vw;
-}
-
-h2{
-  font-size:4vw;
-}
-
-th{
-  font-size:3vw;
-}
-
-td{
-  font-size:3vw;
-}
-
+  td {
+    font-size: 3vw;
+  }
 }
 
 .loader {
@@ -65,24 +72,20 @@ td{
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
-.card-text{
+.card-text {
   font-size: 20px;
   font-weight: bolder;
   text-align: center;
 }
 
-.card-title{
-  text-align:center;
+.card-title {
+  text-align: center;
 }
-
-
-
-
-
-
-
-

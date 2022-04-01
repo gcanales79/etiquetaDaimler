@@ -33,7 +33,7 @@ module.exports = function (app) {
   //Get produccion page
   app.get("/produccion", isAuthenticated, function (req, res) {
     //console.log(req.user)
-    if (req.user.role === "admin" || req.user.role === "produccion") {
+    if (req.user.role === "admin" || req.user.role === "produccion" || req.user.role ==="inspector") {
       res.status(200);
       db.Daimler.findAll({
         limit: 6,
@@ -176,14 +176,14 @@ module.exports = function (app) {
   // Carga la pagina para dar de alta usuarios
   app.get("/alta", isAuthenticated, function (req, res) {
     //console.log(res.locals.sessionFlash)
-    let message=res.locals.sessionFlash
-    console.log(message)
-    let jsfile = [{ jsfile: "/js/alta.js" }];
+    //let message=res.locals.sessionFlash
+    //console.log(message)
+    let jsfile = [{jsfile:"/js/toastr.js"},{jsfile:"/js/pagination.js"},{ jsfile: "/js/alta.js" }];
     if(req.user.role==="admin"){
       //console.log(res.locals.sessionFlash)
     //res.status(200);
     res.render("alta", {
-      sessionFlash: message,
+      // sessionFlash: message,
       title: "alta",
       active_alta: {
         Register: true,
@@ -210,22 +210,15 @@ module.exports = function (app) {
     //console.log(req.user)
     if(req.user.role==="admin" || req.user.role==="inspector"){
     res.status(200);
-    db.Daimler.findAll({
-      limit: 6,
-      order: [["createdAt", "DESC"]],
-
-    })
-      .then(function (dbDaimler) {
         let jsfile = [{ jsfile: "/js/gp12.js" }];
         res.render("gp12", {
           title: "gpq2",
           active_gp12: {
             Register: true,
           },
-          etiqueta: dbDaimler,
           jsfile: jsfile,
         });
-      });
+    
     }
     else{
       res.render("404")

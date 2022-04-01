@@ -30,7 +30,7 @@ $(document).ready(function() {
       password: password,
     }).then(function(data) {
     // console.log("Hello");
-      console.log(data);
+      // console.log(data);
       
       if (data.alert === "success") {
         //window.location.replace(data);
@@ -45,27 +45,9 @@ $(document).ready(function() {
   function notificationToast(result, message) {
     switch (result) {
       case "Success":
-        /*$.notify(
-          {
-            icon: "far fa-check-circle",
-            message: message,
-          },
-          {
-            type: "success",
-          }
-        );*/
         toastr.success(message);
         break;
       case "Error":
-        /*$.notify(
-          {
-            icon: "far fa-times-circle",
-            message: message,
-          },
-          {
-            type: "danger",
-          }
-        );*/
         toastr.error(message);
         break;
     }
