@@ -331,7 +331,7 @@ module.exports = function(app) {
       db.Daimler.findAll({
         where: {
           id: {
-            [Op.gte]: count*0.85,
+            [Op.gte]: count*0.95,
           },
           uso_etiqueta: {
             [Op.eq]: "Produccion",
@@ -407,7 +407,7 @@ module.exports = function(app) {
       db.Daimler.findAll({
         where: {
           id: {
-            [Op.gte]: count*0.85,
+            [Op.gte]: count*0.95,
           },
         },
         limit: 6,
@@ -438,7 +438,7 @@ module.exports = function(app) {
       db.Daimler.findAndCountAll({
         where: {
           id: {
-            [Op.gte]: count*0.85,
+            [Op.gte]: count*0.90,
           },
           createdAt: {
             [Op.gte]: fechainicial,
