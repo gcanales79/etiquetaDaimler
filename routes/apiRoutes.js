@@ -327,32 +327,37 @@ module.exports = function(app) {
 
   //To show the last 6 scan labels
   app.get("/api/all/tabla/seisetiquetas", function(req, res) {
-    db.Daimler.findAll({
-      where: {
-        id: {
-          [Op.gte]: 410000,
+    db.Daimler.count().then(count=>{
+      db.Daimler.findAll({
+        where: {
+          id: {
+            [Op.gte]: count*0.85,
+          },
+          uso_etiqueta: {
+            [Op.eq]: "Produccion",
+          },
         },
-        uso_etiqueta: {
-          [Op.eq]: "Produccion",
-        },
-      },
-      limit: 6,
-      order: [["createdAt", "DESC"]],
-    })
-      .then(function(dbDaimler) {
-        // res.json(dbDaimler);
-        if (!dbDaimler) {
-          res
-            .status(404)
-            .send({ message: "Datos no encontrados", alert: "Error" });
-        } else {
-          res.status(200).send({ data: dbDaimler, alert: "Success" });
-        }
-        //console.log(dbDaimler)
+        limit: 6,
+        order: [["createdAt", "DESC"]],
       })
-      .catch((err) => {
-        res.status(500).send({ err: err, alert: "Error" });
-      });
+        .then(function(dbDaimler) {
+          // res.json(dbDaimler);
+          if (!dbDaimler) {
+            res
+              .status(404)
+              .send({ message: "Datos no encontrados", alert: "Error" });
+          } else {
+            res.status(200).send({ data: dbDaimler, alert: "Success" });
+          }
+          //console.log(dbDaimler)
+        })
+        .catch((err) => {
+          res.status(500).send({ err: err, alert: "Error" });
+        });
+    }).catch(err=>{
+      console.log(err)
+    })
+    
   });
 
   //To add the date it was inspected in GP-12
@@ -398,18 +403,23 @@ module.exports = function(app) {
   //To get the last 6 GP12 scan labels
   //To show the last 6 scan labels
   app.get("/api/all/tabla/gp12seisetiquetas", function(req, res) {
-    db.Daimler.findAll({
-      where: {
-        id: {
-          [Op.gte]: 410000,
+    db.Daimler.count().then(count=>{
+      db.Daimler.findAll({
+        where: {
+          id: {
+            [Op.gte]: count*0.85,
+          },
         },
-      },
-      limit: 6,
-      order: [["fecha_gp12", "DESC"]],
-    }).then(function(dbDaimler) {
-      res.json(dbDaimler);
-      //console.log(dbDaimler)
-    });
+        limit: 6,
+        order: [["fecha_gp12", "DESC"]],
+      }).then(function(dbDaimler) {
+        res.json(dbDaimler);
+        //console.log(dbDaimler)
+      });
+    }).catch(err=>{
+      console.log(err)
+    })
+    
   });
 
   //Get data between hour
@@ -423,38 +433,44 @@ module.exports = function(app) {
     //console.log(fechainicial)
     //console.log(fechafinal)
     //console.log(req.params.fechafinal)
-    db.Daimler.findAndCountAll({
-      where: {
-        id: {
-          [Op.gte]: 410000,
+    db.Daimler.count().then(count=>{
+      // console.log(count)
+      db.Daimler.findAndCountAll({
+        where: {
+          id: {
+            [Op.gte]: count*0.85,
+          },
+          createdAt: {
+            [Op.gte]: fechainicial,
+            [Op.lte]: fechafinal,
+          },
+          //Le agregue esto para que no cuente las cambiadas
+          etiqueta_remplazada: null,
+          registro_auto: {
+            [Op.eq]: 1,
+          },
         },
-        createdAt: {
-          [Op.gte]: fechainicial,
-          [Op.lte]: fechafinal,
-        },
-        //Le agregue esto para que no cuente las cambiadas
-        etiqueta_remplazada: null,
-        registro_auto: {
-          [Op.eq]: 1,
-        },
-      },
-      distinct: true,
-      col: "serial",
-    })
-      .then((data) => {
-        if (!data) {
-          res
-            .status(404)
-            .send({ message: "Datos no encontrados", alert: "Error" });
-        } else {
-          res.status(200).send({ data: data, alert: "Success" });
-        }
+        distinct: true,
+        col: "serial",
       })
-      .catch(function(err) {
-        res
-          .status(500)
-          .send({ message: "Error de servidor", err: err, alert: "Error" });
-      });
+        .then((data) => {
+          if (!data) {
+            res
+              .status(404)
+              .send({ message: "Datos no encontrados", alert: "Error" });
+          } else {
+            res.status(200).send({ data: data, alert: "Success" });
+          }
+        })
+        .catch(function(err) {
+          res
+            .status(500)
+            .send({ message: "Error de servidor", err: err, alert: "Error" });
+        });
+    }).catch(err=>{
+      console.log(err)
+    })
+    
   });
 
   //* SMS Produccion del turno
