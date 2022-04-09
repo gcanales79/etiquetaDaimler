@@ -31,7 +31,7 @@
     "handlebars-helpers": "^0.10.0",
     "jwt-simple": "^0.5.6",
     "memorystore": "^1.6.1",
-    "moment": "^2.24.0",
+    "moment": "^2.29.2",
     "moment-timezone": "^0.5.25",
     "morgan": "^1.10.0",
     "mysql2": "^1.6.5",
