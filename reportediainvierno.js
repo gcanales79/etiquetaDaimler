@@ -1,6 +1,12 @@
 const moment = require("moment-timezone");
 const axios = require("axios");
 
+let daylight= moment()
+.tz("America/Monterrey")
+.isDST()
+
+console.log(`Daylight: ${daylight}`)
+
 /**Si es horario de verna */
 if (
   moment()
