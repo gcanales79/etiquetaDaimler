@@ -13,7 +13,8 @@ $(document).ready(function() {
   $("#submit").on("click", function(event) {
     event.preventDefault();
     //console.log("Submitt button");
-    $("#logoResultado").empty();
+    $("#spanLogoResultado").removeClass("fa fa-ban ban");
+    $("#spanLogoResultado").removeClass("fa fa-check-circle check");
     $("#mensajeResultadoBueno").empty();
     $("#mensajeResultadoMalo").empty();
     var nuevoSerial = $("#serialEtiqueta")
@@ -42,23 +43,29 @@ $(document).ready(function() {
         //Etiqueta correcta
         case "200":
           //var newDiv = $("<div>");
-          var resultadoImagen = $("<img>");
-          resultadoImagen.attr("src", "../images/good.png");
+          //var resultadoImagen = $("<img>");
+          //resultadoImagen.attr("src", "../images/good.png");
           //resultadoImagen.attr("class", "resultadoImagen");
+          $("#spanLogoResultado").addClass("fa fa-check-circle check");
           $("#mensajeResultadoBueno").text(data.message);
           //$("#mensajeResultado").attr("class", "comentariobueno");
           //Borra el dato de la etiqueta despues de 3 segundos
           setTimeout(function() {
             $("#serialEtiqueta").val("");
-          }, 2000);
-          $("#logoResultado").append(resultadoImagen);
-          //$("#Resultado").append(newDiv);
-          //Borrar el resultado despues de unos segundos
-          setTimeout(function() {
-            $("#logoResultado").empty();
+            $("#spanLogoResultado").removeClass("fa fa-ban ban");
+            $("#spanLogoResultado").removeClass("fa fa-check-circle check");
             $("#mensajeResultadoBueno").empty();
             $("#mensajeResultadoMalo").empty();
-          }, 3000);
+          }, 2000);
+          //$("#logoResultado").append(resultadoImagen);
+          //$("#Resultado").append(newDiv);
+          //Borrar el resultado despues de unos segundos
+          /*setTimeout(function() {
+            $("#spanLogoResultado").removeClass("fa fa-ban ban");
+            $("#spanLogoResultado").removeClass("fa fa-check-circle check");
+            $("#mensajeResultadoBueno").empty();
+            $("#mensajeResultadoMalo").empty();
+          }, 3000);*/
           getLast6();
           produccionPorhora();
           produccionTurnos();
@@ -68,18 +75,20 @@ $(document).ready(function() {
         //Numero de parte no agregado
         case "401":
           //var newDiv = $("<div>");
-          var resultadoImagen = $("<img>");
-          resultadoImagen.attr("src", "../images/wrong.png");
-          resultadoImagen.attr("class", "resultadoImagen");
+          //var resultadoImagen = $("<img>");
+          //resultadoImagen.attr("src", "../images/wrong.png");
+          //resultadoImagen.attr("class", "resultadoImagen");
           $("#mensajeResultadoMalo").text(data.message);
           //newDiv.attr("class", "comentario");
           setTimeout(function() {
             $("#serialEtiqueta").val("");
           }, 2000);
-          $("#logoResultado").append(resultadoImagen);
+          //$("#logoResultado").append(resultadoImagen);
+          $("#spanLogoResultado").addClass("fa fa-ban ban");
           //$("#Resultado").append(newDiv);
           setTimeout(function() {
-            $("#logoResultado").empty();
+            $("#spanLogoResultado").removeClass("fa fa-ban ban");
+            $("#spanLogoResultado").removeClass("fa fa-check-circle check");
             $("#mensajeResultadoBueno").empty();
             $("#mensajeResultadoMalo").empty();
           }, 3000);
@@ -92,18 +101,20 @@ $(document).ready(function() {
         //Etiqueta repetida
         case "404":
           //var newDiv = $("<div>");
-          var resultadoImagen = $("<img>");
-          resultadoImagen.attr("src", "../images/wrong.png");
-          resultadoImagen.attr("class", "resultadoImagen");
+          //var resultadoImagen = $("<img>");
+          //resultadoImagen.attr("src", "../images/wrong.png");
+          //resultadoImagen.attr("class", "resultadoImagen");
           $("#mensajeResultadoMalo").text(data.message);
           //newDiv.attr("class", "comentario");
           setTimeout(function() {
             $("#serialEtiqueta").val("");
           }, 2000);
-          $("#logoResultado").append(resultadoImagen);
+          //$("#logoResultado").append(resultadoImagen);
+          $("#spanLogoResultado").addClass("fa fa-ban ban");
           //$("#Resultado").append(newDiv);
           setTimeout(function() {
-            $("#logoResultado").empty();
+            $("#spanLogoResultado").removeClass("fa fa-ban ban");
+            $("#spanLogoResultado").removeClass("fa fa-check-circle check");
             $("#mensajeResultadoBueno").empty();
             $("#mensajeResultadoMalo").empty();
           }, 3000);
@@ -115,19 +126,21 @@ $(document).ready(function() {
 
         //Error de Servidor
         case "500":
-          //var newDiv = $("<div>");
-          var resultadoImagen = $("<img>");
-          resultadoImagen.attr("src", "../images/wrong.png");
-          resultadoImagen.attr("class", "resultadoImagen");
+         //var newDiv = $("<div>");
+          //var resultadoImagen = $("<img>");
+          //resultadoImagen.attr("src", "../images/wrong.png");
+          //resultadoImagen.attr("class", "resultadoImagen");
           $("#mensajeResultadoMalo").text(data.message);
           //newDiv.attr("class", "comentario");
           setTimeout(function() {
             $("#serialEtiqueta").val("");
           }, 2000);
-          $("#logoResultado").append(resultadoImagen);
+          //$("#logoResultado").append(resultadoImagen);
+          $("#spanLogoResultado").addClass("fa fa-ban ban");
           //$("#Resultado").append(newDiv);
           setTimeout(function() {
-            $("#logoResultado").empty();
+            $("#spanLogoResultado").removeClass("fa fa-ban ban");
+            $("#spanLogoResultado").removeClass("fa fa-check-circle check");
             $("#mensajeResultadoBueno").empty();
             $("#mensajeResultadoMalo").empty();
           }, 3000);
@@ -140,26 +153,28 @@ $(document).ready(function() {
         //Etiqueta repetida no encontrada
         case "402":
          //var newDiv = $("<div>");
-         var resultadoImagen = $("<img>");
-         resultadoImagen.attr("src", "../images/wrong.png");
-         resultadoImagen.attr("class", "resultadoImagen");
-         $("#mensajeResultadoMalo").text(data.message);
-         //newDiv.attr("class", "comentario");
-         setTimeout(function() {
-           $("#serialEtiqueta").val("");
-         }, 2000);
-         $("#logoResultado").append(resultadoImagen);
-         //$("#Resultado").append(newDiv);
-         setTimeout(function() {
-           $("#logoResultado").empty();
-           $("#mensajeResultadoBueno").empty();
-           $("#mensajeResultadoMalo").empty();
-         }, 3000);
-         getLast6();
-         produccionPorhora();
-         produccionTurnos();
-         produccionPorsemana();
-         break;
+          //var resultadoImagen = $("<img>");
+          //resultadoImagen.attr("src", "../images/wrong.png");
+          //resultadoImagen.attr("class", "resultadoImagen");
+          $("#mensajeResultadoMalo").text(data.message);
+          //newDiv.attr("class", "comentario");
+          setTimeout(function() {
+            $("#serialEtiqueta").val("");
+          }, 2000);
+          //$("#logoResultado").append(resultadoImagen);
+          $("#spanLogoResultado").addClass("fa fa-ban ban");
+          //$("#Resultado").append(newDiv);
+          setTimeout(function() {
+            $("#spanLogoResultado").removeClass("fa fa-ban ban");
+            $("#spanLogoResultado").removeClass("fa fa-check-circle check");
+            $("#mensajeResultadoBueno").empty();
+            $("#mensajeResultadoMalo").empty();
+          }, 3000);
+          getLast6();
+          produccionPorhora();
+          produccionTurnos();
+          produccionPorsemana();
+          break;
       }
     });
 
@@ -236,7 +251,6 @@ $(document).ready(function() {
     // Grab the last 6 scan labels
 
     $.get("/api/fa1/all/tabla/seisetiquetas", function(datos) {
-      
       //console.log(data);
       const { data } = datos;
       // For each registry...

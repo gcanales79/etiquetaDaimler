@@ -13,7 +13,11 @@ $(document).ready(function() {
   $("#submit").on("click", function(event) {
     event.preventDefault();
     //console.log("Submitt button");
-    $("#Resultado").empty();
+    //$("#Resultado").empty();
+    $("#spanLogoResultado").removeClass("fa fa-ban ban");
+    $("#spanLogoResultado").removeClass("fa fa-check-circle check")
+    $("#mensajeResultadoBueno").empty();
+    $("#mensajeResultadoMalo").empty();
     var nuevoSerial = $("#serialEtiqueta")
       .val()
       .trim();
@@ -34,9 +38,10 @@ $(document).ready(function() {
         if (data) {
           //console.log(data);
           var newDiv = $("<div>");
-          var resultadoImagen = $("<img>");
-          resultadoImagen.attr("src", "../images/wrong.png");
-          resultadoImagen.attr("class", "resultadoImagen");
+          //var resultadoImagen = $("<span>");
+          //resultadoImagen.attr("src", "../images/wrong.png");
+          //resultadoImagen.attr("class", "'fa fa-ban ban'");
+          $("#spanLogoResultado").addClass("fa fa-ban ban");
           newDiv.text(
             "La etiqueta ya existe, por favor segregar la pieza para inspección de calidad"
           );
@@ -46,9 +51,9 @@ $(document).ready(function() {
           newButton.attr("type", "submit");
           newButton.attr("id", "cambioDeetiqueta");
           newButton.text("Pieza Segregada");
-          $("#Resultado").append(resultadoImagen);
-          $("#Resultado").append(newDiv);
-          $("#Resultado").append(newButton);
+          $("#logoResultado").append(resultadoImagen);
+          $("#mensajeResultadoMalo").append(newDiv);
+          $("#buttonResultado").append(newButton);
           $("#submit").prop("disabled", true);
 
           $.post("/api/repetido", newSerial).then(newSerial);
@@ -60,20 +65,25 @@ $(document).ready(function() {
           $.post("/api/serial", newSerial).then(function() {
             //console.log("El newSerial es: " + JSON.stringify(newSerial));
             var newDiv = $("<div>");
-            var resultadoImagen = $("<img>");
-            resultadoImagen.attr("src", "../images/good.png");
-            resultadoImagen.attr("class", "resultadoImagen");
+            //var resultadoImagen = $("<img>");
+            //resultadoImagen.attr("src", "../images/good.png");
+            //resultadoImagen.attr("class", "resultadoImagen");
+            $("#spanLogoResultado").addClass("fa fa-check-circle check");
             newDiv.text("Etiqueta Correcta");
             newDiv.attr("class", "comentariobueno");
             //Borra el dato de la etiqueta despues de 3 segundos
             setTimeout(function() {
               $("#serialEtiqueta").val("");
             }, 2000);
-            $("#Resultado").append(resultadoImagen);
-            $("#Resultado").append(newDiv);
+            //$("#Resultado").append(resultadoImagen);
+            $("#mensajeResultadoBueno").append(newDiv);
             //Borrar el resultado despues de unos segundos
             setTimeout(function() {
-              $("#Resultado").empty();
+              //$("#Resultado").empty();
+              $("#spanLogoResultado").removeClass("fa fa-ban ban");
+              $("#spanLogoResultado").removeClass("fa fa-check-circle check")
+              $("#mensajeResultadoBueno").empty();
+              $("#mensajeResultadoMalo").empty();
             }, 3000);
             getLast6();
             produccionPorhora();
@@ -105,7 +115,13 @@ $(document).ready(function() {
   $(document).on("click", "#cambioDeetiqueta", function(event) {
     event.preventDefault();
     $("#serialEtiqueta").val("");
-    window.location.href = "./produccion";
+    $("#spanLogoResultado").removeClass("fa fa-ban ban");
+    $("#spanLogoResultado").removeClass("fa fa-check-circle check")
+    $("#mensajeResultadoBueno").empty();
+    $("#mensajeResultadoMalo").empty();
+    $("#buttonResultado").empty();
+    $("#submit").prop("disabled", false);
+    //window.location.href = "./produccion/daimler";
     getLast6();
   });
 

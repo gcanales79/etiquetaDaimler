@@ -9,8 +9,10 @@ function addSerial(req,res){
     const{serial}=req.body;
     let numero_parte=serial.substring(serial.indexOf("P")+1,serial.indexOf("P")+9)
     //console.log(numero_parte);
-    let numero_serie=serial.substring(serial.indexOf("TT")+2)
-    //console.log(numero_serie);
+    //console.log(-1*serial.length+14)
+  //!Aqui iria desde donde se quiere tomar numero de serie a partir de la derecha
+    let numero_serie=serial.slice(-14)
+    //console.log(`El numeor de serie es ${numero_serie}`);
     db.Numeropt.findOne({
         where:{
             linea:{
@@ -86,20 +88,21 @@ function getLastSixLabels(req,res){
               .then(function(response) {
                 // res.json(dbDaimler);
                 if (!response) {
-                  res
+                 return res
                     .status(404)
                     .send({ message: "Etiquetas no encontradas", alert: "Error" });
                 } else {
-                  res.status(200).send({ data: response, alert: "Success" });
+                 return res.status(200).send({ data: response, alert: "Success" });
                 }
                 //console.log(dbDaimler)
               })
               .catch((err) => {
-                res.status(500).send({ err: err, alert: "Error" });
+                return res.status(500).send({ err: err, alert: "Error" });
               });
           })
           .catch((err) => {
             console.log(err);
+            return
           });
       
 }
@@ -135,21 +138,22 @@ function productionPerHour (req, res) {
           .then((data) => {
             //console.log(data)
             if (!data) {
-              res
+             return res
                 .status(404)
                 .send({ message: "Datos no encontrados", alert: "Error" });
             } else {
-              res.status(200).send({ data: data, alert: "Success" });
+              return res.status(200).send({ data: data, alert: "Success" });
             }
           })
           .catch(function(err) {
-            res
+           return res
               .status(500)
               .send({ message: "Error de servidor", err: err, alert: "Error" });
           });
       })
       .catch((err) => {
         console.log(err);
+        return
       });
   };
 
