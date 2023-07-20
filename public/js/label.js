@@ -35,7 +35,7 @@ $(document).ready(function() {
           //console.log(data);
           var newDiv = $("<div>");
           var resultadoImagen = $("<img>");
-          resultadoImagen.attr("src", "./images/wrong.png");
+          resultadoImagen.attr("src", "../images/wrong.png");
           resultadoImagen.attr("class", "resultadoImagen");
           newDiv.text(
             "La etiqueta ya existe, por favor segregar la pieza para inspección de calidad"
@@ -61,7 +61,7 @@ $(document).ready(function() {
             //console.log("El newSerial es: " + JSON.stringify(newSerial));
             var newDiv = $("<div>");
             var resultadoImagen = $("<img>");
-            resultadoImagen.attr("src", "./images/good.png");
+            resultadoImagen.attr("src", "../images/good.png");
             resultadoImagen.attr("class", "resultadoImagen");
             newDiv.text("Etiqueta Correcta");
             newDiv.attr("class", "comentariobueno");
@@ -91,7 +91,7 @@ $(document).ready(function() {
     } else {
       var newDiv = $("<div>");
       var resultadoImagen = $("<img>");
-      resultadoImagen.attr("src", "./images/wrong.png");
+      resultadoImagen.attr("src", "../images/wrong.png");
       resultadoImagen.attr("class", "resultadoImagen");
       newDiv.text(
         "La etiqueta debe ser de 22 digitos o tiene el inicio incorrecto"
