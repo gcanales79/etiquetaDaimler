@@ -76,25 +76,45 @@ $(document).ready(function() {
     $(document).on("click", ".editPartNumber", function(event) {
       //console.log("Edit Part Number")
       event.preventDefault();
+      $("#lineName").empty();
       let pageNum = $(this).attr("page");
       let partNumberId = $(this).attr("value");
+      $.get("/get-all-lines",()=>{}).then((response)=>{
+        //console.log(response)
+        defaultOption=$("<option>");
+        defaultOption.text("Escoge una línea");
+        defaultOption.attr("selected","selected");
+        defaultOption.val("");
+        $("#lineName").append(defaultOption)
+
+        for (let i=0;i<response.data.length;i++){
+          //console.log(response.data[i].linea)
+          newOption=$("<option>");
+          newOption.text(response.data[i].linea);
+          newOption.attr("value", response.data[i].linea);
   
-      $.get(`/get-part-number/${partNumberId}`, () => {}).then((data) => {
-        const { partNumber, code } = data;
-        //console.log(user)
-        if (code !== "200") {
-          notificationToast(code, message);
-        } else {
-          $("#modalPartNumberLongTitle").text("Editar Numero de Parte");
-          $("#createPartNumber").text("Actualizar Numero de Parte");
-          $("#createPartNumber").attr("partNumberId", partNumberId);
-          $("#createPartNumber").attr("page", pageNum);
-          $("#modalPartNumberCenter").attr("type", "Update");
-          $("#partNumber").val(partNumber.numero_parte);
-          $("#lineaNumber").val(partNumber.linea);
-          $("#modalPartNumberCenter").modal("show");
+          $("#lineName").append(newOption);
         }
-      });
+        $.get(`/get-part-number/${partNumberId}`, () => {}).then((data) => {
+          const { partNumber, code } = data;
+          //console.log(user)
+          if (code !== "200") {
+            notificationToast(code, message);
+          } else {
+            $("#modalPartNumberLongTitle").text("Editar Numero de Parte");
+            $("#createPartNumber").text("Actualizar Numero de Parte");
+            $("#createPartNumber").attr("partNumberId", partNumberId);
+            $("#createPartNumber").attr("page", pageNum);
+            $("#modalPartNumberCenter").attr("type", "Update");
+            $("#partNumber").val(partNumber.numero_parte);
+            $("#lineaNumber").val(partNumber.linea);
+            $("#modalPartNumberCenter").modal("show");
+          }
+        });
+     
+      })
+  
+    
     });
   
     //Open Modal to Delete Part Number
@@ -172,6 +192,7 @@ $(document).ready(function() {
   
     //Open Modal to Add Part Number
     $("#addPartNumber").on("click", function(event) {
+      $("#lineName").empty();
       $.get("/get-all-lines",()=>{}).then((response)=>{
         //console.log(response)
         defaultOption=$("<option>");
