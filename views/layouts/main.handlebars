@@ -11,9 +11,9 @@
     integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
   <script defer src="https://kit.fontawesome.com/28f98ade22.js" crossorigin="anonymous"></script>
-  <link rel="stylesheet" href="/styles/toastr.css"/>
-  <link rel="stylesheet" href="/styles/pagination.css"/>
-  <link rel="stylesheet" href="/styles/styles.css"/>
+  <link rel="stylesheet" href="/styles/toastr.css" />
+  <link rel="stylesheet" href="/styles/pagination.css" />
+  <link rel="stylesheet" href="/styles/styles.css" />
   <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.css">
 
 </head>
@@ -36,20 +36,23 @@
         </li>-->
         {{#ifCond admin "||" produccion}}
         <li class="nav-item {{#if active_produccion}} active {{/if}}">
-          <a class="nav-link" href="/produccion">Produccion
-
-          </a>
+          <a class="nav-link" href="/produccion">Produccion  
+          </a>       
         </li>
+   
+
         <li class="nav-item">
           <a class="nav-link {{#if active_pruebas}}active{{/if}}" href=" /pruebas">Registro Manual</a>
         </li>
         {{/ifCond}}
         <!--Para los inspectores-->
-         {{#if inspector}}
-        <li class="nav-item {{#if active_produccion}} active {{/if}}">
+        {{#if inspector}}
+        <!li class="nav-item {{#if active_produccion}} active {{/if}}">
           <a class="nav-link" href="/produccion">Produccion
           </a>
         </li>
+     
+
         {{/if}}
 
         {{#if admin}}
@@ -62,6 +65,8 @@
             <a class="dropdown-item" href="/consulta">Consulta No. Serie</a>
             <a class="dropdown-item" href="/tabla">Ver Registros</a>
             <a class="dropdown-item" href="/alta">Alta Usuarios</a>
+            <a class="dropdown-item" href="/alta-linea">Alta Línea</a>
+            <a class="dropdown-item" href="/alta-numero-de-parte">Alta Numero de Parte</a>
           </div>
         </li>
         {{/if}}
@@ -82,9 +87,9 @@
   {{{body}}}
 
   <footer class="footer">
-      <div class="row justify-content-center">
-        <img src="../images/Logo_netzwerk.png" width="120" height="70">
-      </div>
+    <div class="row justify-content-center">
+      <img src="../images/Logo_netzwerk.png" width="120" height="70">
+    </div>
   </footer>
 
 

@@ -1,14 +1,14 @@
 <div class="container">
     <div class="row">
         <div class="col-sm-12 col-lg">
-            <h2>Etiqueta a Revisar Daimler</h2>
+            <h2>Etiqueta a Revisar FA-1</h2>
             <form>
                 <div class="input-group input-group-lg">
                     <div class="input-group-prepend">
                         <span class="input-group-text">Serial</span>
                     </div>
-                    <input type="number" class="form-control" autofocus="autofocus" id="serialEtiqueta" aria-label="Sizing example input"
-                        aria-describedby="inputGroup-sizing-lg">
+                    <input type="text" class="form-control" autofocus="autofocus" id="serialEtiqueta"
+                        aria-label="Sizing example input" aria-describedby="inputGroup-sizing-lg">
                 </div>
                 <br>
                 <button class="btn btn-primary" type="submit" id="submit">Revisar</button>
@@ -64,7 +64,7 @@
 
         </div>
         <div class="col-sm-12 col-lg">
-            <div class="row">
+            <div class="row justify-content-center">
                 <div class="card-deck">
                     <div class="card text-white bg-primary">
                         <div class="card-body">
@@ -89,45 +89,58 @@
 
             </div>
             <h2>Resultado</h2>
-            <div class="row justify-content-center" id="Resultado">
+            <div class="container">
+                <div class="row" id="Resultado">
+                    <div class="col-12" id="logoResultado">
+                        
+                    </div>
+                    <div class="col-12" id="mensajeResultadoBueno">
+                       
+                    </div>
+                    <div class="col-12" id="mensajeResultadoMalo">
+                       
+                    </div>
 
-
+                </div>
             </div>
 
-        </div>
-    </div>
 
-    <!-- Modal -->
-    <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Etiqueta con NP Diferente</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-12">
-                            <h3>
-                                El Numero de Parte de la etiqueta pasada y la nueva no coinciden. Si hubo cambio de
-                                numero
-                                puedes proceder. De lo contrario avisa al Ing. de Calidad y el Ing. de Producción y pon
-                                la piezas en cuarentena.
-                            </h3>
-                        </div>
+
+        </div>
+
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Etiqueta con NP Diferente</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <h3>
+                            El Numero de Parte de la etiqueta pasada y la nueva no coinciden. Si hubo cambio de
+                            numero
+                            puedes proceder. De lo contrario avisa al Ing. de Calidad y el Ing. de Producción y pon
+                            la piezas en cuarentena.
+                        </h3>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
-                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
             </div>
         </div>
     </div>
+</div>
 
 
 </div>
 <br>
-

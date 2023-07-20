@@ -29,9 +29,30 @@ module.exports = function (app) {
 
   });
 
+  //Get Production Home Page
+  app.get("/produccion",isAuthenticated,function(req,res){
+    if (req.user.role === "admin" || req.user.role === "produccion" || req.user.role ==="inspector") {
+      res.status(200);
+          /*let jsfile = [{jsfile:"https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.3/Chart.js"},
+          { jsfile: "/js/label.js" }];*/
+          res.render("homeproduccion", {
+            title: "produccion",
+            active_produccion: {
+              Register: true,
+            },
+            /*jsfile: jsfile,*/
+            
+          });
+        
+    }
+    else{
+      res.render("404")
+    }
+  })
 
-  //Get produccion page
-  app.get("/produccion", isAuthenticated, function (req, res) {
+
+  //Get Mercedes report page 
+  app.get("/produccion/daimler", isAuthenticated, function (req, res) {
     //console.log(req.user)
     if (req.user.role === "admin" || req.user.role === "produccion" || req.user.role ==="inspector") {
       res.status(200);
@@ -49,6 +70,35 @@ module.exports = function (app) {
               Register: true,
             },
             etiqueta: dbDaimler,
+            jsfile: jsfile,
+            
+          });
+        });
+    }
+    else{
+      res.render("404")
+    }
+  });
+
+  //Get FA-1
+  app.get("/produccion/fa1", isAuthenticated, function (req, res) {
+    //console.log(req.user)
+    if (req.user.role === "admin" || req.user.role === "produccion" || req.user.role ==="inspector") {
+      res.status(200);
+      db.Fa1.findAll({
+        limit: 6,
+        order: [["createdAt", "DESC"]],
+
+      })
+        .then(function (response) {
+          let jsfile = [{jsfile:"https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.3/Chart.js"},
+          { jsfile: "/js/label_fa1.js" }];
+          res.render("produccionfa1", {
+            title: "Produccion FA-1",
+            active_produccion: {
+              Register: true,
+            },
+            etiqueta: response,
             jsfile: jsfile,
             
           });
@@ -185,7 +235,57 @@ module.exports = function (app) {
     res.render("alta", {
       // sessionFlash: message,
       title: "alta",
-      active_alta: {
+      active_consulta: {
+        Register: true,
+      },
+      jsfile:jsfile,
+      
+      
+    });
+  }
+  else{
+    res.render("404")
+  }
+  });
+
+  //Carga la pagina para dar de alta los NP
+  app.get("/alta-numero-de-parte", isAuthenticated, function (req, res) {
+    //console.log(res.locals.sessionFlash)
+    //let message=res.locals.sessionFlash
+    //console.log(message)
+    let jsfile = [{jsfile:"/js/toastr.js"},{jsfile:"/js/pagination.js"},{ jsfile: "/js/alta_numeropt.js" }];
+    if(req.user.role==="admin"){
+      //console.log(res.locals.sessionFlash)
+    //res.status(200);
+    res.render("alta_numero", {
+      // sessionFlash: message,
+      title: "Alta de Numero de Parte",
+      active_consulta: {
+        Register: true,
+      },
+      jsfile:jsfile,
+      
+      
+    });
+  }
+  else{
+    res.render("404")
+  }
+  });
+
+  //Carga la pagina para dar de alta las lineas
+  app.get("/alta-linea", isAuthenticated, function (req, res) {
+    //console.log(res.locals.sessionFlash)
+    //let message=res.locals.sessionFlash
+    //console.log(message)
+    let jsfile = [{jsfile:"/js/toastr.js"},{jsfile:"/js/pagination.js"},{ jsfile: "/js/alta_linea.js" }];
+    if(req.user.role==="admin"){
+      //console.log(res.locals.sessionFlash)
+    //res.status(200);
+    res.render("alta_linea", {
+      // sessionFlash: message,
+      title: "Alta de Línea",
+      active_consulta: {
         Register: true,
       },
       jsfile:jsfile,

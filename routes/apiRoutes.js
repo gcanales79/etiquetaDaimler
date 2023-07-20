@@ -12,6 +12,8 @@ const Sequelize = require("sequelize");
 const Op = Sequelize.Op;
 const sgMail = require("@sendgrid/mail");
 var isAuthenticated = require("../config/middleware/isAuthenticated");
+const LineController = require("../controllers/linea");
+const Fa1Controller = require("../controllers/fa1");
 
 module.exports = function(app) {
   // Using the passport.authenticate middleware with our local strategy.
@@ -327,37 +329,38 @@ module.exports = function(app) {
 
   //To show the last 6 scan labels
   app.get("/api/all/tabla/seisetiquetas", function(req, res) {
-    db.Daimler.count().then(count=>{
-      db.Daimler.findAll({
-        where: {
-          id: {
-            [Op.gte]: count*0.95,
+    db.Daimler.count()
+      .then((count) => {
+        db.Daimler.findAll({
+          where: {
+            id: {
+              [Op.gte]: count * 0.95,
+            },
+            uso_etiqueta: {
+              [Op.eq]: "Produccion",
+            },
           },
-          uso_etiqueta: {
-            [Op.eq]: "Produccion",
-          },
-        },
-        limit: 6,
-        order: [["createdAt", "DESC"]],
-      })
-        .then(function(dbDaimler) {
-          // res.json(dbDaimler);
-          if (!dbDaimler) {
-            res
-              .status(404)
-              .send({ message: "Datos no encontrados", alert: "Error" });
-          } else {
-            res.status(200).send({ data: dbDaimler, alert: "Success" });
-          }
-          //console.log(dbDaimler)
+          limit: 6,
+          order: [["createdAt", "DESC"]],
         })
-        .catch((err) => {
-          res.status(500).send({ err: err, alert: "Error" });
-        });
-    }).catch(err=>{
-      console.log(err)
-    })
-    
+          .then(function(dbDaimler) {
+            // res.json(dbDaimler);
+            if (!dbDaimler) {
+              res
+                .status(404)
+                .send({ message: "Datos no encontrados", alert: "Error" });
+            } else {
+              res.status(200).send({ data: dbDaimler, alert: "Success" });
+            }
+            //console.log(dbDaimler)
+          })
+          .catch((err) => {
+            res.status(500).send({ err: err, alert: "Error" });
+          });
+      })
+      .catch((err) => {
+        console.log(err);
+      });
   });
 
   //To add the date it was inspected in GP-12
@@ -403,23 +406,24 @@ module.exports = function(app) {
   //To get the last 6 GP12 scan labels
   //To show the last 6 scan labels
   app.get("/api/all/tabla/gp12seisetiquetas", function(req, res) {
-    db.Daimler.count().then(count=>{
-      db.Daimler.findAll({
-        where: {
-          id: {
-            [Op.gte]: count*0.95,
+    db.Daimler.count()
+      .then((count) => {
+        db.Daimler.findAll({
+          where: {
+            id: {
+              [Op.gte]: count * 0.95,
+            },
           },
-        },
-        limit: 6,
-        order: [["fecha_gp12", "DESC"]],
-      }).then(function(dbDaimler) {
-        res.json(dbDaimler);
-        //console.log(dbDaimler)
+          limit: 6,
+          order: [["fecha_gp12", "DESC"]],
+        }).then(function(dbDaimler) {
+          res.json(dbDaimler);
+          //console.log(dbDaimler)
+        });
+      })
+      .catch((err) => {
+        console.log(err);
       });
-    }).catch(err=>{
-      console.log(err)
-    })
-    
   });
 
   //Get data between hour
@@ -433,44 +437,45 @@ module.exports = function(app) {
     //console.log(fechainicial)
     //console.log(fechafinal)
     //console.log(req.params.fechafinal)
-    db.Daimler.count().then(count=>{
-      // console.log(count)
-      db.Daimler.findAndCountAll({
-        where: {
-          id: {
-            [Op.gte]: count*0.90,
+    db.Daimler.count()
+      .then((count) => {
+        // console.log(count)
+        db.Daimler.findAndCountAll({
+          where: {
+            id: {
+              [Op.gte]: count * 0.9,
+            },
+            createdAt: {
+              [Op.gte]: fechainicial,
+              [Op.lte]: fechafinal,
+            },
+            //Le agregue esto para que no cuente las cambiadas
+            etiqueta_remplazada: null,
+            registro_auto: {
+              [Op.eq]: 1,
+            },
           },
-          createdAt: {
-            [Op.gte]: fechainicial,
-            [Op.lte]: fechafinal,
-          },
-          //Le agregue esto para que no cuente las cambiadas
-          etiqueta_remplazada: null,
-          registro_auto: {
-            [Op.eq]: 1,
-          },
-        },
-        distinct: true,
-        col: "serial",
-      })
-        .then((data) => {
-          if (!data) {
-            res
-              .status(404)
-              .send({ message: "Datos no encontrados", alert: "Error" });
-          } else {
-            res.status(200).send({ data: data, alert: "Success" });
-          }
+          distinct: true,
+          col: "serial",
         })
-        .catch(function(err) {
-          res
-            .status(500)
-            .send({ message: "Error de servidor", err: err, alert: "Error" });
-        });
-    }).catch(err=>{
-      console.log(err)
-    })
-    
+          .then((data) => {
+            if (!data) {
+              res
+                .status(404)
+                .send({ message: "Datos no encontrados", alert: "Error" });
+            } else {
+              res.status(200).send({ data: data, alert: "Success" });
+            }
+          })
+          .catch(function(err) {
+            res
+              .status(500)
+              .send({ message: "Error de servidor", err: err, alert: "Error" });
+          });
+      })
+      .catch((err) => {
+        console.log(err);
+      });
   });
 
   //* SMS Produccion del turno
@@ -706,11 +711,11 @@ module.exports = function(app) {
     })
       .then((userCreated) => {
         if (!userCreated) {
-          res.status(404).send({ code: "404", message: "Usuario no creado" });
+          res.status(404).send({ code: "404", message: "Usuario no agregado" });
         } else {
           res
             .status(200)
-            .send({ code: "200", message: "Usuario creacdo exitosamente" });
+            .send({ code: "200", message: "Usuario agregado exitosamente" });
         }
       })
       .catch((err) => {
@@ -771,15 +776,15 @@ module.exports = function(app) {
       });
   });
 
-  //Edit User by in
+  //Edit User by id
   app.put("/update-user/:id", isAuthenticated, (req, res) => {
     const { id } = req.params;
-    const { email, password,role } = req.body;
+    const { email, password, role } = req.body;
     db.User.update(
       {
-        email:email,
-        password:password,
-        role:role
+        email: email,
+        password: password,
+        role: role,
       },
       {
         where: {
@@ -795,16 +800,214 @@ module.exports = function(app) {
             code: "404",
           });
         } else {
-            res.status(200).send({
-              message: "Usuario actualizado correctamente",
-              code: "200",
-            });
-          
+          res.status(200).send({
+            message: "Usuario actualizado correctamente",
+            code: "200",
+          });
         }
       })
       .catch((err) => {
-        console.log(err)
-        res.status(500).send({ code:"500",message: "Error del servidor" });
+        console.log(err);
+        res.status(500).send({ code: "500", message: "Error del servidor" });
       });
   });
+
+  //Add Part Number
+  app.post(
+    "/add-part-number",
+    /*isAuthenticated,*/ (req, res) => {
+      const { numero_parte, linea } = req.body;
+      if (!numero_parte || !linea) {
+        res.status(200).send({
+          code: "500",
+          message: "Numero de parte y línea son obligatorios",
+        });
+      } else {
+        db.Numeropt.findOne({
+          where: {
+            linea: {
+              [Op.eq]: linea,
+            },
+            numero_parte: {
+              [Op.eq]: numero_parte,
+            },
+          },
+        })
+          .then((foundPartNumber) => {
+            if (foundPartNumber) {
+              res.status(200).send({
+                code: "500",
+                message: "Numero de parte ya agregado anteriormente",
+              });
+            } else {
+              db.Numeropt.create({
+                numero_parte: numero_parte,
+                linea: linea,
+              })
+                .then((partnumberCreated) => {
+                  if (!partnumberCreated) {
+                    res.status(404).send({
+                      code: "404",
+                      message: "Numero de parte no agregado",
+                    });
+                  } else {
+                    res.status(200).send({
+                      code: "200",
+                      message: "Numero de parte agregado exitosamente",
+                    });
+                  }
+                })
+                .catch((err) => {
+                  res.status(500).send({
+                    code: "500",
+                    message: "Error del servidor",
+                    err: err,
+                  });
+                });
+            }
+          })
+          .catch((err) => {
+            res.status(500),
+              send({ code: "500", message: "Error del servidor", err: err });
+          });
+      }
+    }
+  );
+
+  //Get Part Number by id
+  app.get("/get-part-number/:id", isAuthenticated, (req, res) => {
+    const { id } = req.params;
+    db.Numeropt.findOne({
+      where: {
+        id: {
+          [Op.eq]: id,
+        },
+      },
+    })
+      .then((partNumberStored) => {
+        if (!partNumberStored) {
+          res.status(400).send({
+            code: "400",
+            message: "No se encontro ningún numero de parte",
+          });
+        } else {
+          res.status(200).send({ code: "200", partNumber: partNumberStored });
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+        res.status(500).send({ code: "500", message: "Error de servidor" });
+      });
+  });
+
+  //Get All Part Numbers
+  app.get("/get-all-part-numbers", isAuthenticated, (req, res) => {
+    db.Numeropt.findAll({
+      order: [["numero_parte", "ASC"]],
+    })
+      .then((partNumberList) => {
+        if (!partNumberList) {
+          res.send({
+            message: "No se encontraron numeros de parte",
+            code: "404",
+          });
+        } else {
+          res.send({ data: partNumberList, code: "200" });
+        }
+      })
+      .catch((err) => {
+        res.send({ message: "Error de servidor", code: "500", err: err });
+      });
+  });
+
+  //Delete Part Number by id
+  app.delete("/delete-part-number/:id", isAuthenticated, (req, res) => {
+    const { id } = req.params;
+    db.Numeropt.destroy({
+      where: {
+        id: {
+          [Op.eq]: id,
+        },
+      },
+    })
+      .then((partNumberDeleted) => {
+        if (!partNumberDeleted) {
+          res
+            .status(404)
+            .send({
+              code: "404",
+              message: "No se borro ningún numero de parte",
+            });
+        } else {
+          res
+            .status(200)
+            .send({
+              code: "200",
+              message: "Numero de parte borrado exitosamente",
+            });
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+        res.status(500).send({ code: "200", message: "Error de servidor" });
+      });
+  });
+
+  //Edit Part Number by id
+  app.put("/update-part-number/:id", isAuthenticated, (req, res) => {
+    const { id } = req.params;
+    const { numero_parte, linea } = req.body;
+    db.Numeropt.update(
+      {
+        numero_parte: numero_parte,
+        linea: linea,
+      },
+      {
+        where: {
+          id: id,
+        },
+      }
+    )
+      .then((partNumberStore) => {
+        // console.log(userStore);
+        if (partNumberStore[0] === 0) {
+          res.status(404).send({
+            message: "Numero de parte no encontrado",
+            code: "404",
+          });
+        } else {
+          res.status(200).send({
+            message: "Numero de parte actualizado correctamente",
+            code: "200",
+          });
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+        res.status(500).send({ code: "500", message: "Error del servidor" });
+      });
+  });
+
+  //Add Line
+  app.post("/add-line", isAuthenticated, LineController.addLine);
+
+  // Get Line by id
+  app.get("/get-line/:id", isAuthenticated, LineController.getLine);
+
+  //Get All Lines
+  app.get("/get-all-lines", isAuthenticated, LineController.getAllLines);
+
+  //Delete Line by id
+  app.delete("/delete-line/:id", isAuthenticated, LineController.deleteLine);
+
+  //Edit Line by id
+  app.put("/update-line/:id", isAuthenticated, LineController.editLine);
+
+  //Add Serial FA-1
+  app.post("/api/fa1/serial", Fa1Controller.addSerial);
+
+  //Find the last six pieces builts
+  app.get("/api/fa1/all/tabla/seisetiquetas",Fa1Controller.getLastSixLabels)
+
+  app.get("/fa1/produccionhora/:fechainicial/:fechafinal",Fa1Controller.productionPerHour)
 };

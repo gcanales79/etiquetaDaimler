@@ -8,6 +8,26 @@
   padding-bottom:80px;
 }
 
+#logoResultado{
+  text-align: center;
+  height: 30%;
+  width: 30%;
+  /*background-color: red;*/
+}
+
+#mensajeResultadoBueno{
+  /*background-color:green;*/
+  text-align: center !important;
+  color: green;
+  font-size: 30px;
+}
+
+#mensajeResultadoMalo{
+  /*background-color:green;*/
+  text-align: center !important;
+  color: red;
+  font-size: 30px;
+}
 
 
 .comentario {
@@ -23,6 +43,7 @@
 .comentariobueno {
   color: green;
   font-size: 30px;
+  text-align:center;
 }
 
 .footer {
@@ -32,6 +53,10 @@
   width: 100%;
   height: auto;
   background-color: #1f1f23;
+}
+
+.buttonMain{
+  margin-top:20px;
 }
 
 

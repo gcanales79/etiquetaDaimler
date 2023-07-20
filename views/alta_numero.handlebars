@@ -1,0 +1,37 @@
+<div id="content">
+
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container-fluid justify-content-end">
+            <button type="button" id="addPartNumber" class="btn btn-info">
+                <i class="fas fa-plus-square"></i>
+                <span>Agregar Numero de Parte</span>
+            </button>
+        </div>
+    </nav>
+    <div class="container-fluid">
+        <div class="table-responsive-md table-striped table-sm">
+            <table class="table">
+                <thead>
+                    <th scope="col">Numero de Parte</th>
+                    <th scope="col">Línea</th>
+                    <th scope="col"></th>
+                </thead>
+
+                <tbody id="partNumberList">
+
+                </tbody>
+            </table>
+        </div>
+
+        <div class="data-container"></div>
+        <div class="row justify-content-center">
+            <div class="paginationjs" id="pagination-containerPartNumber">
+
+            </div>
+        </div>
+
+
+    </div>
+</div>
+{{>modalAdmin}}
+{{>modalPartNumber}}

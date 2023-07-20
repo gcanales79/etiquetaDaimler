@@ -1,0 +1,38 @@
+-<div class="modal fadeIn" id="modalPartNumberCenter" role="dialog" aria-labelledby="exampleModalCenterTitle"
+    aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" id="modalPartNumberDialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalPartNumberLongTitle"></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="modalPartNumberBody">
+                <form role="form" id="partNumberForm">
+                    <div class="form-group" id="partNumberForm">
+                        <label for="Numero de Parte">Numero de Parte</label>
+                        <input type="number" class="form-control" id="partNumber" aria-describedby="Numero de Parte"
+                            placeholder="Introducir Numero de Parte" required>
+                    </div>
+                    <!--div class="form-group" id="lineNumberForm">
+                        <label for="Linea">Linea</label>
+                        <input type="text" class="form-control" id="lineaNumber" placeholder="Linea"
+                            required>
+                    </div-->
+                    <div class="form-group">
+                        <label class="my-1 mr-2" for="inlineFormCustomSelectPref">Línea</label>
+                        <select class="custom-select custom-select-sm" id="lineName" required>
+                        </select>
+                    </div>
+                
+                    <div class="col">
+                        <button type="submit" style="width: 100%" id="createPartNumber" class="btn btn-primary"></button>
+                    </div>
+                </form>
+
+
+            </div>
+        </div>
+    </div>
+</div>
