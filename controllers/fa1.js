@@ -162,9 +162,13 @@ function productionPerHour (req, res) {
 
 
 //* SMS Produccion del turno
-function productionReport (req, res) {
+function productionReport (req, res) { 
   var telefonos = [
     process.env.GUS_PHONE,
+    process.env.OMAR_PHONE,
+    process.env.CHAVA_PHONE,
+    process.env.CHAGO_PHONE,
+    process.env.JOEL_PHONE
   ];
 
   //* Send messages thru SMS
