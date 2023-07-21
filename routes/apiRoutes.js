@@ -1007,7 +1007,9 @@ module.exports = function(app) {
   app.post("/api/fa1/serial", Fa1Controller.addSerial);
 
   //Find the last six pieces builts
-  app.get("/api/fa1/all/tabla/seisetiquetas",Fa1Controller.getLastSixLabels)
+  app.get("/api/fa1/all/tabla/seisetiquetas",Fa1Controller.getLastSixLabels);
 
-  app.get("/fa1/produccionhora/:fechainicial/:fechafinal",Fa1Controller.productionPerHour)
+  app.get("/fa1/produccionhora/:fechainicial/:fechafinal",Fa1Controller.productionPerHour);
+
+  app.post("/fa1/reporte",Fa1Controller.productionReport);
 };

@@ -2,6 +2,9 @@ var db = require("../models");
 const Sequelize = require("sequelize");
 const Op = Sequelize.Op;
 const moment = require("moment-timezone");
+const accountSid = process.env.TWILIO_ACCOUNT_SID;
+const authToken = process.env.TWILIO_AUTH_TOKEN;
+const client = require("twilio")(accountSid, authToken);
 
 
 //Add a new label
@@ -157,9 +160,59 @@ function productionPerHour (req, res) {
       });
   };
 
+
+//* SMS Produccion del turno
+function productionReport (req, res) {
+  var telefonos = [
+    process.env.GUS_PHONE,
+  ];
+
+  //* Send messages thru SMS
+  /*
+  for (var i = 0; i < telefonos.length; i++) {
+    client.messages.create({
+      from: process.env.TWILIO_PHONE, // From a valid Twilio number
+      body: "La producción de la linea Daimler del turno de " + req.body.turno + " fue de: " + req.body.piezasProducidas,
+      to: telefonos[i],  // Text this number
+
+    })
+      .then(function (message) {
+        console.log("Mensaje de texto: " + message.sid);
+        res.json(message);
+      });
+  }
+*/
+
+  //* Send message thry whatsapp
+  for (var i = 0; i < telefonos.length; i++) {
+    console.log("whatsapp:" + telefonos[i]);
+    client.messages
+      .create({
+        from: "whatsapp:" + process.env.TWILIO_PHONE, // From a valid Twilio number,
+        body:
+          "La producción de la linea de FA-1 del turno de " +
+          req.body.turno +
+          " fue de: " +
+          req.body.piezasProducidas,
+        to: "whatsapp:" + telefonos[i], // Text this number
+        /*La producción de la linea de Daimler del turno de {{1}} fue de: {{2}}*/
+      })
+      .then(function(message) {
+        console.log("Whatsapp:" + message.sid);
+        return res.json(message);
+      })
+      .catch(function(error) {
+        return res.json(error);
+      });
+  }
+};
+
+
 module.exports={
    addSerial,
    getLastSixLabels,
-   productionPerHour
+   productionPerHour,
+   productionReport,
+   
 
   }
