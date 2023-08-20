@@ -177,11 +177,11 @@ function productionPerHour (req, res) {
 function productionReport (req, res) { 
   var telefonos = [
     process.env.GUS_PHONE,
-    process.env.OMAR_PHONE,
+    /*process.env.OMAR_PHONE,
     process.env.CHAVA_PHONE,
     process.env.CHAGO_PHONE,
     process.env.JOEL_PHONE,
-    process.env.BERNARDO
+    process.env.BERNARDO*/
   ];
 
   //* Send messages thru SMS
