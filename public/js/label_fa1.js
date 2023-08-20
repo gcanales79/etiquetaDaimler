@@ -33,22 +33,19 @@ $(document).ready(function() {
       serial: nuevoSerial,
     };
 
-    console.log(nuevoSerial);
+    //console.log(nuevoSerial);
 
     $.post("/api/fa1/serial", {
       serial: nuevoSerial,
     }).then((data) => {
-      console.log(data);
+      //console.log(data);
       switch (data.code) {
         //Etiqueta correcta
         case "200":
-          //var newDiv = $("<div>");
-          //var resultadoImagen = $("<img>");
-          //resultadoImagen.attr("src", "../images/good.png");
-          //resultadoImagen.attr("class", "resultadoImagen");
+
           $("#spanLogoResultado").addClass("fa fa-check-circle check");
           $("#mensajeResultadoBueno").text(data.message);
-          //$("#mensajeResultado").attr("class", "comentariobueno");
+ 
           //Borra el dato de la etiqueta despues de 3 segundos
           setTimeout(function() {
             $("#serialEtiqueta").val("");
@@ -57,67 +54,38 @@ $(document).ready(function() {
             $("#mensajeResultadoBueno").empty();
             $("#mensajeResultadoMalo").empty();
           }, 2000);
-          //$("#logoResultado").append(resultadoImagen);
-          //$("#Resultado").append(newDiv);
-          //Borrar el resultado despues de unos segundos
-          /*setTimeout(function() {
+
+          getLast6();
+          produccionPorhora();
+          produccionTurnos();
+          produccionPorsemana();
+          break;
+
+        //Mensaje de rechazo
+        case "400":
+          
+        
+          $("#spanLogoResultado").addClass("fa fa-ban ban");
+          $("#mensajeResultadoMalo").text(data.message);
+
+          //Limpia el codigo y el error después de dos segundos
+         /* setTimeout(function() {
+            $("#serialEtiqueta").val("");
             $("#spanLogoResultado").removeClass("fa fa-ban ban");
             $("#spanLogoResultado").removeClass("fa fa-check-circle check");
             $("#mensajeResultadoBueno").empty();
             $("#mensajeResultadoMalo").empty();
           }, 3000);*/
-          getLast6();
-          produccionPorhora();
-          produccionTurnos();
-          produccionPorsemana();
-          break;
 
-        //Numero de parte no agregado
-        case "401":
-          //var newDiv = $("<div>");
-          //var resultadoImagen = $("<img>");
-          //resultadoImagen.attr("src", "../images/wrong.png");
-          //resultadoImagen.attr("class", "resultadoImagen");
-          $("#mensajeResultadoMalo").text(data.message);
-          //newDiv.attr("class", "comentario");
-          setTimeout(function() {
-            $("#serialEtiqueta").val("");
-          }, 2000);
-          //$("#logoResultado").append(resultadoImagen);
-          $("#spanLogoResultado").addClass("fa fa-ban ban");
-          //$("#Resultado").append(newDiv);
-          setTimeout(function() {
-            $("#spanLogoResultado").removeClass("fa fa-ban ban");
-            $("#spanLogoResultado").removeClass("fa fa-check-circle check");
-            $("#mensajeResultadoBueno").empty();
-            $("#mensajeResultadoMalo").empty();
-          }, 3000);
-          getLast6();
-          produccionPorhora();
-          produccionTurnos();
-          produccionPorsemana();
-          break;
+          //Cuando una pieza sale mal se pone el boton de segregar
+          var newButton = $("<button>");
+          newButton.attr("class", "btn btn-primary");
+          newButton.attr("type", "submit");
+          newButton.attr("id", "cambioDeetiqueta");
+          newButton.text("Contención de Pieza");
+          $("#buttonResultado").append(newButton);
+          $("#submit").prop("disabled", true);
 
-        //Etiqueta repetida
-        case "404":
-          //var newDiv = $("<div>");
-          //var resultadoImagen = $("<img>");
-          //resultadoImagen.attr("src", "../images/wrong.png");
-          //resultadoImagen.attr("class", "resultadoImagen");
-          $("#mensajeResultadoMalo").text(data.message);
-          //newDiv.attr("class", "comentario");
-          setTimeout(function() {
-            $("#serialEtiqueta").val("");
-          }, 2000);
-          //$("#logoResultado").append(resultadoImagen);
-          $("#spanLogoResultado").addClass("fa fa-ban ban");
-          //$("#Resultado").append(newDiv);
-          setTimeout(function() {
-            $("#spanLogoResultado").removeClass("fa fa-ban ban");
-            $("#spanLogoResultado").removeClass("fa fa-check-circle check");
-            $("#mensajeResultadoBueno").empty();
-            $("#mensajeResultadoMalo").empty();
-          }, 3000);
           getLast6();
           produccionPorhora();
           produccionTurnos();
@@ -126,19 +94,13 @@ $(document).ready(function() {
 
         //Error de Servidor
         case "500":
-         //var newDiv = $("<div>");
-          //var resultadoImagen = $("<img>");
-          //resultadoImagen.attr("src", "../images/wrong.png");
-          //resultadoImagen.attr("class", "resultadoImagen");
+
           $("#mensajeResultadoMalo").text(data.message);
-          //newDiv.attr("class", "comentario");
+    
+          $("#spanLogoResultado").addClass("fa fa-ban ban");
+
           setTimeout(function() {
             $("#serialEtiqueta").val("");
-          }, 2000);
-          //$("#logoResultado").append(resultadoImagen);
-          $("#spanLogoResultado").addClass("fa fa-ban ban");
-          //$("#Resultado").append(newDiv);
-          setTimeout(function() {
             $("#spanLogoResultado").removeClass("fa fa-ban ban");
             $("#spanLogoResultado").removeClass("fa fa-check-circle check");
             $("#mensajeResultadoBueno").empty();
@@ -150,98 +112,22 @@ $(document).ready(function() {
           produccionPorsemana();
           break;
 
-        //Etiqueta repetida no encontrada
-        case "402":
-         //var newDiv = $("<div>");
-          //var resultadoImagen = $("<img>");
-          //resultadoImagen.attr("src", "../images/wrong.png");
-          //resultadoImagen.attr("class", "resultadoImagen");
-          $("#mensajeResultadoMalo").text(data.message);
-          //newDiv.attr("class", "comentario");
-          setTimeout(function() {
-            $("#serialEtiqueta").val("");
-          }, 2000);
-          //$("#logoResultado").append(resultadoImagen);
-          $("#spanLogoResultado").addClass("fa fa-ban ban");
-          //$("#Resultado").append(newDiv);
-          setTimeout(function() {
-            $("#spanLogoResultado").removeClass("fa fa-ban ban");
-            $("#spanLogoResultado").removeClass("fa fa-check-circle check");
-            $("#mensajeResultadoBueno").empty();
-            $("#mensajeResultadoMalo").empty();
-          }, 3000);
-          getLast6();
-          produccionPorhora();
-          produccionTurnos();
-          produccionPorsemana();
-          break;
       }
     });
 
-    /* $.get("/api/" + nuevoSerial, function(data) {
-          if (data) {
-            //console.log(data);
-            var newDiv = $("<div>");
-            var resultadoImagen = $("<img>");
-            resultadoImagen.attr("src", "./images/wrong.png");
-            resultadoImagen.attr("class", "resultadoImagen");
-            newDiv.text(
-              "La etiqueta ya existe, por favor segregar la pieza para inspección de calidad"
-            );
-            newDiv.attr("class", "comentario");
-            var newButton = $("<button>");
-            newButton.attr("class", "btn btn-primary");
-            newButton.attr("type", "submit");
-            newButton.attr("id", "cambioDeetiqueta");
-            newButton.text("Pieza Segregada");
-            $("#Resultado").append(resultadoImagen);
-            $("#Resultado").append(newDiv);
-            $("#Resultado").append(newButton);
-            $("#submit").prop("disabled", true);
   
-            $.post("/api/repetido", newSerial).then(newSerial);
-            $.post("/message", newSerial).then(newSerial);
-            $.post("/api/crearregistro/repetido", newSerial).then(newSerial);
-  
-            return;
-          } else {
-            $.post("/api/serial", newSerial).then(function() {
-              //console.log("El newSerial es: " + JSON.stringify(newSerial));
-              var newDiv = $("<div>");
-              var resultadoImagen = $("<img>");
-              resultadoImagen.attr("src", "./images/good.png");
-              resultadoImagen.attr("class", "resultadoImagen");
-              newDiv.text("Etiqueta Correcta");
-              newDiv.attr("class", "comentariobueno");
-              //Borra el dato de la etiqueta despues de 3 segundos
-              setTimeout(function() {
-                $("#serialEtiqueta").val("");
-              }, 2000);
-              $("#Resultado").append(resultadoImagen);
-              $("#Resultado").append(newDiv);
-              //Borrar el resultado despues de unos segundos
-              setTimeout(function() {
-                $("#Resultado").empty();
-              }, 3000);
-              getLast6();
-              produccionPorhora();
-              produccionTurnos();
-              produccionPorsemana();
-              //Esta funcion permite recargar la pagina para que saliera la tabla
-              //
-                //              setTimeout(function () {
-                 //                 window.location.href = "./";
-                   //           }, 5000);
-            });
-            return;
-          }
-        });*/
   });
 
+    //Al dar click en Contener pieza se limpia el area y se vuelve activar el serial.
   $(document).on("click", "#cambioDeetiqueta", function(event) {
     event.preventDefault();
     $("#serialEtiqueta").val("");
-    window.location.href = "./produccion";
+    $("#spanLogoResultado").removeClass("fa fa-ban ban");
+    $("#spanLogoResultado").removeClass("fa fa-check-circle check")
+    $("#mensajeResultadoBueno").empty();
+    $("#mensajeResultadoMalo").empty();
+    $("#buttonResultado").empty();
+    $("#submit").prop("disabled", false);
     getLast6();
   });
 

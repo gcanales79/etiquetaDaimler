@@ -33,6 +33,15 @@ $(document).ready(function() {
               lineNumber = $("<td>");
               lineNumber.text(data[i].linea);
               actionPartNumber = $("<td>");
+              //!No se esta usando para cada NP los detales
+             /* serialLength=$("<td>");
+              serialLength.text(data[i].largo_etiqueta)
+              partNumberLength=$("<td>");
+              partNumberLength.text(data[i].largo_numero_parte);
+              findPartNumber=$("<td>");
+              findPartNumber.text(data[i].izq_etiqueta);
+              findSerialNumber=$("<td>");
+              findSerialNumber.text(data[i].der_etiqueta);*/
   
               //Button Edit
               buttonEdit = $("<button>");
@@ -62,7 +71,13 @@ $(document).ready(function() {
   
               newItem.append(partNumber);
               newItem.append(lineNumber);
+              //! No se estan usando los detalles de los NP
+              //newItem.append(serialLength);
+              //newItem.append(partNumberLength);
+              //newItem.append(findPartNumber);
+              //newItem.append(findSerialNumber)
               newItem.append(actionPartNumber);
+              
   
               //Append Item to List
               $("#partNumberList").append(newItem);
@@ -231,6 +246,9 @@ $(document).ready(function() {
       if (linea==="Escoge una línea"){
         linea="";
       }
+      //let largo_etiqueta=$("#labelLength").val().trim();
+      //let izq_etiqueta=$("#lengthToPartNumber").val().trim();
+      //let der_etiqueta=$("#lengthToSerialNumber").val().trim();
       let buttonType = $("#modalPartNumberCenter").attr("type");
       let pageNum = $(this)
         .find("#createPartNumber")
@@ -249,6 +267,9 @@ $(document).ready(function() {
           $.post("/add-part-number", {
             numero_parte: numero_parte,
             linea: linea,
+           // largo_etiqueta:largo_etiqueta,
+            //izq_etiqueta:izq_etiqueta,
+            //der_etiqueta:der_etiqueta,
           }).then((data) => {
             //console.log(data);
             const { code, message } = data;
@@ -263,7 +284,10 @@ $(document).ready(function() {
           // console.log("Update");
           let changes = {
             numero_parte:numero_parte,
-            linea:linea
+            linea:linea,
+            //largo_etiqueta:largo_etiqueta,
+            //izq_etiqueta:izq_etiqueta,
+            //der_etiqueta:der_etiqueta,  
           };
           $.ajax({
             url: `/update-part-number/${partNumberId}`,

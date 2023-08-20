@@ -4,7 +4,7 @@ const client = require("twilio")(accountSid, authToken);
 var passport = require("../config/passport");
 var db = require("../models");
 const moment = require("moment-timezone");
-const { check, validationResult } = require("express-validator/check");
+const { query, validationResult } = require("express-validator");
 var async = require("async");
 var nodemailer = require("nodemailer");
 var crypto = require("crypto");
@@ -76,10 +76,10 @@ module.exports = function(app) {
   app.post(
     "/api/signup",
     [
-      check("email")
+      query("email")
         .isEmail()
         .withMessage("No es un correo valido"),
-      check("password")
+      query("password")
         .isLength({ min: 5 })
         .withMessage("La contraseña debe tener 5 caracteres  "),
     ],
@@ -124,8 +124,10 @@ module.exports = function(app) {
 
   // Route for logging user out
   app.get("/logout", function(req, res) {
-    req.logout();
-    res.redirect("/");
+    req.logout(function(err) {
+      if (err) { return next(err); }
+      res.redirect('/');
+    });
   });
 
   // Get all examples
@@ -816,7 +818,13 @@ module.exports = function(app) {
   app.post(
     "/add-part-number",
     /*isAuthenticated,*/ (req, res) => {
-      const { numero_parte, linea } = req.body;
+      const {
+        numero_parte,
+        linea,
+        izq_etiqueta,
+        der_etiqueta,
+        largo_etiqueta,
+      } = req.body;
       if (!numero_parte || !linea) {
         res.status(200).send({
           code: "500",
@@ -843,6 +851,10 @@ module.exports = function(app) {
               db.Numeropt.create({
                 numero_parte: numero_parte,
                 linea: linea,
+                largo_etiqueta: largo_etiqueta,
+                izq_etiqueta: izq_etiqueta,
+                der_etiqueta: der_etiqueta,
+                largo_numero_parte: numero_parte.length,
               })
                 .then((partnumberCreated) => {
                   if (!partnumberCreated) {
@@ -932,19 +944,15 @@ module.exports = function(app) {
     })
       .then((partNumberDeleted) => {
         if (!partNumberDeleted) {
-          res
-            .status(404)
-            .send({
-              code: "404",
-              message: "No se borro ningún numero de parte",
-            });
+          res.status(404).send({
+            code: "404",
+            message: "No se borro ningún numero de parte",
+          });
         } else {
-          res
-            .status(200)
-            .send({
-              code: "200",
-              message: "Numero de parte borrado exitosamente",
-            });
+          res.status(200).send({
+            code: "200",
+            message: "Numero de parte borrado exitosamente",
+          });
         }
       })
       .catch((err) => {
@@ -961,6 +969,10 @@ module.exports = function(app) {
       {
         numero_parte: numero_parte,
         linea: linea,
+        largo_etiqueta: largo_etiqueta,
+        izq_etiqueta: izq_etiqueta,
+        der_etiqueta: der_etiqueta,
+        largo_numero_parte: numero_parte.length,
       },
       {
         where: {
@@ -1007,9 +1019,12 @@ module.exports = function(app) {
   app.post("/api/fa1/serial", Fa1Controller.addSerial);
 
   //Find the last six pieces builts
-  app.get("/api/fa1/all/tabla/seisetiquetas",Fa1Controller.getLastSixLabels);
+  app.get("/api/fa1/all/tabla/seisetiquetas", Fa1Controller.getLastSixLabels);
 
-  app.get("/fa1/produccionhora/:fechainicial/:fechafinal",Fa1Controller.productionPerHour);
+  app.get(
+    "/fa1/produccionhora/:fechainicial/:fechafinal",
+    Fa1Controller.productionPerHour
+  );
 
-  app.post("/fa1/reporte",Fa1Controller.productionReport);
+  app.post("/fa1/reporte", Fa1Controller.productionReport);
 };

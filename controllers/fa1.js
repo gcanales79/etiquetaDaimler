@@ -10,12 +10,13 @@ const client = require("twilio")(accountSid, authToken);
 //Add a new label
 function addSerial(req,res){
     const{serial}=req.body;
+
     let numero_parte=serial.substring(serial.indexOf("P")+1,serial.indexOf("P")+9)
     //console.log(numero_parte);
     //console.log(-1*serial.length+14)
   //!Aqui iria desde donde se quiere tomar numero de serie a partir de la derecha
-    let numero_serie=serial.slice(-14)
-    //console.log(`El numeor de serie es ${numero_serie}`);
+    //let numero_serie=serial.slice(-14);
+    //console.log(`El numero de serie es ${numero_serie}`);
     db.Numeropt.findOne({
         where:{
             linea:{
@@ -26,17 +27,27 @@ function addSerial(req,res){
             }
         }
     }).then((response)=>{
+      console.log(response)
         if(!response){
-            res.send({code:"401", message:"El número de parte no esta dado de alta en la línea"})
+            return res.send({code:"400", message:"El número de parte no esta dado de alta en la línea"})
         }else{
+
             //res.status(200).send({code:"200", message:"Número encontrado" })
+            /*if(serial.length!=parseInt(response.largo_etiqueta)){
+              return res.send({code:"400", message: "Etiqueta no tiene el largo correcto"})
+            }*/
+            /*else{*/
+              //!Cambiar esto si se utilizan los datos del NP
+            //let numero_parte=serial.substring(parseInt(response.izq_etiqueta),parseInt(response.izq_etiqueta)+parseInt(response.largo_numero_parte));
+            //let numero_serie=serial.slice(-1*parseInt(response.der_etiqueta))
+            let numero_serie=serial.slice(-14);
             db.Fa1.create({
                 serial:serial,
                 numero_parte:numero_parte,
                 numero_serie:numero_serie,
             }).then((serialStored)=>{
                 if(!serialStored){
-                    res.send({code:"500",message:"Error de servidor"})
+                    return res.send({code:"500",message:"Error de servidor"})
                 }else{
                     res.send({code:"200", serialStored:serialStored,message:"Etiqueta correcta"})
                 }
@@ -53,13 +64,13 @@ function addSerial(req,res){
                             }
                         }).then((labelUpdate)=>{
                             if(!labelUpdate){
-                                res.send({code:"402",message:"Etiqueta no encontrada"})
+                               return res.send({code:"400",message:"Etiqueta no encontrada"})
                             }else{
-                                res.send({code:"404",message:"Numero de serie repetido"})
+                               return res.send({code:"400",message:"Numero de serie repetido"})
                             }
                         }).catch((err)=>{
                             console.log(err)
-                            res.send({code:"500",message:"Error del servidor"})
+                           return res.send({code:"500",message:"Error del servidor"})
                         })
                        
                     }
@@ -68,9 +79,10 @@ function addSerial(req,res){
                     }
                 }
             })
+          /*}*/
         }
     }).catch((err)=>{
-        res.status(500).send({code:"500", message:"Error de servidor", err:err})
+        res.send({code:"500", message:"Error de servidor", err:err})
     })
 
 }
@@ -168,7 +180,8 @@ function productionReport (req, res) {
     process.env.OMAR_PHONE,
     process.env.CHAVA_PHONE,
     process.env.CHAGO_PHONE,
-    process.env.JOEL_PHONE
+    process.env.JOEL_PHONE,
+    process.env.BERNARDO
   ];
 
   //* Send messages thru SMS

@@ -8,6 +8,18 @@ module.exports = function (sequelize, DataTypes) {
         type: DataTypes.STRING,
         allowNull:false,
       },
+      largo_etiqueta:{
+        type:DataTypes.STRING,
+      },
+      izq_etiqueta:{
+        type:DataTypes.STRING,
+      },
+      der_etiqueta:{
+        type:DataTypes.STRING,
+      },
+      largo_numero_parte:{
+        type:DataTypes.STRING,
+      }
 
       
       
