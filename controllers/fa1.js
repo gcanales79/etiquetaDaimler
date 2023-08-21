@@ -47,6 +47,7 @@ function addSerial(req,res){
                 numero_serie:numero_serie,
             }).then((serialStored)=>{
                 if(!serialStored){
+                  console.log("Error en crear el NP")
                     return res.send({code:"500",message:"Error de servidor"})
                 }else{
                     res.send({code:"200", serialStored:serialStored,message:"Etiqueta correcta"})
