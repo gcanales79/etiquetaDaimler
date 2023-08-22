@@ -182,6 +182,7 @@ function productionReport (req, res) {
     process.env.CHAVA_PHONE,
     process.env.CHAGO_PHONE,
     process.env.JOEL_PHONE,
+    process.env.BERE_PHONE,
     process.env.BERNARDO
   ];
 
@@ -202,6 +203,7 @@ function productionReport (req, res) {
 */
 
   //* Send message thry whatsapp
+  let responseMessage=[]
   for (var i = 0; i < telefonos.length; i++) {
     console.log("whatsapp:" + telefonos[i]);
     client.messages
@@ -217,7 +219,11 @@ function productionReport (req, res) {
       })
       .then(function(message) {
         console.log("Whatsapp:" + message.sid);
-        return res.json(message);
+        responseMessage.push(message);
+            console.log(responseMessage);
+            if(responseMessage.length==telefonos.length){
+            return res.json(responseMessage);
+            }
       })
       .catch(function(error) {
         return res.json(error);

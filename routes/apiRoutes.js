@@ -487,11 +487,11 @@ module.exports = function(app) {
     var telefonos = [
       process.env.GUS_PHONE,
       process.env.CHAVA_PHONE,
-      process.env.OMAR_PHONE
-      /*process.env.SALINAS_PHONE,
+      process.env.OMAR_PHONE,
+      process.env.SALINAS_PHONE,
       process.env.CHAGO_PHONE,
       process.env.BERE_PHONE,
-      process.env.BERNARDO*/
+      process.env.BERNARDO
     ];
 
     //* Send messages thru SMS
