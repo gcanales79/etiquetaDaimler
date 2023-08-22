@@ -486,9 +486,9 @@ module.exports = function(app) {
   app.post("/reporte", function(req, res) {
     var telefonos = [
       process.env.GUS_PHONE,
-      process.env.CHAVA_PHONE,
+      /*process.env.CHAVA_PHONE,
       process.env.OMAR_PHONE,
-      /*process.env.SALINAS_PHONE,
+      process.env.SALINAS_PHONE,
       process.env.CHAGO_PHONE,
       process.env.BERE_PHONE,
       process.env.BERNARDO*/
