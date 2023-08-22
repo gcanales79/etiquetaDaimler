@@ -524,7 +524,7 @@ module.exports = function(app) {
         })
         .then(function(message) {
           console.log("Whatsapp:" + message.sid);
-          //res.json(message);
+          res.send(message);
         })
         .catch(function(error) {
           console.log("error: " + error)
