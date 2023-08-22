@@ -534,7 +534,8 @@ module.exports = function(app) {
           .then(function(message) {
             console.log("Whatsapp:" + message.sid);
             responseMessage.push(message);
-            if(responseMessage.length==telefonos.lenght){
+            console.log(responseMessage);
+            if(responseMessage.length==telefonos.length){
             return res.json(responseMessage);
             }
           })
