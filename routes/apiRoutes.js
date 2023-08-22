@@ -530,7 +530,7 @@ module.exports = function(app) {
           })
           .then(function(message) {
             console.log("Whatsapp:" + message.sid);
-            res.json(message);
+            return res.json(message);
           })
           .catch(function(error) {
             console.log("error: " + error);
