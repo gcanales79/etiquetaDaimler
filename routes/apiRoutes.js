@@ -125,8 +125,10 @@ module.exports = function(app) {
   // Route for logging user out
   app.get("/logout", function(req, res) {
     req.logout(function(err) {
-      if (err) { return next(err); }
-      res.redirect('/');
+      if (err) {
+        return next(err);
+      }
+      res.redirect("/");
     });
   });
 
@@ -485,7 +487,7 @@ module.exports = function(app) {
     var telefonos = [
       process.env.GUS_PHONE,
       process.env.CHAVA_PHONE,
-      process.env.OMAR_PHONE
+      process.env.OMAR_PHONE,
       /*process.env.SALINAS_PHONE,
       process.env.CHAGO_PHONE,
       process.env.BERE_PHONE,
@@ -507,29 +509,34 @@ module.exports = function(app) {
         });
     }
 */
+    sendMessage(telefonos)
 
-    //* Send message thry whatsapp
-    for (var i = 0; i < telefonos.length; i++) {
-      console.log("whatsapp:" + telefonos[i]);
-      client.messages
-        .create({
-          from: "whatsapp:" + process.env.TWILIO_PHONE, // From a valid Twilio number,
-          body:
-            "La producción de la linea de Daimler del turno de " +
-            req.body.turno +
-            " fue de: " +
-            req.body.piezasProducidas,
-          to: "whatsapp:" + telefonos[i], // Text this number
-          /*La producción de la linea de Daimler del turno de {{1}} fue de: {{2}}*/
-        })
-        .then(function(message) {
-          console.log("Whatsapp:" + message.sid);
-          res.status(200).json(message);
-        })
-        .catch(function(error) {
-          console.log("error: " + error)
-          res.status(500).json(error);
-        });
+    //* Async function
+
+    async function sendMessage(telefonos) {
+      //* Send message thry whatsapp
+      for (var i = 0; i < telefonos.length; i++) {
+        console.log("whatsapp:" + telefonos[i]);
+        await client.messages
+          .create({
+            from: "whatsapp:" + process.env.TWILIO_PHONE, // From a valid Twilio number,
+            body:
+              "La producción de la linea de Daimler del turno de " +
+              req.body.turno +
+              " fue de: " +
+              req.body.piezasProducidas,
+            to: "whatsapp:" + telefonos[i], // Text this number
+            /*La producción de la linea de Daimler del turno de {{1}} fue de: {{2}}*/
+          })
+          .then(function(message) {
+            console.log("Whatsapp:" + message.sid);
+            res.status(200).json(message);
+          })
+          .catch(function(error) {
+            console.log("error: " + error);
+            res.status(500).json(error);
+          });
+      }
     }
   });
 
