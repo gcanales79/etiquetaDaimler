@@ -527,7 +527,8 @@ module.exports = function(app) {
           //res.json(message);
         })
         .catch(function(error) {
-          res.json(error);
+          console.log("error: " + error)
+          //res.json(error);
         });
     }
   });
