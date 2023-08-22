@@ -10,7 +10,7 @@ module.exports = function (sequelize, DataTypes) {
         type: DataTypes.STRING,
         unique: true,
       },
-      /*largo_etiqueta:{
+      largo_etiqueta:{
         type:DataTypes.STRING,
       },
       izq_etiqueta:{
@@ -21,7 +21,7 @@ module.exports = function (sequelize, DataTypes) {
       },
       largo_numero_parte:{
         type:DataTypes.STRING,
-      }*/
+      }
       
     });
   
