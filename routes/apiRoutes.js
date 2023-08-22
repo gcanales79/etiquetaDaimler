@@ -524,11 +524,11 @@ module.exports = function(app) {
         })
         .then(function(message) {
           console.log("Whatsapp:" + message.sid);
-          res.send(message);
+          res.status(200).json(message);
         })
         .catch(function(error) {
           console.log("error: " + error)
-          //res.json(error);
+          res.status(500).json(error);
         });
     }
   });
