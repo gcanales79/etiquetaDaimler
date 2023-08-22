@@ -513,11 +513,18 @@ module.exports = function(app) {
 
     //* Async function
 
-    async function sendMessage(telefonos) {
+    function sendMessage(telefonos) {
+      //Stop condition
+      if(!telefonos.length){
+        console.log("------------------------------");
+        return
+      }
+
+      const currentNumber=telefonos.shift();
+
       //* Send message thry whatsapp
-      for (var i = 0; i < telefonos.length; i++) {
-        console.log("whatsapp:" + telefonos[i]);
-        await client.messages
+        console.log("whatsapp:" + currentNumber);
+        client.messages
           .create({
             from: "whatsapp:" + process.env.TWILIO_PHONE, // From a valid Twilio number,
             body:
@@ -525,17 +532,17 @@ module.exports = function(app) {
               req.body.turno +
               " fue de: " +
               req.body.piezasProducidas,
-            to: "whatsapp:" + telefonos[i], // Text this number
+            to: "whatsapp:" + currentNumber, // Text this number
             /*La producción de la linea de Daimler del turno de {{1}} fue de: {{2}}*/
           })
           .then(function(message) {
             console.log("Whatsapp:" + message.sid);
-            return res.json(message);
+            res.json(message);
+            sendMessage(telefonos)
           })
           .catch(function(error) {
             console.log("error: " + error);
           });
-      }
     }
   });
 
