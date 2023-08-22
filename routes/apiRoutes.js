@@ -517,6 +517,7 @@ module.exports = function(app) {
       //Stop condition
 
       //* Send message thry whatsapp
+      let responseMessage=[]
       for (var i = 0; i < telefonos.length; i++) {
         console.log("whatsapp:" + telefonos[i]);
         await client.messages
@@ -532,7 +533,10 @@ module.exports = function(app) {
           })
           .then(function(message) {
             console.log("Whatsapp:" + message.sid);
-            return res.json(message);
+            responseMessage.push(message);
+            if(responseMessage.length==telefonos.lenght){
+            return res.json(responseMessage);
+            }
           })
           .catch(function(error) {
             console.log("error: " + error);
