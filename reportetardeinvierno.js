@@ -13,6 +13,7 @@ if (moment().tz("America/Monterrey").isDST()) {
 }
 else {
     console.log("No es horario de verano")
+   
     var horainicial = moment().subtract(1, "day").format("YYYY-MM-DD") + " 21:00:00"
     var horainicialx = moment(horainicial).format("X")
     var horafinal = moment().add(0, "day").format("YYYY-MM-DD") + " 05:00:00"
