@@ -812,9 +812,9 @@ module.exports = function(app) {
       }
     )
       .then((userStore) => {
-        //console.log(userStore);
+        console.log(userStore);
         if (userStore[0] === 0) {
-          res.status(404).send({
+          res.status(200).send({
             message: "Usuario no encontrado",
             code: "404",
           });

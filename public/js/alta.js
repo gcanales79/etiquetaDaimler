@@ -238,6 +238,7 @@ $(document).ready(function() {
           data: JSON.stringify(changes),
           success: function(data) {
             const { code, message } = data;
+            //console.log(code)
             if (code !== "200") {
               notificationToast(code, message);
             } else {
