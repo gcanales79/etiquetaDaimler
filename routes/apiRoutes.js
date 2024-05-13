@@ -41,7 +41,7 @@ module.exports = function(app) {
       // So we're sending the user back the route to the members page because the redirect will happen on the front end
       // They won't get this or even be able to access this page if they aren't authed
       //console.log(req.user)
-      
+      //console.log(info)
       if (err) {
         console.log(err);
         // res.send({ message: "Error de Servidor", alert: "Error" });
@@ -51,9 +51,11 @@ module.exports = function(app) {
         console.log("Not user: " + info.message);
         res.send({ message: info.message, alert: "Error" });
         // res.redirect("/");
+        
       }
 
       req.logIn(user, function(err) {
+      //console.log(user)
         if (err) {
           console.log(err);
         } else {
@@ -806,10 +808,11 @@ module.exports = function(app) {
         where: {
           id: id,
         },
+        individualHooks: true,
       }
     )
       .then((userStore) => {
-        // console.log(userStore);
+        //console.log(userStore);
         if (userStore[0] === 0) {
           res.status(404).send({
             message: "Usuario no encontrado",

@@ -43,8 +43,13 @@ module.exports = function(sequelize, DataTypes) {
   });
 
   User.addHook("beforeUpdate", function(user) {
-    console.log("before update")
-    user.password = bcrypt.hashSync(user.password, bcrypt.genSaltSync(10), null);
+    //console.log("Before Update hook is being executed...");
+    if (user.changed('password')) {
+      //console.log("Password field has been modified. Hashing password...");
+      user.password = bcrypt.hashSync(user.password, bcrypt.genSaltSync(10), null);
+    } else {
+      console.log("Password field has not been modified. Skipping password hashing.");
+    }
   });
   
 
