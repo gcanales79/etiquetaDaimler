@@ -488,7 +488,7 @@ module.exports = function(app) {
   app.post("/reporte", function(req, res) {
     var telefonos = [
       process.env.GUS_PHONE,
-      process.env.CHAVA_PHONE,
+      rocess.env.CHAVA_PHONE,
       process.env.OMAR_PHONE,
       process.env.SALINAS_PHONE,
       process.env.CHAGO_PHONE,
@@ -521,10 +521,10 @@ module.exports = function(app) {
       //* Send message thry whatsapp
       let responseMessage=[]
       for (var i = 0; i < telefonos.length; i++) {
-        console.log("whatsapp:" + telefonos[i]);
+        //console.log("whatsapp:" + telefonos[i]);
         await client.messages
           .create({
-            from: "whatsapp:" + process.env.TWILIO_PHONE, // From a valid Twilio number,
+            /*from: "whatsapp:" + process.env.TWILIO_PHONE, // From a valid Twilio number,
             body:
               "La producción de la linea de Daimler del turno de " +
               req.body.turno +
@@ -532,11 +532,21 @@ module.exports = function(app) {
               req.body.piezasProducidas,
             to: "whatsapp:" + telefonos[i], // Text this number
             /*La producción de la linea de Daimler del turno de {{1}} fue de: {{2}}*/
+            contentSid:"HX156cf46181c4f696541af97b78a920b9",
+            from: "whatsapp:" + process.env.TWILIO_PHONE, // From a valid Twilio number,
+            to: "whatsapp:" + telefonos[i], // Text this number,
+            messagingServiceSid: process.env.serviceSid,
+            contentVariables:JSON.stringify({
+              1: req.body.turno,
+              2: req.body.piezasProducidas
+            })
+            
           })
           .then(function(message) {
-            console.log("Whatsapp:" + message.sid);
+            //console.log("Whatsapp:" + message.sid);
+            console.log(`El mensaje a ${message.to} con sid: ${message.sid} tiene el status de: ${message.status}`)
             responseMessage.push(message);
-            console.log(responseMessage);
+            //console.log(responseMessage);
             if(responseMessage.length==telefonos.length){
             return res.json(responseMessage);
             }

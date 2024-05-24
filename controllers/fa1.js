@@ -205,22 +205,32 @@ function productionReport (req, res) {
   //* Send message thry whatsapp
   let responseMessage=[]
   for (var i = 0; i < telefonos.length; i++) {
-    console.log("whatsapp:" + telefonos[i]);
+    //console.log("whatsapp:" + telefonos[i]);
     client.messages
       .create({
-        from: "whatsapp:" + process.env.TWILIO_PHONE, // From a valid Twilio number,
+        /*from: "whatsapp:" + process.env.TWILIO_PHONE, // From a valid Twilio number,
         body:
           "La producción de la linea de FA-1 del turno de " +
           req.body.turno +
           " fue de: " +
           req.body.piezasProducidas,
-        to: "whatsapp:" + telefonos[i], // Text this number
+        to: "whatsapp:" + t/*elefonos[i], // Text this number
         /*La producción de la linea de Daimler del turno de {{1}} fue de: {{2}}*/
+            contentSid:"HXb454791f97e9b548a336957d567d7c9d",
+            from: "whatsapp:" + process.env.TWILIO_PHONE, // From a valid Twilio number,
+            to: "whatsapp:" + telefonos[i], // Text this number,
+            messagingServiceSid: process.env.serviceSid,
+            contentVariables:JSON.stringify({
+              1:'FA-1',
+              2: req.body.turno,
+              3: req.body.piezasProducidas
+            })
       })
       .then(function(message) {
-        console.log("Whatsapp:" + message.sid);
+        //console.log("Whatsapp:" + message.sid);
+        console.log(`El mensaje a ${message.to} con sid: ${message.sid} tiene el status de: ${message.status}`)
         responseMessage.push(message);
-            console.log(responseMessage);
+            //console.log(responseMessage);
             if(responseMessage.length==telefonos.length){
             return res.json(responseMessage);
             }
