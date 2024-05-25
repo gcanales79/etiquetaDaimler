@@ -222,8 +222,8 @@ function productionReport (req, res) {
             messagingServiceSid: process.env.serviceSid,
             contentVariables:JSON.stringify({
               1:'FA-1',
-              2: req.body.turno,
-              3: req.body.piezasProducidas
+              2: String(req.body.turno),
+              3: String(req.body.piezasProducidas)
             })
       })
       .then(function(message) {

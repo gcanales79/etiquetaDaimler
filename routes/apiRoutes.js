@@ -537,8 +537,8 @@ module.exports = function(app) {
             to: "whatsapp:" + telefonos[i], // Text this number,
             messagingServiceSid: process.env.serviceSid,
             contentVariables:JSON.stringify({
-              1: req.body.turno,
-              2: req.body.piezasProducidas
+              1: String(req.body.turno),
+              2: String(req.body.piezasProducidas)
             })
             
           })
