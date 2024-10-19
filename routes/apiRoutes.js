@@ -14,6 +14,9 @@ const sgMail = require("@sendgrid/mail");
 var isAuthenticated = require("../config/middleware/isAuthenticated");
 const LineController = require("../controllers/linea");
 const Fa1Controller = require("../controllers/fa1");
+const Fa9Controller = require("../controllers/fa9");
+const Fa11Controller = require("../controllers/fa11");
+const Fa13Controller = require("../controllers/fa13");
 
 module.exports = function(app) {
   // Using the passport.authenticate middleware with our local strategy.
@@ -1054,4 +1057,43 @@ module.exports = function(app) {
   );
 
   app.post("/fa1/reporte", Fa1Controller.productionReport);
+
+    //Add Serial FA-9
+    app.post("/api/fa9/serial", Fa9Controller.addSerial);
+
+    //Find the last six pieces builts
+    app.get("/api/fa9/all/tabla/seisetiquetas", Fa9Controller.getLastSixLabels);
+  
+    app.get(
+      "/fa9/produccionhora/:fechainicial/:fechafinal",
+      Fa9Controller.productionPerHour
+    );
+  
+    app.post("/fa9/reporte", Fa9Controller.productionReport);
+
+      //Add Serial FA-11
+  app.post("/api/fa11/serial", Fa11Controller.addSerial);
+
+  //Find the last six pieces builts
+  app.get("/api/fa11/all/tabla/seisetiquetas", Fa11Controller.getLastSixLabels);
+
+  app.get(
+    "/fa11/produccionhora/:fechainicial/:fechafinal",
+    Fa11Controller.productionPerHour
+  );
+
+  app.post("/fa11/reporte", Fa11Controller.productionReport);
+
+    //Add Serial FA-13
+    app.post("/api/fa13/serial", Fa13Controller.addSerial);
+
+    //Find the last six pieces builts
+    app.get("/api/fa13/all/tabla/seisetiquetas", Fa13Controller.getLastSixLabels);
+  
+    app.get(
+      "/fa13/produccionhora/:fechainicial/:fechafinal",
+      Fa13Controller.productionPerHour
+    );
+  
+    app.post("/fa13/reporte", Fa13Controller.productionReport);
 };

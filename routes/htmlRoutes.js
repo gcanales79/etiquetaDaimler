@@ -109,6 +109,93 @@ module.exports = function (app) {
     }
   });
 
+  //Get FA-9
+  app.get("/produccion/fa9", isAuthenticated, function (req, res) {
+    //console.log(req.user)
+    if (req.user.role === "admin" || req.user.role === "produccion" || req.user.role ==="inspector") {
+      res.status(200);
+      db.Fa9.findAll({
+        limit: 6,
+        order: [["createdAt", "DESC"]],
+
+      })
+        .then(function (response) {
+          let jsfile = [{jsfile:"https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.3/Chart.js"},
+          { jsfile: "/js/label_fa9.js" }];
+          res.render("produccionfa9", {
+            title: "Produccion FA-9",
+            active_produccion: {
+              Register: true,
+            },
+            etiqueta: response,
+            jsfile: jsfile,
+            
+          });
+        });
+    }
+    else{
+      res.render("404")
+    }
+  });
+
+   //Get FA-11
+   app.get("/produccion/fa11", isAuthenticated, function (req, res) {
+    //console.log(req.user)
+    if (req.user.role === "admin" || req.user.role === "produccion" || req.user.role ==="inspector") {
+      res.status(200);
+      db.Fa11.findAll({
+        limit: 6,
+        order: [["createdAt", "DESC"]],
+
+      })
+        .then(function (response) {
+          let jsfile = [{jsfile:"https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.3/Chart.js"},
+          { jsfile: "/js/label_fa11.js" }];
+          res.render("produccionfa11", {
+            title: "Produccion FA-11",
+            active_produccion: {
+              Register: true,
+            },
+            etiqueta: response,
+            jsfile: jsfile,
+            
+          });
+        });
+    }
+    else{
+      res.render("404")
+    }
+  });
+
+     //Get FA-13
+     app.get("/produccion/fa13", isAuthenticated, function (req, res) {
+      //console.log(req.user)
+      if (req.user.role === "admin" || req.user.role === "produccion" || req.user.role ==="inspector") {
+        res.status(200);
+        db.Fa13.findAll({
+          limit: 6,
+          order: [["createdAt", "DESC"]],
+  
+        })
+          .then(function (response) {
+            let jsfile = [{jsfile:"https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.3/Chart.js"},
+            { jsfile: "/js/label_fa13.js" }];
+            res.render("produccionfa13", {
+              title: "Produccion FA-13",
+              active_produccion: {
+                Register: true,
+              },
+              etiqueta: response,
+              jsfile: jsfile,
+              
+            });
+          });
+      }
+      else{
+        res.render("404")
+      }
+    });
+
 
   //Esto sirve para cambiar el CSS cuando entras a consulta, con el actvie_consulta
   app.get("/consulta", isAuthenticated, function (req, res) {
