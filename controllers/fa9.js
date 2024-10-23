@@ -6,179 +6,200 @@ const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
 const client = require("twilio")(accountSid, authToken);
 
-
 //Add a new label
-function addSerial(req,res){
-    const{serial}=req.body;
-
-    let numero_parte=serial.substring(serial.indexOf("P")+1,serial.indexOf("P")+9)
+function addSerial(req, res) {
+  const { serial } = req.body;
+  if (checkAfterColon(serial)) {
+    let numero_parte = serial.substring(
+      serial.indexOf("P") + 1,
+      serial.indexOf("P") + 9
+    );
     //console.log(numero_parte);
     //console.log(-1*serial.length+14)
-  //!Aqui iria desde donde se quiere tomar numero de serie a partir de la derecha
+    //!Aqui iria desde donde se quiere tomar numero de serie a partir de la derecha
     //let numero_serie=serial.slice(-14);
     //console.log(`El numero de serie es ${numero_serie}`);
     db.Numeropt.findOne({
-        where:{
-            linea:{
-                [Op.eq]:"FA-9",
-            },
-            numero_parte:{
-                [Op.eq]:numero_parte
-            }
-        }
-    }).then((response)=>{
-      console.log(response)
-        if(!response){
-            return res.send({code:"400", message:"El número de parte no esta dado de alta en la línea"})
-        }else{
-
-            //res.status(200).send({code:"200", message:"Número encontrado" })
-            /*if(serial.length!=parseInt(response.largo_etiqueta)){
-              return res.send({code:"400", message: "Etiqueta no tiene el largo correcto"})
-            }*/
-            /*else{*/
-              //!Cambiar esto si se utilizan los datos del NP
-            //let numero_parte=serial.substring(parseInt(response.izq_etiqueta),parseInt(response.izq_etiqueta)+parseInt(response.largo_numero_parte));
-            //let numero_serie=serial.slice(-1*parseInt(response.der_etiqueta))
-            let numero_serie=serial.slice(-14);
-            db.Fa9.create({
-                serial:serial,
-                numero_parte:numero_parte,
-                numero_serie:numero_serie,
-            }).then((serialStored)=>{
-                if(!serialStored){
-                  console.log("Error en crear el NP")
-                    return res.send({code:"500",message:"Error de servidor"})
-                }else{
-                    res.send({code:"200", serialStored:serialStored,message:"Etiqueta correcta"})
-                }
-            }).catch((err)=>{
-                //res.status(500).send({code:"500", message:"Error de servidor",err:err})
-                for(let i=0;i<err.errors.length;i++){
-                    if (err.errors[i].message=="numero_serie must be unique"){
-                        db.Fa9.update({
-                            repetida:true
-                        },
-                        {
-                            where:{
-                                serial:serial
-                            }
-                        }).then((labelUpdate)=>{
-                            if(!labelUpdate){
-                               return res.send({code:"400",message:"Etiqueta no encontrada"})
-                            }else{
-                               return res.send({code:"400",message:"Numero de serie repetido"})
-                            }
-                        }).catch((err)=>{
-                            console.log(err)
-                           return res.send({code:"500",message:"Error del servidor"})
-                        })
-                       
-                    }
-                    else{
-                        console.log(err.errors[i].message)
-                    }
-                }
+      where: {
+        linea: {
+          [Op.eq]: "FA-9",
+        },
+        numero_parte: {
+          [Op.eq]: numero_parte,
+        },
+      },
+    })
+      .then((response) => {
+        //console.log(response)
+        if (!response) {
+          return res.send({
+            code: "400",
+            message: "El número de parte no esta dado de alta en la línea",
+          });
+        } else {
+          //res.status(200).send({code:"200", message:"Número encontrado" })
+          /*if(serial.length!=parseInt(response.largo_etiqueta)){
+                return res.send({code:"400", message: "Etiqueta no tiene el largo correcto"})
+              }*/
+          /*else{*/
+          //!Cambiar esto si se utilizan los datos del NP
+          //let numero_parte=serial.substring(parseInt(response.izq_etiqueta),parseInt(response.izq_etiqueta)+parseInt(response.largo_numero_parte));
+          //let numero_serie=serial.slice(-1*parseInt(response.der_etiqueta))
+          let numero_serie = serial.slice(-14);
+          db.Fa9.create({
+            serial: serial,
+            numero_parte: numero_parte,
+            numero_serie: numero_serie,
+          })
+            .then((serialStored) => {
+              if (!serialStored) {
+                console.log("Error en crear el NP");
+                return res.send({ code: "500", message: "Error de servidor" });
+              } else {
+                res.send({
+                  code: "200",
+                  serialStored: serialStored,
+                  message: "Etiqueta correcta",
+                });
+              }
             })
+            .catch((err) => {
+              //res.status(500).send({code:"500", message:"Error de servidor",err:err})
+              for (let i = 0; i < err.errors.length; i++) {
+                if (err.errors[i].message == "numero_serie must be unique") {
+                  db.Fa9.update(
+                    {
+                      repetida: true,
+                    },
+                    {
+                      where: {
+                        serial: serial,
+                      },
+                    }
+                  )
+                    .then((labelUpdate) => {
+                      if (!labelUpdate) {
+                        return res.send({
+                          code: "400",
+                          message: "Etiqueta no encontrada",
+                        });
+                      } else {
+                        return res.send({
+                          code: "400",
+                          message: "Numero de serie repetido",
+                        });
+                      }
+                    })
+                    .catch((err) => {
+                      console.log(err);
+                      return res.send({
+                        code: "500",
+                        message: "Error del servidor",
+                      });
+                    });
+                } else {
+                  console.log(err.errors[i].message);
+                }
+              }
+            });
           /*}*/
         }
-    }).catch((err)=>{
-        res.send({code:"500", message:"Error de servidor", err:err})
-    })
-
+      })
+      .catch((err) => {
+        res.send({ code: "500", message: "Error de servidor", err: err });
+      });
+  } else {
+    res.send({code:"400",message:"La etiqueta no tiene el formato correcto"})
+  }
 }
 
 //Fin the last six pieces produced
-function getLastSixLabels(req,res){
-        db.Fa9.count()
-          .then((count) => {
-            db.Fa9.findAll({
-              where: {
-                id: {
-                  [Op.gte]: count * 0,
-                },
-              },
-              limit: 6,
-              order: [["createdAt", "DESC"]],
-            })
-              .then(function(response) {
-                // res.json(dbDaimler);
-                if (!response) {
-                 return res
-                    .status(404)
-                    .send({ message: "Etiquetas no encontradas", alert: "Error" });
-                } else {
-                 return res.status(200).send({ data: response, alert: "Success" });
-                }
-                //console.log(dbDaimler)
-              })
-              .catch((err) => {
-                return res.status(500).send({ err: err, alert: "Error" });
-              });
-          })
-          .catch((err) => {
-            console.log(err);
-            return
-          });
-      
+function getLastSixLabels(req, res) {
+  db.Fa9.count()
+    .then((count) => {
+      db.Fa9.findAll({
+        where: {
+          id: {
+            [Op.gte]: count * 0,
+          },
+        },
+        limit: 6,
+        order: [["createdAt", "DESC"]],
+      })
+        .then(function(response) {
+          // res.json(dbDaimler);
+          if (!response) {
+            return res
+              .status(404)
+              .send({ message: "Etiquetas no encontradas", alert: "Error" });
+          } else {
+            return res.status(200).send({ data: response, alert: "Success" });
+          }
+          //console.log(dbDaimler)
+        })
+        .catch((err) => {
+          return res.status(500).send({ err: err, alert: "Error" });
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return;
+    });
 }
 
 //Get production per hour
-function productionPerHour (req, res) {
-    let fechainicial = moment
-      .unix(req.params.fechainicial)
-      .format("YYYY-MM-DD HH:mm:ss");
-    let fechafinal = moment
-      .unix(req.params.fechafinal)
-      .format("YYYY-MM-DD HH:mm:ss");
-    //console.log(fechainicial)
-    //console.log(fechafinal)
-    //console.log(req.params.fechafinal)
-    db.Fa9.count()
-      .then((count) => {
-        // console.log(count)
-        db.Fa9.findAndCountAll({
-          where: {
-           /* id: {
+function productionPerHour(req, res) {
+  let fechainicial = moment
+    .unix(req.params.fechainicial)
+    .format("YYYY-MM-DD HH:mm:ss");
+  let fechafinal = moment
+    .unix(req.params.fechafinal)
+    .format("YYYY-MM-DD HH:mm:ss");
+  //console.log(fechainicial)
+  //console.log(fechafinal)
+  //console.log(req.params.fechafinal)
+  db.Fa9.count()
+    .then((count) => {
+      // console.log(count)
+      db.Fa9.findAndCountAll({
+        where: {
+          /* id: {
               [Op.gte]: count * 0,
             },*/
-            createdAt: {
-              [Op.gte]: fechainicial,
-              [Op.lte]: fechafinal,
-            },
-            //Le agregue esto para que no cuente las cambiadas
+          createdAt: {
+            [Op.gte]: fechainicial,
+            [Op.lte]: fechafinal,
           },
-          distinct: true,
-          col: "serial",
-        })
-          .then((data) => {
-            //console.log(data)
-            if (!data) {
-             return res
-                .status(404)
-                .send({ message: "Datos no encontrados", alert: "Error" });
-            } else {
-              return res.status(200).send({ data: data, alert: "Success" });
-            }
-          })
-          .catch(function(err) {
-           return res
-              .status(500)
-              .send({ message: "Error de servidor", err: err, alert: "Error" });
-          });
+          //Le agregue esto para que no cuente las cambiadas
+        },
+        distinct: true,
+        col: "serial",
       })
-      .catch((err) => {
-        console.log(err);
-        return
-      });
-  };
-
+        .then((data) => {
+          //console.log(data)
+          if (!data) {
+            return res
+              .status(404)
+              .send({ message: "Datos no encontrados", alert: "Error" });
+          } else {
+            return res.status(200).send({ data: data, alert: "Success" });
+          }
+        })
+        .catch(function(err) {
+          return res
+            .status(500)
+            .send({ message: "Error de servidor", err: err, alert: "Error" });
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return;
+    });
+}
 
 //* SMS Produccion del turno
-function productionReport (req, res) { 
-  var telefonos = [
-    process.env.GUS_PHONE,
-  ];
+function productionReport(req, res) {
+  var telefonos = [process.env.GUS_PHONE];
 
   //* Send messages thru SMS
   /*
@@ -197,7 +218,7 @@ function productionReport (req, res) {
 */
 
   //* Send message thry whatsapp
-  let responseMessage=[]
+  let responseMessage = [];
   for (var i = 0; i < telefonos.length; i++) {
     //console.log("whatsapp:" + telefonos[i]);
     client.messages
@@ -210,37 +231,57 @@ function productionReport (req, res) {
           req.body.piezasProducidas,
         to: "whatsapp:" + t/*elefonos[i], // Text this number
         /*La producción de la linea de Daimler del turno de {{1}} fue de: {{2}}*/
-            contentSid:"HXb454791f97e9b548a336957d567d7c9d",
-            from: "whatsapp:" + process.env.TWILIO_PHONE, // From a valid Twilio number,
-            to: "whatsapp:" + telefonos[i], // Text this number,
-            messagingServiceSid: process.env.serviceSid,
-            contentVariables:JSON.stringify({
-              1:'FA-9',
-              2: String(req.body.turno),
-              3: String(req.body.piezasProducidas)
-            })
+        contentSid: "HXb454791f97e9b548a336957d567d7c9d",
+        from: "whatsapp:" + process.env.TWILIO_PHONE, // From a valid Twilio number,
+        to: "whatsapp:" + telefonos[i], // Text this number,
+        messagingServiceSid: process.env.serviceSid,
+        contentVariables: JSON.stringify({
+          1: "FA-9",
+          2: String(req.body.turno),
+          3: String(req.body.piezasProducidas),
+        }),
       })
       .then(function(message) {
         //console.log("Whatsapp:" + message.sid);
-        console.log(`El mensaje a ${message.to} con sid: ${message.sid} tiene el status de: ${message.status}`)
+        console.log(
+          `El mensaje a ${message.to} con sid: ${
+            message.sid
+          } tiene el status de: ${message.status}`
+        );
         responseMessage.push(message);
-            //console.log(responseMessage);
-            if(responseMessage.length==telefonos.length){
-            return res.json(responseMessage);
-            }
+        //console.log(responseMessage);
+        if (responseMessage.length == telefonos.length) {
+          return res.json(responseMessage);
+        }
       })
       .catch(function(error) {
         return res.json(error);
       });
   }
-};
+}
 
+function checkAfterColon(str) {
+  // Find the position of the colon
+  const colonIndex = str.indexOf(":");
 
-module.exports={
-   addSerial,
-   getLastSixLabels,
-   productionPerHour,
-   productionReport,
-   
-
+  // If no colon is found, or no content after the colon, return false
+  if (colonIndex === -1 || colonIndex === str.length - 1) {
+    return false;
   }
+
+  // Get the part after the colon
+  const afterColon = str.slice(colonIndex + 1);
+
+  // Regular expression to check if the part after the colon contains only letters and numbers
+  const regex = /^[a-zA-Z0-9]+$/;
+
+  // Check if the length is exactly 58 characters and if it matches the regular expression
+  return afterColon.length === 55 && regex.test(afterColon);
+}
+
+module.exports = {
+  addSerial,
+  getLastSixLabels,
+  productionPerHour,
+  productionReport,
+};
