@@ -47,7 +47,7 @@ function addSerial(req, res) {
           //let numero_parte=serial.substring(parseInt(response.izq_etiqueta),parseInt(response.izq_etiqueta)+parseInt(response.largo_numero_parte));
           //let numero_serie=serial.slice(-1*parseInt(response.der_etiqueta))
           let numero_serie = serial.slice(-14);
-          db.Fa9.create({
+          db.Fa1.create({
             serial: serial,
             numero_parte: numero_parte,
             numero_serie: numero_serie,
@@ -68,7 +68,7 @@ function addSerial(req, res) {
               //res.status(500).send({code:"500", message:"Error de servidor",err:err})
               for (let i = 0; i < err.errors.length; i++) {
                 if (err.errors[i].message == "numero_serie must be unique") {
-                  db.Fa9.update(
+                  db.Fa1.update(
                     {
                       repetida: true,
                     },
