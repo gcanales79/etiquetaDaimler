@@ -203,7 +203,7 @@ function productionPerHour (req, res) {
 //* SMS Produccion del turno
 function productionReport (req, res) { 
   var telefonos = [
-    process.env.GUS_PHONE,
+    process.env.GUS_PHONE,process.env.CHAVA_PHONE
   ];
 
   //* Send messages thru SMS
