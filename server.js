@@ -17,6 +17,7 @@ var flash = require("connect-flash");
 var MemoryStore = require("memorystore")(session);
 const morgan=require("morgan")
 
+
 var app = express();
 //var sessionStore = new session.MemoryStore;
 var PORT = process.env.PORT || 3000;
@@ -146,6 +147,7 @@ app.use(function(req, res, next) {
 // Routes
 require("./routes/apiRoutes")(app);
 require("./routes/htmlRoutes")(app);
+
 
 var syncOptions = { force: false };
 

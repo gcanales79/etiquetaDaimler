@@ -1,0 +1,41 @@
+<div class="container my-4">
+  <div class="card shadow">
+    <div class="card-header bg-primary text-white">
+      <h4 class="mb-0">Buscar en Base de Datos</h4>
+    </div>
+    <div class="card-body">
+      <form class="row g-3" onsubmit="event.preventDefault(); searchSerial();">
+        <div class="col-md-4">
+          <label for="dbSelect" class="form-label">Base de Datos</label>
+          <select id="dbSelect" class="form-select">
+            <option value="Fa9">FA9</option>
+            <option value="Fa11">FA11</option>
+            <option value="Fa13">FA13</option>
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label for="serialInput" class="form-label">Serial</label>
+          <input type="text" id="serialInput" class="form-control" placeholder="Ingrese parte del serial">
+        </div>
+        <div class="col-md-2 d-flex align-items-end">
+          <button type="submit" id="searchButton" class="btn btn-primary w-100">Buscar</button>
+        </div>
+      </form>
+      <div class="table-responsive mt-4">
+        <table id="resultsTable" class="table table-striped table-bordered align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>Serial</th>
+              <th>Numero Parte</th>
+              <th>Numero Serie</th>
+              <th>Repetida</th>
+              <th class="text-nowrap">Fecha de Creación</th>
+              <th class="text-nowrap">Fecha de Modificación</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

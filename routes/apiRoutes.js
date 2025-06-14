@@ -17,6 +17,8 @@ const Fa1Controller = require("../controllers/fa1");
 const Fa9Controller = require("../controllers/fa9");
 const Fa11Controller = require("../controllers/fa11");
 const Fa13Controller = require("../controllers/fa13");
+const { fa9, fa11, fa13 } = require("../models"); // Adjust if your models are imported differently
+const models = { fa9: fa9, fa11: fa11, fa13: fa13 };
 
 module.exports = function(app) {
   // Using the passport.authenticate middleware with our local strategy.
@@ -54,11 +56,10 @@ module.exports = function(app) {
         console.log("Not user: " + info.message);
         res.send({ message: info.message, alert: "Error" });
         // res.redirect("/");
-        
       }
 
       req.logIn(user, function(err) {
-      //console.log(user)
+        //console.log(user)
         if (err) {
           console.log(err);
         } else {
@@ -496,7 +497,7 @@ module.exports = function(app) {
       process.env.SALINAS_PHONE,
       process.env.CHAGO_PHONE,
       process.env.BERE_PHONE,
-      process.env.BERNARDO
+      process.env.BERNARDO,
     ];
 
     //* Send messages thru SMS
@@ -514,7 +515,7 @@ module.exports = function(app) {
         });
     }
 */
-    sendMessage(telefonos)
+    sendMessage(telefonos);
 
     //* Async function
 
@@ -522,7 +523,7 @@ module.exports = function(app) {
       //Stop condition
 
       //* Send message thry whatsapp
-      let responseMessage=[]
+      let responseMessage = [];
       for (var i = 0; i < telefonos.length; i++) {
         //console.log("whatsapp:" + telefonos[i]);
         await client.messages
@@ -535,23 +536,26 @@ module.exports = function(app) {
               req.body.piezasProducidas,
             to: "whatsapp:" + telefonos[i], // Text this number
             /*La producción de la linea de Daimler del turno de {{1}} fue de: {{2}}*/
-            contentSid:"HX156cf46181c4f696541af97b78a920b9",
+            contentSid: "HX156cf46181c4f696541af97b78a920b9",
             from: "whatsapp:" + process.env.TWILIO_PHONE, // From a valid Twilio number,
             to: "whatsapp:" + telefonos[i], // Text this number,
             messagingServiceSid: process.env.serviceSid,
-            contentVariables:JSON.stringify({
+            contentVariables: JSON.stringify({
               1: String(req.body.turno),
-              2: String(req.body.piezasProducidas)
-            })
-            
+              2: String(req.body.piezasProducidas),
+            }),
           })
           .then(function(message) {
             //console.log("Whatsapp:" + message.sid);
-            console.log(`El mensaje a ${message.to} con sid: ${message.sid} tiene el status de: ${message.status}`)
+            console.log(
+              `El mensaje a ${message.to} con sid: ${
+                message.sid
+              } tiene el status de: ${message.status}`
+            );
             responseMessage.push(message);
             //console.log(responseMessage);
-            if(responseMessage.length==telefonos.length){
-            return res.json(responseMessage);
+            if (responseMessage.length == telefonos.length) {
+              return res.json(responseMessage);
             }
           })
           .catch(function(error) {
@@ -1058,20 +1062,20 @@ module.exports = function(app) {
 
   app.post("/fa1/reporte", Fa1Controller.productionReport);
 
-    //Add Serial FA-9
-    app.post("/api/fa9/serial", Fa9Controller.addSerial);
+  //Add Serial FA-9
+  app.post("/api/fa9/serial", Fa9Controller.addSerial);
 
-    //Find the last six pieces builts
-    app.get("/api/fa9/all/tabla/seisetiquetas", Fa9Controller.getLastSixLabels);
-  
-    app.get(
-      "/fa9/produccionhora/:fechainicial/:fechafinal",
-      Fa9Controller.productionPerHour
-    );
-  
-    app.post("/fa9/reporte", Fa9Controller.productionReport);
+  //Find the last six pieces builts
+  app.get("/api/fa9/all/tabla/seisetiquetas", Fa9Controller.getLastSixLabels);
 
-      //Add Serial FA-11
+  app.get(
+    "/fa9/produccionhora/:fechainicial/:fechafinal",
+    Fa9Controller.productionPerHour
+  );
+
+  app.post("/fa9/reporte", Fa9Controller.productionReport);
+
+  //Add Serial FA-11
   app.post("/api/fa11/serial", Fa11Controller.addSerial);
 
   //Find the last six pieces builts
@@ -1084,16 +1088,44 @@ module.exports = function(app) {
 
   app.post("/fa11/reporte", Fa11Controller.productionReport);
 
-    //Add Serial FA-13
-    app.post("/api/fa13/serial", Fa13Controller.addSerial);
+  //Add Serial FA-13
+  app.post("/api/fa13/serial", Fa13Controller.addSerial);
 
-    //Find the last six pieces builts
-    app.get("/api/fa13/all/tabla/seisetiquetas", Fa13Controller.getLastSixLabels);
-  
-    app.get(
-      "/fa13/produccionhora/:fechainicial/:fechafinal",
-      Fa13Controller.productionPerHour
-    );
-  
-    app.post("/fa13/reporte", Fa13Controller.productionReport);
+  //Find the last six pieces builts
+  app.get("/api/fa13/all/tabla/seisetiquetas", Fa13Controller.getLastSixLabels);
+
+  app.get(
+    "/fa13/produccionhora/:fechainicial/:fechafinal",
+    Fa13Controller.productionPerHour
+  );
+
+  app.post("/fa13/reporte", Fa13Controller.productionReport);
+
+
+  //Search for a serial
+  app.get("/search-serial/:linea/:serial", async (req, res) => {
+    const { linea, serial } = req.params;
+ db[linea].findAll({
+        where: {
+          serial: { [Op.like]: `%${serial}%` },
+        },
+      }).then((serialStored) => {
+        if (!serialStored) {
+          res.status(400).send({
+            code: "400",
+            message: "No se encontro ningún numero de parte",
+          });
+        } else {
+          res.status(200).send({ code: "200", serialData: serialStored });
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+        res.status(500).send({ code: "500", message: "Error de servidor" });
+      });
+      
+    
+  });
 };
+
+

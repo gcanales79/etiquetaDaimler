@@ -336,17 +336,43 @@ module.exports = function (app) {
   });
 
   //Carga la pagina para dar de alta los NP
-  app.get("/alta-numero-de-parte", isAuthenticated, function (req, res) {
+    app.get("/alta-numero-de-parte", isAuthenticated, function (req, res) {
+      //console.log(res.locals.sessionFlash)
+      //let message=res.locals.sessionFlash
+      //console.log(message)
+      let jsfile = [{jsfile:"/js/toastr.js"},{jsfile:"/js/pagination.js"},{ jsfile: "/js/alta_numeropt.js" }];
+      if(req.user.role==="admin"){
+        //console.log(res.locals.sessionFlash)
+      //res.status(200);
+      res.render("alta_numero", {
+        // sessionFlash: message,
+        title: "Alta de Numero de Parte",
+        active_consulta: {
+          Register: true,
+        },
+        jsfile:jsfile,
+        
+        
+      });
+    }
+    else{
+      res.render("404")
+    }
+    });
+
+  // Carga la pagina para buscar el serial
+
+  app.get("/buscar-serial", isAuthenticated, function (req, res) {
     //console.log(res.locals.sessionFlash)
     //let message=res.locals.sessionFlash
     //console.log(message)
-    let jsfile = [{jsfile:"/js/toastr.js"},{jsfile:"/js/pagination.js"},{ jsfile: "/js/alta_numeropt.js" }];
+    let jsfile = [{jsfile:"/js/toastr.js"},{jsfile:"/js/pagination.js"},{ jsfile: "/js/buscar_serial.js" }];
     if(req.user.role==="admin"){
       //console.log(res.locals.sessionFlash)
     //res.status(200);
-    res.render("alta_numero", {
+    res.render("buscar_serial", {
       // sessionFlash: message,
-      title: "Alta de Numero de Parte",
+      title: "Buscar Serial",
       active_consulta: {
         Register: true,
       },
@@ -358,7 +384,9 @@ module.exports = function (app) {
   else{
     res.render("404")
   }
-  });
+  }
+  );
+
 
   //Carga la pagina para dar de alta las lineas
   app.get("/alta-linea", isAuthenticated, function (req, res) {
