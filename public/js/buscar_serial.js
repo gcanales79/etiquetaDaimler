@@ -27,11 +27,13 @@ $(document).on("click", "#searchButton", function(event) {
               year: "numeric",
             })
             .replace(".", "");
-            const createdAtTime = createdAt.toLocaleTimeString("es-MX", {
+          const createdAtTime = createdAt.toLocaleTimeString("es-MX", {
             hour: "2-digit",
             minute: "2-digit",
           });
-          const createdAtCell = $("<td>").addClass("text-nowrap").text(`${createdAtFormatted} ${createdAtTime}`);
+          const createdAtCell = $("<td>")
+            .addClass("text-nowrap")
+            .text(`${createdAtFormatted} ${createdAtTime}`);
           const updatedAt = new Date(item.updatedAt);
           const updatedAtFormatted = updatedAt
             .toLocaleDateString("es-MX", {
@@ -44,7 +46,9 @@ $(document).on("click", "#searchButton", function(event) {
             hour: "2-digit",
             minute: "2-digit",
           });
-          const updatedAtCell = $("<td>").addClass("text-nowrap").text(`${updatedAtFormatted} ${updatedAtTime}`);
+          const updatedAtCell = $("<td>")
+            .addClass("text-nowrap")
+            .text(`${updatedAtFormatted} ${updatedAtTime}`);
           // Append cells to the new row
           newRow
             .append(serialCell)
@@ -56,8 +60,13 @@ $(document).on("click", "#searchButton", function(event) {
           $("#resultsTable").append(newRow);
         });
       } else {
-        $("#resultsTable").append(
-          $("<tr><td colspan='2'>No results found</td></tr>")
+        $("#resultsTable tbody").append(
+          $("<tr>").append(
+            $("<td>")
+              .attr("colspan", 6)
+              .addClass("text-center")
+              .text("No se encontraron resultados")
+          )
         );
       }
     } else {
