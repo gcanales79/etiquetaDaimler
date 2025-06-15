@@ -74,3 +74,26 @@ $(document).on("click", "#searchButton", function(event) {
     }
   });
 });
+
+document.addEventListener("DOMContentLoaded", function() {
+  document.getElementById("copyTableBtn").addEventListener("click", function() {
+    const table = document.getElementById("resultsTable");
+    let text = "";
+    // Get headers
+    const headers = Array.from(table.querySelectorAll("thead th")).map(th => th.innerText.trim());
+    text += headers.join("\t") + "\n";
+    // Get rows
+    const rows = table.querySelectorAll("tbody tr");
+    rows.forEach(row => {
+      const cells = Array.from(row.querySelectorAll("td")).map(td => td.innerText.trim());
+      text += cells.join("\t") + "\n";
+    });
+    // Copy to clipboard
+    navigator.clipboard.writeText(text).then(() => {
+      // Optional: show feedback
+      const btn = document.getElementById("copyTableBtn");
+      btn.innerText = "¡Copiado!";
+      setTimeout(() => { btn.innerText = "Copiar resultados"; }, 1500);
+    });
+  });
+});
