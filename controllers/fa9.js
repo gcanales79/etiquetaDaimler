@@ -109,7 +109,10 @@ function addSerial(req, res) {
         res.send({ code: "500", message: "Error de servidor", err: err });
       });
   } else {
-    res.send({code:"400",message:"La etiqueta no tiene el formato correcto"})
+    res.send({
+      code: "400",
+      message: "La etiqueta no tiene el formato correcto",
+    });
   }
 }
 
@@ -199,7 +202,13 @@ function productionPerHour(req, res) {
 
 //* SMS Produccion del turno
 function productionReport(req, res) {
-  var telefonos = [process.env.GUS_PHONE,process.env.CHAVA_PHONE];
+  var telefonos = [
+    process.env.GUS_PHONE,
+    process.env.CHAVA_PHONE,
+    process.env.CHAGO_PHONE,
+    process.env.BERE_PHONE,
+    process.env.BERNARDO
+  ];
 
   //* Send messages thru SMS
   /*
