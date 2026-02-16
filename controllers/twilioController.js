@@ -80,24 +80,6 @@ async function handleTwilioMessage(req, res) {
   }
 
   // 🚫 BLOCK UNSUPPORTED QUESTIONS
-  if (!isSupportedQuestion(incomingText)) {
-    return reply(
-      res,
-      `
-I can help with:
-
-• Production today
-• Production this shift
-• Last production
-• Production by line (Daimler, FA-1, FA-9, FA-11, FA-13)
-
-Examples:
-• "production today fa-9"
-• "production this shift"
-• "last production fa-11"
-`.trim()
-    );
-  }
 
   // Init session
   if (!sessions[from]) {
@@ -114,6 +96,27 @@ Examples:
     if (!session.line) {
       if (!session.pendingQuestion) {
         session.pendingQuestion = incomingText;
+      }
+
+      // 🚫 BLOCK UNSUPPORTED QUESTIONS
+      // Only block if we are NOT waiting for line selection
+      if (!isSupportedQuestion(incomingText) && !session.line) {
+        return reply(
+          res,
+          `
+I can help with:
+
+• Production today
+• Production this shift
+• Last production
+• Production by line (Daimler, FA-1, FA-9, FA-11, FA-13)
+
+Examples:
+• "production today fa-9"
+• "production this shift"
+• "last production fa-11"
+`.trim()
+        );
       }
 
       // Detect line
