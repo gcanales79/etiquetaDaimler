@@ -100,7 +100,7 @@ async function handleTwilioMessage(req, res) {
 
       // 🚫 BLOCK UNSUPPORTED QUESTIONS
       // Only block if we are NOT waiting for line selection
-      if (!isSupportedQuestion(incomingText) && !session.line) {
+      if (!isSupportedQuestion(incomingText) && !session.pendingQuestion) {
         return reply(
           res,
           `
