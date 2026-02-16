@@ -232,7 +232,7 @@ Examples:
     FROM ${tableName}
     WHERE
     (
-      -- Shift 1: 13:00–21:00 UTC (07–15 MTY)
+      
       (
         TIME(createdAt) BETWEEN '13:00:00' AND '20:59:59'
         AND DATE(createdAt) = DATE(UTC_TIMESTAMP())
@@ -240,7 +240,7 @@ Examples:
 
       OR
 
-      -- Shift 2: 21:00–05:00 UTC (15–23 MTY)
+      
       (
         (
           TIME(createdAt) >= '21:00:00'
@@ -257,7 +257,7 @@ Examples:
 
       OR
 
-      -- Shift 3: 05:00–13:00 UTC (23–07 MTY)
+      
       (
         TIME(createdAt) BETWEEN '05:00:00' AND '12:59:59'
         AND DATE(createdAt) = DATE(UTC_TIMESTAMP())
