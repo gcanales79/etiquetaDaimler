@@ -220,53 +220,45 @@ Examples:
     }
 
     if (isShiftRequest) {
-      sql = `
+  sql = `
     SELECT COUNT(*) AS total
     FROM ${tableName}
     WHERE
-(
-  -- Shift 1: 07:00–15:00 Monterrey
-  (
-    TIME(CONVERT_TZ(createdAt, 'UTC', 'America/Monterrey'))
-      BETWEEN '07:00:00' AND '14:59:59'
-    AND DATE(CONVERT_TZ(createdAt, 'UTC', 'America/Monterrey'))
-      = DATE(CONVERT_TZ(UTC_TIMESTAMP(), 'UTC', 'America/Monterrey'))
-  )
-
-  OR
-
-  -- Shift 2: 15:00–23:00 Monterrey
-  (
-    TIME(CONVERT_TZ(createdAt, 'UTC', 'America/Monterrey'))
-      BETWEEN '15:00:00' AND '22:59:59'
-    AND DATE(CONVERT_TZ(createdAt, 'UTC', 'America/Monterrey'))
-      = DATE(CONVERT_TZ(UTC_TIMESTAMP(), 'UTC', 'America/Monterrey'))
-  )
-
-  OR
-
-  -- Shift 3: 23:00–07:00 (crosses midnight Monterrey)
-  (
     (
-      TIME(CONVERT_TZ(createdAt, 'UTC', 'America/Monterrey')) >= '23:00:00'
-      AND DATE(CONVERT_TZ(createdAt, 'UTC', 'America/Monterrey'))
-        = DATE(CONVERT_TZ(UTC_TIMESTAMP(), 'UTC', 'America/Monterrey'))
-    )
+      -- Shift 1: 13:00–21:00 UTC (07–15 MTY)
+      (
+        TIME(createdAt) BETWEEN '13:00:00' AND '20:59:59'
+        AND DATE(createdAt) = DATE(UTC_TIMESTAMP())
+      )
 
-    OR
+      OR
 
-    (
-      TIME(CONVERT_TZ(createdAt, 'UTC', 'America/Monterrey')) < '07:00:00'
-      AND DATE(CONVERT_TZ(createdAt, 'UTC', 'America/Monterrey'))
-        = DATE_SUB(
-            DATE(CONVERT_TZ(UTC_TIMESTAMP(), 'UTC', 'America/Monterrey')),
-            INTERVAL 1 DAY
-          )
-    )
-  )
-);
+      -- Shift 2: 21:00–05:00 UTC (15–23 MTY)
+      (
+        (
+          TIME(createdAt) >= '21:00:00'
+          AND DATE(createdAt) = DATE(UTC_TIMESTAMP())
+        )
+
+        OR
+
+        (
+          TIME(createdAt) < '05:00:00'
+          AND DATE(createdAt) = DATE_ADD(DATE(UTC_TIMESTAMP()), INTERVAL 1 DAY)
+        )
+      )
+
+      OR
+
+      -- Shift 3: 05:00–13:00 UTC (23–07 MTY)
+      (
+        TIME(createdAt) BETWEEN '05:00:00' AND '12:59:59'
+        AND DATE(createdAt) = DATE(UTC_TIMESTAMP())
+      )
+    );
   `;
-    }
+}
+
 
     console.log("Final SQL:", sql);
 
