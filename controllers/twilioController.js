@@ -224,39 +224,47 @@ Examples:
     SELECT COUNT(*) AS total
     FROM ${tableName}
     WHERE
+(
+  -- Shift 1: 07:00–15:00 Monterrey
+  (
+    TIME(CONVERT_TZ(createdAt, 'UTC', 'America/Monterrey'))
+      BETWEEN '07:00:00' AND '14:59:59'
+    AND DATE(CONVERT_TZ(createdAt, 'UTC', 'America/Monterrey'))
+      = DATE(CONVERT_TZ(UTC_TIMESTAMP(), 'UTC', 'America/Monterrey'))
+  )
+
+  OR
+
+  -- Shift 2: 15:00–23:00 Monterrey
+  (
+    TIME(CONVERT_TZ(createdAt, 'UTC', 'America/Monterrey'))
+      BETWEEN '15:00:00' AND '22:59:59'
+    AND DATE(CONVERT_TZ(createdAt, 'UTC', 'America/Monterrey'))
+      = DATE(CONVERT_TZ(UTC_TIMESTAMP(), 'UTC', 'America/Monterrey'))
+  )
+
+  OR
+
+  -- Shift 3: 23:00–07:00 (crosses midnight Monterrey)
+  (
     (
-      (
-        CURTIME() BETWEEN '07:00:00' AND '14:59:59'
-        AND DATE(createdAt) = CURDATE()
-        AND TIME(createdAt) BETWEEN '07:00:00' AND '14:59:59'
-      )
+      TIME(CONVERT_TZ(createdAt, 'UTC', 'America/Monterrey')) >= '23:00:00'
+      AND DATE(CONVERT_TZ(createdAt, 'UTC', 'America/Monterrey'))
+        = DATE(CONVERT_TZ(UTC_TIMESTAMP(), 'UTC', 'America/Monterrey'))
+    )
 
-      OR
+    OR
 
-      (
-        CURTIME() BETWEEN '15:00:00' AND '22:59:59'
-        AND DATE(createdAt) = CURDATE()
-        AND TIME(createdAt) BETWEEN '15:00:00' AND '22:59:59'
-      )
-
-      OR
-
-      (
-        (
-          CURTIME() >= '23:00:00'
-          AND DATE(createdAt) = CURDATE()
-          AND TIME(createdAt) >= '23:00:00'
-        )
-
-        OR
-
-        (
-          CURTIME() < '07:00:00'
-          AND DATE(createdAt) = DATE_SUB(CURDATE(), INTERVAL 1 DAY)
-          AND TIME(createdAt) < '07:00:00'
-        )
-      )
-    );
+    (
+      TIME(CONVERT_TZ(createdAt, 'UTC', 'America/Monterrey')) < '07:00:00'
+      AND DATE(CONVERT_TZ(createdAt, 'UTC', 'America/Monterrey'))
+        = DATE_SUB(
+            DATE(CONVERT_TZ(UTC_TIMESTAMP(), 'UTC', 'America/Monterrey')),
+            INTERVAL 1 DAY
+          )
+    )
+  )
+);
   `;
     }
 
