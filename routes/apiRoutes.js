@@ -19,6 +19,7 @@ const Fa11Controller = require("../controllers/fa11");
 const Fa13Controller = require("../controllers/fa13");
 const { fa9, fa11, fa13 } = require("../models"); // Adjust if your models are imported differently
 const models = { fa9: fa9, fa11: fa11, fa13: fa13 };
+const {handleTwilioMessage}=require("../controllers/twilioController")
 
 module.exports = function(app) {
   // Using the passport.authenticate middleware with our local strategy.
@@ -1121,9 +1122,11 @@ module.exports = function(app) {
         console.log(err);
         res.status(500).send({ code: "500", message: "Error de servidor" });
       });
-      
-    
   });
+
+  //Twilio Webhook
+  app.post("/sms",handleTwilioMessage)
+
 };
 
 
