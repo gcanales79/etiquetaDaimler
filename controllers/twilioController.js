@@ -115,7 +115,7 @@ Examples:
 • "production today fa-9"
 • "production this shift"
 • "last production fa-11"
-`.trim()
+`.trim(),
         );
       }
 
@@ -156,7 +156,7 @@ Examples:
     let sql = await getSQLfromQuestion(
       incomingText,
       session.line.toUpperCase(),
-      tableName
+      tableName,
     );
 
     // Clean markdown
@@ -184,7 +184,7 @@ Examples:
     // Fix today filter
     sql = sql.replace(
       /createdAt\s*=\s*CURDATE\(\)/i,
-      "DATE(createdAt) = CURDATE()"
+      "DATE(createdAt) = CURDATE()",
     );
 
     // Clean broken WHERE
@@ -220,7 +220,7 @@ Examples:
     }
 
     if (isShiftRequest) {
-  sql = `
+      sql = `
     SELECT COUNT(*) AS total
     FROM ${tableName}
     WHERE
@@ -257,8 +257,7 @@ Examples:
       )
     );
   `;
-}
-
+    }
 
     console.log("Final SQL:", sql);
 
@@ -279,6 +278,13 @@ Examples:
     if (!sequelize) {
       throw new Error("Database connection not found");
     }
+
+    // 🔍 DEBUG: show DB connection info
+    console.log("DB HOST:", sequelize.config.host);
+    console.log("DB NAME:", sequelize.config.database);
+    console.log("DB USER:", sequelize.config.username);
+    console.log("TABLE:", tableName);
+    console.log("SQL:", sql);
 
     const [rows] = await sequelize.query(sql);
 
