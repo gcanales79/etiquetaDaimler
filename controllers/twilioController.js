@@ -119,9 +119,13 @@ Examples:
         );
       }
 
-      // Detect line
-      for (const key in TABLES) {
-        if (incomingText.includes(key)) {
+      // Detect line (match longer keys first)
+      const sortedKeys = Object.keys(TABLES).sort(
+        (a, b) => b.length - a.length,
+      );
+
+      for (const key of sortedKeys) {
+        if (incomingText === key || incomingText.includes(key)) {
           session.line = key;
           break;
         }
@@ -135,6 +139,7 @@ Examples:
       if (incomingText === session.line) {
         incomingText = session.pendingQuestion;
       }
+      console.log("Restored question:", incomingText);
     }
 
     // ===============================
