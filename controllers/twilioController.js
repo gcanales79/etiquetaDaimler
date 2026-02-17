@@ -15,27 +15,35 @@ const TABLES = {
 // In-memory sessions
 const sessions = {};
 
+function sendTwiml(res, xml) {
+  res.status(200).type("text/xml").send(xml);
+}
+
+function reply(res, message) {
+  const twiml = `
+<Response>
+  <Message>${message}</Message>
+</Response>
+`.trim();
+
+  sendTwiml(res, twiml);
+}
+
 function replyWithImage(res, text, imageUrl) {
- const twiml = `<Response>
+  const twiml = `
+<Response>
   <Message>
     <Body>${text}</Body>
     <Media>${imageUrl}</Media>
   </Message>
-</Response>`.trim;
-console.log("TWIML RESPONSE:", twiml);
-res.writeHead(200, { "Content-Type": "text/xml" });
-res.end(twiml);
+</Response>
+`.trim();
+
+  console.log("TWIML RESPONSE:\n", twiml);
+
+  sendTwiml(res, twiml);
 }
 
-// Helper: send Twilio reply
-function reply(res, message) {
-  res.set("Content-Type", "text/xml");
-  res.send(`
-    <Response>
-      <Message>${message}</Message>
-    </Response>
-  `);
-}
 
 function getWeekRangeUTC(lastWeek = false) {
   const now = new Date();
