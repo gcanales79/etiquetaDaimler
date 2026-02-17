@@ -419,13 +419,13 @@ Examples:
       sql = `
 SELECT
   CASE
-    -- Night shift after midnight belongs to previous day
+    
     WHEN TIME(createdAt) < '07:00:00'
     THEN DATE(DATE_SUB(createdAt, INTERVAL 1 DAY))
     ELSE DATE(createdAt)
   END AS day,
 
-  -- Day: 07:00–14:59
+  
   SUM(
     CASE
       WHEN TIME(createdAt) BETWEEN '07:00:00' AND '14:59:59'
@@ -433,7 +433,7 @@ SELECT
     END
   ) AS shift_day,
 
-  -- Afternoon: 15:00–22:59
+  
   SUM(
     CASE
       WHEN TIME(createdAt) BETWEEN '15:00:00' AND '22:59:59'
@@ -441,7 +441,7 @@ SELECT
     END
   ) AS shift_afternoon,
 
-  -- Night: 23:00–06:59
+  
   SUM(
     CASE
       WHEN TIME(createdAt) >= '23:00:00'
