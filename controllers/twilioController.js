@@ -58,7 +58,7 @@ function replyWithImage(res, text, imageUrl) {
 //Twilio message sender (for charts)
 async function sendGraphMessage(to, text, imageUrl) {
   await client.messages.create({
-    from: "whatsapp:+14155238886", // Twilio sandbox or your WA number
+    from: `whatsapp:${process.env.TWILIO_PHONE}`, // Twilio sandbox or your WA number
     to: to,
     body: text,
     mediaUrl: [imageUrl],
