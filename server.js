@@ -15,7 +15,9 @@ var db = require("./models");
 var axios = require("axios");
 var flash = require("connect-flash");
 var MemoryStore = require("memorystore")(session);
-const morgan=require("morgan")
+const morgan=require("morgan");
+const path = require("path");
+const os = require("os");
 
 
 var app = express();
@@ -74,6 +76,9 @@ app.use(flash());
 
 app.use(passport.initialize());
 app.use(passport.session());
+
+
+
 
 //Create a Handlebar function
 var hbs = exphbs.create({

@@ -1,5 +1,7 @@
 const { getSQLfromQuestion, explainResult } = require("../services/ai");
 const db = require("../models");
+const { generateWeeklyChart } = require("../services/chart");
+const path = require("path");
 
 // Map lines → tables
 const TABLES = {
@@ -13,6 +15,18 @@ const TABLES = {
 // In-memory sessions
 const sessions = {};
 
+function replyWithImage(res, text, imageUrl) {
+  res.set("Content-Type", "text/xml");
+  res.send(`
+    <Response>
+      <Message>
+        <Body>${text}</Body>
+        <Media>${imageUrl}</Media>
+      </Message>
+    </Response>
+  `);
+}
+
 // Helper: send Twilio reply
 function reply(res, message) {
   res.set("Content-Type", "text/xml");
@@ -21,6 +35,67 @@ function reply(res, message) {
       <Message>${message}</Message>
     </Response>
   `);
+}
+
+function getWeekRangeUTC(lastWeek = false) {
+  const now = new Date();
+
+  // Get Monday of current week
+  const day = now.getUTCDay() || 7; // Sunday = 7
+  const diff = now.getUTCDate() - day + 1;
+
+  const monday = new Date(now);
+  monday.setUTCDate(diff);
+  monday.setUTCHours(0, 0, 0, 0);
+
+  // Move to last week if needed
+  if (lastWeek) {
+    monday.setUTCDate(monday.getUTCDate() - 7);
+  }
+
+  // Get Sunday 23:59:59
+  const sunday = new Date(monday);
+  sunday.setUTCDate(sunday.getUTCDate() + 6);
+  sunday.setUTCHours(23, 59, 59, 999);
+
+  return {
+    start: monday
+      .toISOString()
+      .slice(0, 19)
+      .replace("T", " "),
+    end: sunday
+      .toISOString()
+      .slice(0, 19)
+      .replace("T", " "),
+  };
+}
+
+function getWeekRangeUTC(lastWeek = false) {
+  const now = new Date();
+
+  const day = now.getUTCDay() || 7;
+  const diff = now.getUTCDate() - day + 1;
+
+  const monday = new Date(now.setUTCDate(diff));
+  monday.setUTCHours(0, 0, 0, 0);
+
+  if (lastWeek) {
+    monday.setUTCDate(monday.getUTCDate() - 7);
+  }
+
+  const sunday = new Date(monday);
+  sunday.setUTCDate(sunday.getUTCDate() + 7);
+
+  return {
+    start: monday
+      .toISOString()
+      .slice(0, 19)
+      .replace("T", " "),
+    end: sunday
+      .toISOString()
+      .slice(0, 19)
+      .replace("T", " "),
+  };
 }
 
 function getCurrentShiftUtcWindow() {
@@ -225,46 +300,52 @@ Examples:
       .trim();
 
     // 4) Normalize SQL so it fits our schema and allowed columns
-   // ===============================
-// 4️⃣ NORMALIZE SQL (AI ONLY)
-// ===============================
+    // ===============================
+    // 4️⃣ NORMALIZE SQL (AI ONLY)
+    // ===============================
 
-if (!manualSQL) {
+    if (!manualSQL) {
+      // Force correct table
+      sql = sql.replace(/from\s+\w+/i, `FROM ${tableName}`);
 
-  // Force correct table
-  sql = sql.replace(/from\s+\w+/i, `FROM ${tableName}`);
+      // Remove invalid "line = 'FA-X'"
+      sql = sql.replace(/where\s+line\s*=\s*'[^']+'\s*(and\s*)?/i, "WHERE ");
 
-  // Remove invalid "line = 'FA-X'"
-  sql = sql.replace(/where\s+line\s*=\s*'[^']+'\s*(and\s*)?/i, "WHERE ");
+      // Fix production_date → createdAt
+      sql = sql.replace(/production_date/gi, "createdAt");
 
-  // Fix production_date → createdAt
-  sql = sql.replace(/production_date/gi, "createdAt");
+      // Fix CURRENT_DATE → CURDATE()
+      sql = sql.replace(/current_date/gi, "CURDATE()");
 
-  // Fix CURRENT_DATE → CURDATE()
-  sql = sql.replace(/current_date/gi, "CURDATE()");
+      // Fix today filter
+      sql = sql.replace(
+        /createdAt\s*=\s*CURDATE\(\)/i,
+        "DATE(createdAt) = CURDATE()",
+      );
 
-  // Fix today filter
-  sql = sql.replace(
-    /createdAt\s*=\s*CURDATE\(\)/i,
-    "DATE(createdAt) = CURDATE()"
-  );
-
-  // Clean broken WHERE
-  sql = sql.replace(/where\s+and/i, "WHERE");
-  sql = sql.replace(/where\s*$/i, "");
-}
-
+      // Clean broken WHERE
+      sql = sql.replace(/where\s+and/i, "WHERE");
+      sql = sql.replace(/where\s*$/i, "");
+    }
 
     // 5) Special intents: last/latest, shift
     const normalizedIncoming = incomingText.toLowerCase();
-    const isLastRequest =
-      normalizedIncoming.includes("last") ||
-      normalizedIncoming.includes("latest") ||
-      normalizedIncoming.includes("recent") ||
-      normalizedIncoming.includes("previous") ||
-      normalizedIncoming.includes("ultimo") ||
-      normalizedIncoming.includes("último");
 
+    // GRAPH (first priority)
+    const isGraphRequest =
+      normalizedIncoming.includes("graph") ||
+      normalizedIncoming.includes("chart") ||
+      normalizedIncoming.includes("grafica") ||
+      normalizedIncoming.includes("gráfica") ||
+      normalizedIncoming.includes("week") ||
+      normalizedIncoming.includes("semana");
+
+    // LAST WEEK (Only for graphs)
+    const isLastWeek =
+      normalizedIncoming.includes("last week") ||
+      normalizedIncoming.includes("semana pasada");
+
+    //SHIFT
     const isShiftRequest =
       normalizedIncoming.includes("shift") ||
       normalizedIncoming.includes("current shift") ||
@@ -275,6 +356,23 @@ if (!manualSQL) {
       normalizedIncoming.includes("esta turno") ||
       normalizedIncoming.includes("hoy turno") ||
       normalizedIncoming.includes("turno de hoy");
+
+    //LAST RECORD
+    const isLastRequest =
+      !isGraphRequest &&
+      (normalizedIncoming.includes("last") ||
+        normalizedIncoming.includes("latest") ||
+        normalizedIncoming.includes("recent") ||
+        normalizedIncoming.includes("previous") ||
+        normalizedIncoming.includes("ultimo") ||
+        normalizedIncoming.includes("último"));
+
+    console.log("INTENTS:", {
+      isGraphRequest,
+      isLastWeek,
+      isLastRequest,
+      isShiftRequest,
+    });
 
     if (isLastRequest) {
       manualSQL = true;
@@ -296,6 +394,56 @@ if (!manualSQL) {
     SELECT COUNT(*) AS total
     FROM ${tableName}
     WHERE createdAt BETWEEN '${start}' AND '${end}'
+  `;
+    }
+
+    // ===============================
+    // WEEKLY GRAPH
+    // ===============================
+
+    if (isGraphRequest) {
+      manualSQL = true;
+
+      const { start, end } = getWeekRangeUTC(isLastWeek);
+
+      console.log("WEEK RANGE:", start, "→", end);
+
+      sql = `
+    SELECT
+      DATE(createdAt) AS day,
+
+      SUM(
+        CASE
+          WHEN TIME(createdAt) BETWEEN '13:00:00' AND '20:59:59' THEN 1
+          ELSE 0
+        END
+      ) AS shift_day,
+
+      SUM(
+        CASE
+          WHEN TIME(createdAt) >= '21:00:00'
+            OR TIME(createdAt) < '05:00:00'
+          THEN 1
+          ELSE 0
+        END
+      ) AS shift_afternoon,
+
+      SUM(
+        CASE
+          WHEN TIME(createdAt) BETWEEN '05:00:00' AND '12:59:59'
+          THEN 1
+          ELSE 0
+        END
+      ) AS shift_night,
+
+      COUNT(*) AS total
+
+    FROM ${tableName}
+
+    WHERE createdAt BETWEEN '${start}' AND '${end}'
+
+    GROUP BY DATE(createdAt)
+    ORDER BY day ASC;
   `;
     }
 
@@ -340,6 +488,25 @@ Part: ${r.numero_parte}
 Serial: ${r.numero_serie}
 Repeated: ${r.repetida ? "Yes" : "No"}
 `.trim();
+    } else if (isGraphRequest) {
+      const fileName = `week-${Date.now()}.png`;
+
+      await generateWeeklyChart(rows, fileName);
+
+      const url = `${process.env.APP_URL}/charts/${fileName}`;
+      console.log("Chart filename:", fileName);
+      console.log("Chart URL:", url);
+      const sum = rows.reduce((a, b) => a + Number(b.total), 0);
+
+      if (!rows || rows.length === 0) {
+        return reply(res, "No data found for that week.");
+      }
+
+      return replyWithImage(
+        res,
+        `📊 Weekly Production Report\nTotal: ${sum}`,
+        url,
+      );
     } else {
       answer = await explainResult(incomingText, rows);
     }
