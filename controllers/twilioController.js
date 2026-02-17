@@ -2,6 +2,12 @@ const { getSQLfromQuestion, explainResult } = require("../services/ai");
 const db = require("../models");
 const { generateWeeklyChart } = require("../services/chart");
 const path = require("path");
+const twilio = require("twilio");
+
+const client = twilio(
+  process.env.TWILIO_ACCOUNT_SID,
+  process.env.TWILIO_AUTH_TOKEN
+);
 
 // Map lines → tables
 const TABLES = {
@@ -46,6 +52,17 @@ function replyWithImage(res, text, imageUrl) {
 
   sendTwiml(res, twiml);
 }
+
+//Twilio message sender (for charts)
+async function sendGraphMessage(to, text, imageUrl) {
+  await client.messages.create({
+    from: "whatsapp:+14155238886", // Twilio sandbox or your WA number
+    to: to,
+    body: text,
+    mediaUrl: [imageUrl],
+  });
+}
+
 
 function getWeekRangeUTC(lastWeek = false) {
   const now = new Date();
@@ -486,7 +503,19 @@ Examples:
 
   const url = `${process.env.APP_URL}/charts/${file}`;
 
-  return replyWithImage(res, "📊 Weekly Production Report", url);
+  console.log("Chart URL:", url);
+
+  // Respond immediately to Twilio (avoid timeout)
+  reply(res, "📊 Generating weekly report...");
+
+  // Send media AFTER webhook response
+  try {
+  await sendGraphMessage(from, "📊 Weekly Production Report", url);
+} catch (err) {
+  console.error("Media send failed:", err);
+}
+
+  return;
 }
 
 
