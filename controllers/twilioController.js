@@ -245,6 +245,9 @@ async function handleTwilioMessage(req, res) {
   }
   const session = sessions[from];
 
+  //Reset line on new message
+  session.line = null;
+
   try {
     // 1) If we haven't got a line selected yet, try to detect it.
     if (!session.line) {
