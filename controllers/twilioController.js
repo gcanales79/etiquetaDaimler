@@ -239,19 +239,7 @@ function isSupportedQuestion(text) {
   );
 }
 
-async function handleTwilioMessage(req, res) {
-  const from = req.body.From || "unknown";
-  let incomingText = (req.body.Body || "").toString().trim();
-
-  console.log("From:", from);
-  console.log("Raw message:", incomingText);
-
-  // Immediately acknowledge Twilio (avoid timeout)
-  res.status(200).type("text/xml").send(`
-<Response>
-  <Message>⏳ Processing your request...</Message>
-</Response>
-`);
+async function processProductionRequest(from, incomingText) {
 
   if (!incomingText) {
     await sendTextMessage(from, "Please send a valid message.");
@@ -279,8 +267,8 @@ return;
       // If user sends something unsupported (and we don't yet have a pending question),
       // show the menu of capabilities.
       if (!isSupportedQuestion(incomingText) && !session.pendingQuestion) {
-
-        return reply(
+        await sendTextMessage(from, "I can help with: \n\n• Production today / producción hoy\n• Production this shift / producción turno actual\n• Last production / última producción\n• Production by line (Daimler, FA-1, FA-9, FA-11, FA-13)\n\nExamples:\n• \"production today fa-9\"\n• \"producción turno actual\"\n• \"last production fa-11\"");
+        /*return reply(
           res,
           `
 I can help with:
@@ -295,7 +283,7 @@ Examples:
 • "producción turno actual"
 • "last production fa-11"
 `.trim(),
-        );
+        );*/
       }
 
       // detect line robustly: normalize both incoming text and known keys
@@ -454,10 +442,53 @@ return;
     // ===============================
 
     if (isGraphRequest) {
+       // Respond immediately to Twilio (avoid timeout)
+      await sendTextMessage(from, "📊 Gathering weekly data...");
       const moment = require("moment-timezone");
       const sequelize = db.sequelize;
 
-      const weekStart = moment()
+        const tz = "America/Monterrey";
+        
+        let startMoment = moment().tz(tz).startOf('isoWeek');
+        if (isLastWeek) startMoment.subtract(1, 'week');
+
+        // We search in UTC, so we define the window clearly
+        const startUTC = startMoment.clone().utc().format('YYYY-MM-DD HH:mm:ss');
+        const endUTC = startMoment.clone().add(7, 'days').utc().format('YYYY-MM-DD HH:mm:ss');
+
+        // THE OFFSET QUERY:
+        // We subtract 6 hours from createdAt to get the "Local" time for grouping
+        const [rows] = await db.sequelize.query(`
+            SELECT 
+                DATE(DATE_SUB(createdAt, INTERVAL 6 HOUR)) as day,
+                COUNT(CASE WHEN HOUR(DATE_SUB(createdAt, INTERVAL 6 HOUR)) BETWEEN 7 AND 14 THEN 1 END) as shift_day,
+                COUNT(CASE WHEN HOUR(DATE_SUB(createdAt, INTERVAL 6 HOUR)) BETWEEN 15 AND 22 THEN 1 END) as shift_afternoon,
+                COUNT(CASE WHEN HOUR(DATE_SUB(createdAt, INTERVAL 6 HOUR)) >= 23 OR HOUR(DATE_SUB(createdAt, INTERVAL 6 HOUR)) < 7 THEN 1 END) as shift_night,
+                COUNT(*) as total
+            FROM ${tableName}
+            WHERE createdAt BETWEEN :startUTC AND :endUTC
+            GROUP BY day
+            ORDER BY day ASC
+        `, { 
+            replacements: { startUTC, endUTC },
+            type: db.sequelize.QueryTypes.SELECT 
+        });
+
+        if (!rows || rows.length === 0) {
+            await sendTextMessage(from, "No data found for the requested period.");
+            return;
+        }
+
+        const file = `week-${Date.now()}.png`;
+        await generateWeeklyChart(rows, file);
+        
+        const url = `${process.env.APP_URL}/charts/${file}`;
+        await sendGraphMessage(from, `📊 Weekly Report (${session.line.toUpperCase()})`, url);
+        
+        delete sessions[from];
+        return;
+
+     /* const weekStart = moment()
         .tz("America/Monterrey")
         .startOf("isoWeek");
 
@@ -563,8 +594,7 @@ return;
 
       console.log("Generated chart URL:", url);
 
-      // Respond immediately to Twilio (avoid timeout)
-      await sendTextMessage(from, "📊 Generating weekly report...");
+     
       //reply(res, "📊 Generating weekly report...");
 
       // Send media AFTER webhook response
@@ -574,7 +604,7 @@ return;
         console.error("Media send failed:", err);
       }
 
-      return;
+      return;*/
     }
 
     console.log("Final SQL:", sql);
@@ -658,5 +688,25 @@ return;
     //return reply(res, msg);
   }
 }
+
+async function handleTwilioMessage(req, res) {
+  const from = req.body.From || "unknown";
+  let incomingText = (req.body.Body || "").toString().trim();
+
+  console.log("From:", from);
+  console.log("Raw message:", incomingText);
+
+  // Immediately acknowledge Twilio (avoid timeout)
+  res.status(200).type("text/xml").send(`<Response></Response>`);
+
+  // Run the logic in the background
+    try {
+        await processProductionRequest(from, incomingText);
+    } catch (err) {
+        console.error("Background Processing Error:", err);
+    }
+  }
+
+ 
 
 module.exports = { handleTwilioMessage };
