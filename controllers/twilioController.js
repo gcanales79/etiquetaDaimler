@@ -3,6 +3,7 @@ const db = require("../models");
 const { generateWeeklyChart } = require("../services/chart");
 const path = require("path");
 const twilio = require("twilio");
+const fs = require("fs");
 
 const client = twilio(
   process.env.TWILIO_ACCOUNT_SID,
@@ -501,9 +502,14 @@ Examples:
 
   await generateWeeklyChart(rows, file);
 
+  //Debug info
+  const fullPath=path.join(os.tmpdir(), file);
+  console.log("Chart full path:", fullPath);
+  console.log("Chart file exists:",fs.existsSync(fullPath));
+
   const url = `${process.env.APP_URL}/charts/${file}`;
 
-  console.log("Chart URL:", url);
+  console.log("Generated chart URL:", url);
 
   // Respond immediately to Twilio (avoid timeout)
   reply(res, "📊 Generating weekly report...");
