@@ -39,7 +39,8 @@ async function generateWeeklyChart(rows,fileName) {
   const dayShift = rows.map(r => r.shift_day);
   const afternoonShift = rows.map(r => r.shift_afternoon);
   const nightShift = rows.map(r => r.shift_night);
-  const totals = rows.map(r => r.total);
+  //const totals = rows.map(r => r.total);
+  const totals=rows.map(r=>Number(r.total)===0?0:Number(r.total));
   const weeklyTotal = totals.reduce((a, b) => a + b, 0);
 
 
@@ -74,6 +75,7 @@ async function generateWeeklyChart(rows,fileName) {
           borderWidth: 3,
           fill: false,
           tension: 0,
+          spanGaps: true,
         },
       ],
     },
