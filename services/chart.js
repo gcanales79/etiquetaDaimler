@@ -16,8 +16,8 @@ const chartJSNodeCanvas = new ChartJSNodeCanvas({
 });
 
 // Public charts folder
-// const chartsDir = path.join(__dirname, "../public/charts"); Work in local
-const chartsDir = os.tmpdir(); // Use temp directory for charts in production
+const chartsDir = path.join(__dirname, "../public/charts"); 
+//const chartsDir = os.tmpdir(); // Use temp directory for charts in production
 
 // Ensure folder exists
 if (!fs.existsSync(chartsDir)) {

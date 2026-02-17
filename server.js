@@ -33,10 +33,10 @@ app.use(express.static("public"));
 // app.use(cookieParser('secret'));
 
 //Serve charts from temp directory
-app.use("/charts", express.static(os.tmpdir(),{
+/*app.use("/charts", express.static(os.tmpdir(),{
   maxAge:"1h",
   etag:false,
-})); 
+})); */
 
 
 app.set("trust proxy", 1);
