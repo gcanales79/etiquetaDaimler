@@ -171,8 +171,19 @@ Examples:
 
     // Map production_date -> createdAt
     sql = sql.replace(/production_date/gi, "createdAt");
-    sql = sql.replace(/current_date/gi, "CURDATE()");
-    sql = sql.replace(/createdAt\s*=\s*CURDATE\(\)/i, "DATE(createdAt) = CURDATE()");
+    sql = sql.replace(
+  /current_date/gi,
+  "DATE(UTC_TIMESTAMP())"
+);
+
+    sql = sql.replace(
+  /createdAt\s*=\s*CURDATE\(\)/i,
+  `
+  createdAt >= DATE(UTC_TIMESTAMP())
+  AND createdAt < DATE_ADD(DATE(UTC_TIMESTAMP()), INTERVAL 1 DAY)
+  `
+);
+
 
     // prevent broken WHERE / WHERE AND
     sql = sql.replace(/where\s+and/i, "WHERE");
