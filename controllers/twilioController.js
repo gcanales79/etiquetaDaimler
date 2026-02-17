@@ -458,7 +458,7 @@ return;
 
         // THE OFFSET QUERY:
         // We subtract 6 hours from createdAt to get the "Local" time for grouping
-        const [rows] = await db.sequelize.query(`
+        const rows = await db.sequelize.query(`
             SELECT 
                 DATE(DATE_SUB(createdAt, INTERVAL 6 HOUR)) as day,
                 COUNT(CASE WHEN HOUR(DATE_SUB(createdAt, INTERVAL 6 HOUR)) BETWEEN 7 AND 14 THEN 1 END) as shift_day,
@@ -473,6 +473,8 @@ return;
             replacements: { startUTC, endUTC },
             type: db.sequelize.QueryTypes.SELECT 
         });
+
+        console.log("Weekly data rows:", rows);
 
         if (!rows || rows.length === 0) {
             await sendTextMessage(from, "No data found for the requested period.");
