@@ -2,7 +2,7 @@ const { ChartJSNodeCanvas } = require("chartjs-node-canvas");
 const path = require("path");
 const fs = require("fs");
 const db = require("../models");
-const os=require("os");
+const os = require("os");
 
 // Chart size
 const width = 900;
@@ -16,7 +16,7 @@ const chartJSNodeCanvas = new ChartJSNodeCanvas({
 });
 
 // Public charts folder
-const chartsDir = path.join(__dirname, "../public/charts"); 
+const chartsDir = path.join(__dirname, "../public/charts");
 //const chartsDir = os.tmpdir(); // Use temp directory for charts in production
 
 // Ensure folder exists
@@ -27,22 +27,19 @@ if (!fs.existsSync(chartsDir)) {
 /**
  * Generate weekly production chart
  */
-async function generateWeeklyChart(rows,fileName) {
- 
-
+async function generateWeeklyChart(rows, fileName) {
   console.log("Weekly rows:", rows);
   // Prepare labels
-  const labels = rows.map(r =>
-    new Date(r.day).toLocaleDateString("es-MX")
-  );
+  const labels = rows.map((r) => new Date(r.day).toLocaleDateString("es-MX"));
 
-  const dayShift = rows.map(r => r.shift_day);
-  const afternoonShift = rows.map(r => r.shift_afternoon);
-  const nightShift = rows.map(r => r.shift_night);
+  const dayShift = rows.map((r) => r.shift_day);
+  const afternoonShift = rows.map((r) => r.shift_afternoon);
+  const nightShift = rows.map((r) => r.shift_night);
   //const totals = rows.map(r => r.total);
-  const totals=rows.map(r=>Number(r.total)===0?0:Number(r.total));
+  const totals = rows.map((r) =>
+    Number(r.total) === 0 ? null : Number(r.total),
+  );
   const weeklyTotal = totals.reduce((a, b) => a + b, 0);
-
 
   // Chart config
   const config = {
@@ -112,7 +109,7 @@ async function generateWeeklyChart(rows,fileName) {
   const image = await chartJSNodeCanvas.renderToBuffer(config);
 
   // Save file
- 
+
   const filePath = path.join(chartsDir, fileName);
 
   await fs.promises.writeFile(filePath, image);
