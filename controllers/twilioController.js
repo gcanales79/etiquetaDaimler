@@ -16,7 +16,10 @@ const TABLES = {
 const sessions = {};
 
 function sendTwiml(res, xml) {
-  res.status(200).type("text/xml").send(xml);
+  res
+    .status(200)
+    .type("text/xml")
+    .send(xml);
 }
 
 function reply(res, message) {
@@ -43,7 +46,6 @@ function replyWithImage(res, text, imageUrl) {
 
   sendTwiml(res, twiml);
 }
-
 
 function getWeekRangeUTC(lastWeek = false) {
   const now = new Date();
@@ -108,48 +110,46 @@ function getWeekRangeUTC(lastWeek = false) {
 
 function getCurrentShiftUtcWindow() {
   const now = new Date(); // UTC
-
   const hour = now.getUTCHours();
 
   let start = new Date(now);
   let end = new Date(now);
 
-  // Shift 1: 13–21 UTC (07–15 MTY)
-  if (hour >= 13 && hour < 21) {
-    start.setUTCHours(13, 0, 0, 0);
-    end.setUTCHours(21, 0, 0, 0);
-  }
+  // 🌙 Night: 23:00–06:59
+  if (hour >= 23 || hour < 7) {
 
-  // Shift 2: 21–05 UTC (15–23 MTY)
-  else if (hour >= 21 || hour < 5) {
-    if (hour >= 21) {
-      start.setUTCHours(21, 0, 0, 0);
+    if (hour >= 23) {
+      // Night started today
+      start.setUTCHours(23, 0, 0, 0);
       end.setUTCDate(end.getUTCDate() + 1);
-      end.setUTCHours(5, 0, 0, 0);
+      end.setUTCHours(7, 0, 0, 0);
     } else {
+      // After midnight (still night)
       start.setUTCDate(start.getUTCDate() - 1);
-      start.setUTCHours(21, 0, 0, 0);
-      end.setUTCHours(5, 0, 0, 0);
+      start.setUTCHours(23, 0, 0, 0);
+      end.setUTCHours(7, 0, 0, 0);
     }
+
   }
 
-  // Shift 3: 05–13 UTC (23–07 MTY)
+  // ☀️ Day: 07:00–14:59
+  else if (hour >= 7 && hour < 15) {
+    start.setUTCHours(7, 0, 0, 0);
+    end.setUTCHours(15, 0, 0, 0);
+  }
+
+  // 🌇 Afternoon: 15:00–22:59
   else {
-    start.setUTCHours(5, 0, 0, 0);
-    end.setUTCHours(13, 0, 0, 0);
+    start.setUTCHours(15, 0, 0, 0);
+    end.setUTCHours(23, 0, 0, 0);
   }
 
   return {
-    start: start
-      .toISOString()
-      .slice(0, 19)
-      .replace("T", " "),
-    end: end
-      .toISOString()
-      .slice(0, 19)
-      .replace("T", " "),
+    start: start.toISOString().slice(0, 19).replace("T", " "),
+    end: end.toISOString().slice(0, 19).replace("T", " "),
   };
 }
+
 
 // Normalize a string: lowercase + remove non-alphanum (so "FA-11","fa11","Fa 11" -> "fa11")
 function normalize(text = "") {
@@ -417,42 +417,48 @@ Examples:
       console.log("WEEK RANGE:", start, "→", end);
 
       sql = `
-    SELECT
-      DATE(createdAt) AS day,
+SELECT
+  CASE
+    -- Night shift after midnight belongs to previous day
+    WHEN TIME(createdAt) < '07:00:00'
+    THEN DATE(DATE_SUB(createdAt, INTERVAL 1 DAY))
+    ELSE DATE(createdAt)
+  END AS day,
 
-      SUM(
-        CASE
-          WHEN TIME(createdAt) BETWEEN '13:00:00' AND '20:59:59' THEN 1
-          ELSE 0
-        END
-      ) AS shift_day,
+  -- Day: 07:00–14:59
+  SUM(
+    CASE
+      WHEN TIME(createdAt) BETWEEN '07:00:00' AND '14:59:59'
+      THEN 1 ELSE 0
+    END
+  ) AS shift_day,
 
-      SUM(
-        CASE
-          WHEN TIME(createdAt) >= '21:00:00'
-            OR TIME(createdAt) < '05:00:00'
-          THEN 1
-          ELSE 0
-        END
-      ) AS shift_afternoon,
+  -- Afternoon: 15:00–22:59
+  SUM(
+    CASE
+      WHEN TIME(createdAt) BETWEEN '15:00:00' AND '22:59:59'
+      THEN 1 ELSE 0
+    END
+  ) AS shift_afternoon,
 
-      SUM(
-        CASE
-          WHEN TIME(createdAt) BETWEEN '05:00:00' AND '12:59:59'
-          THEN 1
-          ELSE 0
-        END
-      ) AS shift_night,
+  -- Night: 23:00–06:59
+  SUM(
+    CASE
+      WHEN TIME(createdAt) >= '23:00:00'
+        OR TIME(createdAt) < '07:00:00'
+      THEN 1 ELSE 0
+    END
+  ) AS shift_night,
 
-      COUNT(*) AS total
+  COUNT(*) AS total
 
-    FROM ${tableName}
+FROM ${tableName}
 
-    WHERE createdAt BETWEEN '${start}' AND '${end}'
+WHERE createdAt BETWEEN '${start}' AND '${end}'
 
-    GROUP BY DATE(createdAt)
-    ORDER BY day ASC;
-  `;
+GROUP BY day
+ORDER BY day ASC;
+`;
     }
 
     console.log("Final SQL:", sql);
