@@ -23,6 +23,46 @@ function reply(res, message) {
   `);
 }
 
+function getCurrentShiftUtcWindow() {
+  const now = new Date(); // UTC
+
+  const hour = now.getUTCHours();
+
+  let start = new Date(now);
+  let end = new Date(now);
+
+  // Shift 1: 13–21 UTC (07–15 MTY)
+  if (hour >= 13 && hour < 21) {
+    start.setUTCHours(13, 0, 0, 0);
+    end.setUTCHours(21, 0, 0, 0);
+  }
+
+  // Shift 2: 21–05 UTC (15–23 MTY)
+  else if (hour >= 21 || hour < 5) {
+    if (hour >= 21) {
+      start.setUTCHours(21, 0, 0, 0);
+      end.setUTCDate(end.getUTCDate() + 1);
+      end.setUTCHours(5, 0, 0, 0);
+    } else {
+      start.setUTCDate(start.getUTCDate() - 1);
+      start.setUTCHours(21, 0, 0, 0);
+      end.setUTCHours(5, 0, 0, 0);
+    }
+  }
+
+  // Shift 3: 05–13 UTC (23–07 MTY)
+  else {
+    start.setUTCHours(5, 0, 0, 0);
+    end.setUTCHours(13, 0, 0, 0);
+  }
+
+  return {
+    start: start.toISOString().slice(0, 19).replace("T", " "),
+    end: end.toISOString().slice(0, 19).replace("T", " "),
+  };
+}
+
+
 // Normalize a string: lowercase + remove non-alphanum (so "FA-11","fa11","Fa 11" -> "fa11")
 function normalize(text = "") {
   return text.toString().toLowerCase().replace(/[^a-z0-9]/g, "");
@@ -220,50 +260,17 @@ Examples:
     }
 
     if (isShiftRequest) {
+  const { start, end } = getCurrentShiftUtcWindow();
+
+  console.log("SHIFT WINDOW UTC:", start, "→", end);
+
   sql = `
     SELECT COUNT(*) AS total
     FROM ${tableName}
-    WHERE
-    (
-
-      
-      (
-        TIME(UTC_TIMESTAMP()) BETWEEN '13:00:00' AND '20:59:59'
-        AND DATE(createdAt) = DATE(UTC_TIMESTAMP())
-        AND TIME(createdAt) BETWEEN '13:00:00' AND '20:59:59'
-      )
-
-      OR
-
-      
-      (
-        TIME(UTC_TIMESTAMP()) >= '21:00:00'
-        AND
-        (
-          (
-            DATE(createdAt) = DATE(UTC_TIMESTAMP())
-            AND TIME(createdAt) >= '21:00:00'
-          )
-          OR
-          (
-            DATE(createdAt) = DATE_SUB(DATE(UTC_TIMESTAMP()), INTERVAL 1 DAY)
-            AND TIME(createdAt) < '05:00:00'
-          )
-        )
-      )
-
-      OR
-
-      
-      (
-        TIME(UTC_TIMESTAMP()) BETWEEN '05:00:00' AND '12:59:59'
-        AND DATE(createdAt) = DATE(UTC_TIMESTAMP())
-        AND TIME(createdAt) BETWEEN '05:00:00' AND '12:59:59'
-      )
-
-    );
+    WHERE createdAt BETWEEN '${start}' AND '${end}'
   `;
 }
+
 
 
     console.log("Final SQL:", sql);
