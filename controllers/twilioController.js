@@ -57,15 +57,23 @@ function getCurrentShiftUtcWindow() {
   }
 
   return {
-    start: start.toISOString().slice(0, 19).replace("T", " "),
-    end: end.toISOString().slice(0, 19).replace("T", " "),
+    start: start
+      .toISOString()
+      .slice(0, 19)
+      .replace("T", " "),
+    end: end
+      .toISOString()
+      .slice(0, 19)
+      .replace("T", " "),
   };
 }
 
-
 // Normalize a string: lowercase + remove non-alphanum (so "FA-11","fa11","Fa 11" -> "fa11")
 function normalize(text = "") {
-  return text.toString().toLowerCase().replace(/[^a-z0-9]/g, "");
+  return text
+    .toString()
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
 }
 
 function containsAny(text, list) {
@@ -160,17 +168,22 @@ Examples:
 • "production today fa-9"
 • "producción turno actual"
 • "last production fa-11"
-`.trim()
+`.trim(),
         );
       }
 
       // detect line robustly: normalize both incoming text and known keys
       const normalizedIncoming = normalize(incomingText);
       // sort keys by length to prefer 'fa-11' before 'fa-1'
-      const sortedKeys = Object.keys(TABLES).sort((a, b) => b.length - a.length);
+      const sortedKeys = Object.keys(TABLES).sort(
+        (a, b) => b.length - a.length,
+      );
 
       for (const key of sortedKeys) {
-        if (normalizedIncoming === normalize(key) || normalizedIncoming.includes(normalize(key))) {
+        if (
+          normalizedIncoming === normalize(key) ||
+          normalizedIncoming.includes(normalize(key))
+        ) {
           session.line = key;
           break;
         }
@@ -197,37 +210,50 @@ Examples:
     console.log("Using table:", tableName);
 
     // 3) Generate SQL (AI)
-    let sql = await getSQLfromQuestion(incomingText, session.line.toUpperCase(), tableName);
+    let sql;
+    let manualSQL = false;
+    sql = await getSQLfromQuestion(
+      incomingText,
+      session.line.toUpperCase(),
+      tableName,
+    );
 
     // Clean up markdown
-    sql = sql.replace(/```sql/g, "").replace(/```/g, "").trim();
+    sql = sql
+      .replace(/```sql/g, "")
+      .replace(/```/g, "")
+      .trim();
 
     // 4) Normalize SQL so it fits our schema and allowed columns
-    // Force correct table name
-    sql = sql.replace(/from\s+\w+/i, `FROM ${tableName}`);
+   // ===============================
+// 4️⃣ NORMALIZE SQL (AI ONLY)
+// ===============================
 
-    // Remove "line = 'FA-X'" because table doesn't have that column
-    sql = sql.replace(/where\s+line\s*=\s*'[^']+'\s*(and\s*)?/i, "WHERE ");
+if (!manualSQL) {
 
-    // Map production_date -> createdAt
-    sql = sql.replace(/production_date/gi, "createdAt");
-    sql = sql.replace(
-  /current_date/gi,
-  "DATE(UTC_TIMESTAMP())"
-);
+  // Force correct table
+  sql = sql.replace(/from\s+\w+/i, `FROM ${tableName}`);
 
-    sql = sql.replace(
-  /createdAt\s*=\s*CURDATE\(\)/i,
-  `
-  createdAt >= DATE(UTC_TIMESTAMP())
-  AND createdAt < DATE_ADD(DATE(UTC_TIMESTAMP()), INTERVAL 1 DAY)
-  `
-);
+  // Remove invalid "line = 'FA-X'"
+  sql = sql.replace(/where\s+line\s*=\s*'[^']+'\s*(and\s*)?/i, "WHERE ");
 
+  // Fix production_date → createdAt
+  sql = sql.replace(/production_date/gi, "createdAt");
 
-    // prevent broken WHERE / WHERE AND
-    sql = sql.replace(/where\s+and/i, "WHERE");
-    sql = sql.replace(/where\s*$/i, "");
+  // Fix CURRENT_DATE → CURDATE()
+  sql = sql.replace(/current_date/gi, "CURDATE()");
+
+  // Fix today filter
+  sql = sql.replace(
+    /createdAt\s*=\s*CURDATE\(\)/i,
+    "DATE(createdAt) = CURDATE()"
+  );
+
+  // Clean broken WHERE
+  sql = sql.replace(/where\s+and/i, "WHERE");
+  sql = sql.replace(/where\s*$/i, "");
+}
+
 
     // 5) Special intents: last/latest, shift
     const normalizedIncoming = incomingText.toLowerCase();
@@ -251,6 +277,7 @@ Examples:
       normalizedIncoming.includes("turno de hoy");
 
     if (isLastRequest) {
+      manualSQL = true;
       sql = `
         SELECT *
         FROM ${tableName}
@@ -260,18 +287,17 @@ Examples:
     }
 
     if (isShiftRequest) {
-  const { start, end } = getCurrentShiftUtcWindow();
+      manualSQL = true;
+      const { start, end } = getCurrentShiftUtcWindow();
 
-  console.log("SHIFT WINDOW UTC:", start, "→", end);
+      console.log("SHIFT WINDOW UTC:", start, "→", end);
 
-  sql = `
+      sql = `
     SELECT COUNT(*) AS total
     FROM ${tableName}
     WHERE createdAt BETWEEN '${start}' AND '${end}'
   `;
-}
-
-
+    }
 
     console.log("Final SQL:", sql);
 
@@ -299,7 +325,10 @@ Examples:
       answer = "No production records were found.";
     } else if (isShiftRequest) {
       // some DB drivers return [{ total: 42 }] or [{ "COUNT(*)": 42 }] — we handle both
-      const total = rows[0].total ?? rows[0]["COUNT(*)"] ?? rows[0][Object.keys(rows[0])[0]];
+      const total =
+        rows[0].total ??
+        rows[0]["COUNT(*)"] ??
+        rows[0][Object.keys(rows[0])[0]];
       answer = `Current shift production: ${total}`;
     } else if (isLastRequest) {
       const r = rows[0];
