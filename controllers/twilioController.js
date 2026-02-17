@@ -8,7 +8,7 @@ const os = require("os");
 
 const client = twilio(
   process.env.TWILIO_ACCOUNT_SID,
-  process.env.TWILIO_AUTH_TOKEN
+  process.env.TWILIO_AUTH_TOKEN,
 );
 
 // Map lines → tables
@@ -62,6 +62,14 @@ async function sendGraphMessage(to, text, imageUrl) {
     to: to,
     body: text,
     mediaUrl: [imageUrl],
+  });
+}
+
+async function sendTextMessage(to, text) {
+  await client.messages.create({
+    from: `whatsapp:${process.env.TWILIO_PHONE}`,
+    to,
+    body: text,
   });
 }
 
@@ -136,7 +144,6 @@ function getCurrentShiftUtcWindow() {
 
   // 🌙 Night: 23:00–06:59
   if (hour >= 23 || hour < 7) {
-
     if (hour >= 23) {
       // Night started today
       start.setUTCHours(23, 0, 0, 0);
@@ -148,7 +155,6 @@ function getCurrentShiftUtcWindow() {
       start.setUTCHours(23, 0, 0, 0);
       end.setUTCHours(7, 0, 0, 0);
     }
-
   }
 
   // ☀️ Day: 07:00–14:59
@@ -164,11 +170,16 @@ function getCurrentShiftUtcWindow() {
   }
 
   return {
-    start: start.toISOString().slice(0, 19).replace("T", " "),
-    end: end.toISOString().slice(0, 19).replace("T", " "),
+    start: start
+      .toISOString()
+      .slice(0, 19)
+      .replace("T", " "),
+    end: end
+      .toISOString()
+      .slice(0, 19)
+      .replace("T", " "),
   };
 }
-
 
 // Normalize a string: lowercase + remove non-alphanum (so "FA-11","fa11","Fa 11" -> "fa11")
 function normalize(text = "") {
@@ -235,8 +246,17 @@ async function handleTwilioMessage(req, res) {
   console.log("From:", from);
   console.log("Raw message:", incomingText);
 
+  // Immediately acknowledge Twilio (avoid timeout)
+  res.status(200).type("text/xml").send(`
+<Response>
+  <Message>⏳ Processing your request...</Message>
+</Response>
+`);
+
   if (!incomingText) {
-    return reply(res, "Please send a valid message.");
+    await sendTextMessage(from, "Please send a valid message.");
+return;
+
   }
 
   // Init session
@@ -246,7 +266,7 @@ async function handleTwilioMessage(req, res) {
   const session = sessions[from];
 
   //Reset line on new message
-  session.line = null;
+  //session.line = null;
 
   try {
     // 1) If we haven't got a line selected yet, try to detect it.
@@ -259,6 +279,7 @@ async function handleTwilioMessage(req, res) {
       // If user sends something unsupported (and we don't yet have a pending question),
       // show the menu of capabilities.
       if (!isSupportedQuestion(incomingText) && !session.pendingQuestion) {
+
         return reply(
           res,
           `
@@ -296,7 +317,8 @@ Examples:
 
       // If still no line, ask
       if (!session.line) {
-        return reply(res, "Which line? Daimler, FA-1, FA-9, FA-11, or FA-13");
+        await sendTextMessage(from, "Which line? Daimler, FA-1, FA-9, FA-11, or FA-13");
+return;
       }
 
       // The user picked a line — restore the original question (if we had one)
@@ -432,102 +454,128 @@ Examples:
     // ===============================
 
     if (isGraphRequest) {
+      const moment = require("moment-timezone");
+      const sequelize = db.sequelize;
 
-  const moment = require("moment-timezone");
-  const sequelize = db.sequelize;
+      const weekStart = moment()
+        .tz("America/Monterrey")
+        .startOf("isoWeek");
 
-  const weekStart = moment()
-    .tz("America/Monterrey")
-    .startOf("isoWeek");
+      if (isLastWeek) {
+        weekStart.subtract(1, "week");
+      }
 
-  if (isLastWeek) {
-    weekStart.subtract(1, "week");
-  }
+      let rows = [];
 
-  let rows = [];
+      for (let i = 0; i < 7; i++) {
+        const baseDay = weekStart.clone().add(i, "days");
 
-  for (let i = 0; i < 7; i++) {
+        const labelDay = baseDay.format("YYYY-MM-DD");
 
-    const baseDay = weekStart.clone().add(i, "days");
+        // DAY SHIFT
+        const dayStart = baseDay
+          .clone()
+          .hour(7)
+          .minute(0)
+          .second(0);
+        const dayEnd = baseDay
+          .clone()
+          .hour(14)
+          .minute(59)
+          .second(59);
 
-    const labelDay = baseDay.format("YYYY-MM-DD");
+        // AFTERNOON SHIFT
+        const afternoonStart = baseDay
+          .clone()
+          .hour(15)
+          .minute(0)
+          .second(0);
+        const afternoonEnd = baseDay
+          .clone()
+          .hour(22)
+          .minute(59)
+          .second(59);
 
-    // DAY SHIFT
-    const dayStart = baseDay.clone().hour(7).minute(0).second(0);
-    const dayEnd = baseDay.clone().hour(14).minute(59).second(59);
+        // NIGHT SHIFT (previous day 23:00 → 06:59)
+        const nightStart = baseDay
+          .clone()
+          .subtract(1, "day")
+          .hour(23)
+          .minute(0)
+          .second(0);
+        const nightEnd = baseDay
+          .clone()
+          .hour(6)
+          .minute(59)
+          .second(59);
 
-    // AFTERNOON SHIFT
-    const afternoonStart = baseDay.clone().hour(15).minute(0).second(0);
-    const afternoonEnd = baseDay.clone().hour(22).minute(59).second(59);
+        // Convert to UTC
+        const formatUTC = (m) =>
+          m
+            .clone()
+            .tz("UTC")
+            .format("YYYY-MM-DD HH:mm:ss");
 
-    // NIGHT SHIFT (previous day 23:00 → 06:59)
-    const nightStart = baseDay.clone().subtract(1, "day").hour(23).minute(0).second(0);
-    const nightEnd = baseDay.clone().hour(6).minute(59).second(59);
-
-    // Convert to UTC
-    const formatUTC = (m) =>
-      m.clone().tz("UTC").format("YYYY-MM-DD HH:mm:ss");
-
-    const [dayRows] = await sequelize.query(`
+        const [dayRows] = await sequelize.query(`
       SELECT COUNT(*) AS total
       FROM ${tableName}
       WHERE createdAt BETWEEN '${formatUTC(dayStart)}'
       AND '${formatUTC(dayEnd)}'
     `);
 
-    const [afternoonRows] = await sequelize.query(`
+        const [afternoonRows] = await sequelize.query(`
       SELECT COUNT(*) AS total
       FROM ${tableName}
       WHERE createdAt BETWEEN '${formatUTC(afternoonStart)}'
       AND '${formatUTC(afternoonEnd)}'
     `);
 
-    const [nightRows] = await sequelize.query(`
+        const [nightRows] = await sequelize.query(`
       SELECT COUNT(*) AS total
       FROM ${tableName}
       WHERE createdAt BETWEEN '${formatUTC(nightStart)}'
       AND '${formatUTC(nightEnd)}'
     `);
 
-    const d = dayRows[0].total;
-    const a = afternoonRows[0].total;
-    const n = nightRows[0].total;
+        const d = dayRows[0].total;
+        const a = afternoonRows[0].total;
+        const n = nightRows[0].total;
 
-    rows.push({
-      day: labelDay,
-      shift_day: d,
-      shift_afternoon: a,
-      shift_night: n,
-      total: d + a + n
-    });
-  }
+        rows.push({
+          day: labelDay,
+          shift_day: d,
+          shift_afternoon: a,
+          shift_night: n,
+          total: d + a + n,
+        });
+      }
 
-  const file = `week-${Date.now()}.png`;
+      const file = `week-${Date.now()}.png`;
 
-  await generateWeeklyChart(rows, file);
+      await generateWeeklyChart(rows, file);
 
-  //Debug info
-  const fullPath=path.join(os.tmpdir(), file);
-  console.log("Chart full path:", fullPath);
-  console.log("Chart file exists:",fs.existsSync(fullPath));
+      //Debug info
+      const fullPath = path.join(os.tmpdir(), file);
+      console.log("Chart full path:", fullPath);
+      console.log("Chart file exists:", fs.existsSync(fullPath));
 
-  const url = `${process.env.APP_URL}/charts/${file}`;
+      const url = `${process.env.APP_URL}/charts/${file}`;
 
-  console.log("Generated chart URL:", url);
+      console.log("Generated chart URL:", url);
 
-  // Respond immediately to Twilio (avoid timeout)
-  reply(res, "📊 Generating weekly report...");
+      // Respond immediately to Twilio (avoid timeout)
+      await sendTextMessage(from, "📊 Generating weekly report...");
+      //reply(res, "📊 Generating weekly report...");
 
-  // Send media AFTER webhook response
-  try {
-  await sendGraphMessage(from, "📊 Weekly Production Report", url);
-} catch (err) {
-  console.error("Media send failed:", err);
-}
+      // Send media AFTER webhook response
+      try {
+        await sendGraphMessage(from, "📊 Weekly Production Report", url);
+      } catch (err) {
+        console.error("Media send failed:", err);
+      }
 
-  return;
-}
-
+      return;
+    }
 
     console.log("Final SQL:", sql);
 
@@ -581,7 +629,9 @@ Repeated: ${r.repetida ? "Yes" : "No"}
       const sum = rows.reduce((a, b) => a + Number(b.total), 0);
 
       if (!rows || rows.length === 0) {
-        return reply(res, "No data found for that week.");
+        await sendTextMessage(from, "No data found for that week.");
+        return
+        //return reply(res, "No data found for that week.");
       }
 
       return replyWithImage(
@@ -595,14 +645,17 @@ Repeated: ${r.repetida ? "Yes" : "No"}
 
     // 9) Clear session and reply
     delete sessions[from];
-    return reply(res, answer);
+    await sendTextMessage(from, answer);
+return;
   } catch (error) {
     console.error("Error:", error);
     let msg = "Sorry, I couldn’t process that.";
     if (error.code === "insufficient_quota") {
       msg = "AI service unavailable. Contact admin.";
     }
-    return reply(res, msg);
+    await sendTextMessage(from, msg);
+    return;
+    //return reply(res, msg);
   }
 }
 
