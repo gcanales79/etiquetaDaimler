@@ -65,7 +65,7 @@ function getWeekRangeUTC(lastWeek = false) {
 
   // Get Sunday 23:59:59
   const sunday = new Date(monday);
-  sunday.setUTCDate(sunday.getUTCDate() + 6);
+  sunday.setUTCDate(monday.getUTCDate() + 8);
   sunday.setUTCHours(23, 59, 59, 999);
 
   return {
@@ -416,12 +416,17 @@ Examples:
 
       console.log("WEEK RANGE:", start, "→", end);
 
-      sql = `
+     sql = `
 SELECT
   CASE
     
+    WHEN TIME(createdAt) >= '23:00:00'
+    THEN DATE(DATE_ADD(createdAt, INTERVAL 1 DAY))
+
+    
     WHEN TIME(createdAt) < '07:00:00'
-    THEN DATE(DATE_SUB(createdAt, INTERVAL 1 DAY))
+    THEN DATE(createdAt)
+
     ELSE DATE(createdAt)
   END AS day,
 
@@ -433,7 +438,7 @@ SELECT
     END
   ) AS shift_day,
 
-  
+ 
   SUM(
     CASE
       WHEN TIME(createdAt) BETWEEN '15:00:00' AND '22:59:59'
@@ -459,6 +464,7 @@ WHERE createdAt BETWEEN '${start}' AND '${end}'
 GROUP BY day
 ORDER BY day ASC;
 `;
+
     }
 
     console.log("Final SQL:", sql);
