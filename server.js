@@ -29,13 +29,14 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(morgan("dev"))
 
 app.use(bodyParser.json());
-app.use(express.static("public"),{
-  setHeaders: (res, path) => {
-    if (path.endsWith(".png")) {
+app.use(express.static(path.join(__dirname, "public"),{
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith(".png")) {
       res.setHeader("Content-Type", "image/png"); 
     }
   }
-});
+})
+);
 // app.use(cookieParser('secret'));
 
 //Serve charts from temp directory
