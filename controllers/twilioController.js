@@ -420,20 +420,24 @@ Examples:
 SELECT
   CASE
     
-    WHEN TIME(createdAt) >= '23:00:00'
-    THEN DATE(DATE_ADD(createdAt, INTERVAL 1 DAY))
+    WHEN TIME(CONVERT_TZ(createdAt,'+00:00','America/Monterrey')) >= '23:00:00'
+      OR TIME(CONVERT_TZ(createdAt,'+00:00','America/Monterrey')) < '07:00:00'
+    THEN DATE(
+      DATE_ADD(
+        CONVERT_TZ(createdAt,'+00:00','America/Monterrey'),
+        INTERVAL 1 DAY
+      )
+    )
 
     
-    WHEN TIME(createdAt) < '07:00:00'
-    THEN DATE(createdAt)
-
-    ELSE DATE(createdAt)
+    ELSE DATE(CONVERT_TZ(createdAt,'+00:00','America/Monterrey'))
   END AS day,
 
   
   SUM(
     CASE
-      WHEN TIME(createdAt) BETWEEN '07:00:00' AND '14:59:59'
+      WHEN TIME(CONVERT_TZ(createdAt,'+00:00','America/Monterrey'))
+           BETWEEN '07:00:00' AND '14:59:59'
       THEN 1 ELSE 0
     END
   ) AS shift_day,
@@ -441,7 +445,8 @@ SELECT
  
   SUM(
     CASE
-      WHEN TIME(createdAt) BETWEEN '15:00:00' AND '22:59:59'
+      WHEN TIME(CONVERT_TZ(createdAt,'+00:00','America/Monterrey'))
+           BETWEEN '15:00:00' AND '22:59:59'
       THEN 1 ELSE 0
     END
   ) AS shift_afternoon,
@@ -449,8 +454,8 @@ SELECT
   
   SUM(
     CASE
-      WHEN TIME(createdAt) >= '23:00:00'
-        OR TIME(createdAt) < '07:00:00'
+      WHEN TIME(CONVERT_TZ(createdAt,'+00:00','America/Monterrey')) >= '23:00:00'
+        OR TIME(CONVERT_TZ(createdAt,'+00:00','America/Monterrey')) < '07:00:00'
       THEN 1 ELSE 0
     END
   ) AS shift_night,
@@ -464,6 +469,7 @@ WHERE createdAt BETWEEN '${start}' AND '${end}'
 GROUP BY day
 ORDER BY day ASC;
 `;
+
 
     }
 
