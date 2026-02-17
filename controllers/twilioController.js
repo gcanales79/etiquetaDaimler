@@ -410,68 +410,85 @@ Examples:
     // ===============================
 
     if (isGraphRequest) {
-      manualSQL = true;
 
-      const { start, end } = getWeekRangeUTC(isLastWeek);
+  const moment = require("moment-timezone");
+  const sequelize = db.sequelize;
 
-      console.log("WEEK RANGE:", start, "→", end);
+  const weekStart = moment()
+    .tz("America/Monterrey")
+    .startOf("isoWeek");
 
-     sql = `
-SELECT
-  CASE
-    
-    WHEN TIME(CONVERT_TZ(createdAt,'+00:00','America/Monterrey')) >= '23:00:00'
-      OR TIME(CONVERT_TZ(createdAt,'+00:00','America/Monterrey')) < '07:00:00'
-    THEN DATE(
-      DATE_ADD(
-        CONVERT_TZ(createdAt,'+00:00','America/Monterrey'),
-        INTERVAL 1 DAY
-      )
-    )
+  if (isLastWeek) {
+    weekStart.subtract(1, "week");
+  }
 
-    
-    ELSE DATE(CONVERT_TZ(createdAt,'+00:00','America/Monterrey'))
-  END AS day,
+  let rows = [];
 
-  
-  SUM(
-    CASE
-      WHEN TIME(CONVERT_TZ(createdAt,'+00:00','America/Monterrey'))
-           BETWEEN '07:00:00' AND '14:59:59'
-      THEN 1 ELSE 0
-    END
-  ) AS shift_day,
+  for (let i = 0; i < 7; i++) {
 
- 
-  SUM(
-    CASE
-      WHEN TIME(CONVERT_TZ(createdAt,'+00:00','America/Monterrey'))
-           BETWEEN '15:00:00' AND '22:59:59'
-      THEN 1 ELSE 0
-    END
-  ) AS shift_afternoon,
+    const baseDay = weekStart.clone().add(i, "days");
 
-  
-  SUM(
-    CASE
-      WHEN TIME(CONVERT_TZ(createdAt,'+00:00','America/Monterrey')) >= '23:00:00'
-        OR TIME(CONVERT_TZ(createdAt,'+00:00','America/Monterrey')) < '07:00:00'
-      THEN 1 ELSE 0
-    END
-  ) AS shift_night,
+    const labelDay = baseDay.format("YYYY-MM-DD");
 
-  COUNT(*) AS total
+    // DAY SHIFT
+    const dayStart = baseDay.clone().hour(7).minute(0).second(0);
+    const dayEnd = baseDay.clone().hour(14).minute(59).second(59);
 
-FROM ${tableName}
+    // AFTERNOON SHIFT
+    const afternoonStart = baseDay.clone().hour(15).minute(0).second(0);
+    const afternoonEnd = baseDay.clone().hour(22).minute(59).second(59);
 
-WHERE createdAt BETWEEN '${start}' AND '${end}'
+    // NIGHT SHIFT (previous day 23:00 → 06:59)
+    const nightStart = baseDay.clone().subtract(1, "day").hour(23).minute(0).second(0);
+    const nightEnd = baseDay.clone().hour(6).minute(59).second(59);
 
-GROUP BY day
-ORDER BY day ASC;
-`;
+    // Convert to UTC
+    const formatUTC = (m) =>
+      m.clone().tz("UTC").format("YYYY-MM-DD HH:mm:ss");
 
+    const [dayRows] = await sequelize.query(`
+      SELECT COUNT(*) AS total
+      FROM ${tableName}
+      WHERE createdAt BETWEEN '${formatUTC(dayStart)}'
+      AND '${formatUTC(dayEnd)}'
+    `);
 
-    }
+    const [afternoonRows] = await sequelize.query(`
+      SELECT COUNT(*) AS total
+      FROM ${tableName}
+      WHERE createdAt BETWEEN '${formatUTC(afternoonStart)}'
+      AND '${formatUTC(afternoonEnd)}'
+    `);
+
+    const [nightRows] = await sequelize.query(`
+      SELECT COUNT(*) AS total
+      FROM ${tableName}
+      WHERE createdAt BETWEEN '${formatUTC(nightStart)}'
+      AND '${formatUTC(nightEnd)}'
+    `);
+
+    const d = dayRows[0].total;
+    const a = afternoonRows[0].total;
+    const n = nightRows[0].total;
+
+    rows.push({
+      day: labelDay,
+      shift_day: d,
+      shift_afternoon: a,
+      shift_night: n,
+      total: d + a + n
+    });
+  }
+
+  const file = `week-${Date.now()}.png`;
+
+  await generateWeeklyChart(rows, file);
+
+  const url = `${process.env.APP_URL}/charts/${file}`;
+
+  return replyWithImage(res, "📊 Weekly Production Report", url);
+}
+
 
     console.log("Final SQL:", sql);
 
