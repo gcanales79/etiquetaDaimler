@@ -16,15 +16,15 @@ const TABLES = {
 const sessions = {};
 
 function replyWithImage(res, text, imageUrl) {
-  res.set("Content-Type", "text/xml");
-  res.send(`
-    <Response>
-      <Message>
-        <Body>${text}</Body>
-        <Media>${imageUrl}</Media>
-      </Message>
-    </Response>
-  `);
+ const twiml = `<Response>
+  <Message>
+    <Body>${text}</Body>
+    <Media>${imageUrl}</Media>
+  </Message>
+</Response>`.trim;
+console.log("TWIML RESPONSE:", twiml);
+res.writeHead(200, { "Content-Type": "text/xml" });
+res.end(twiml);
 }
 
 // Helper: send Twilio reply
