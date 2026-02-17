@@ -31,6 +31,7 @@ app.use(morgan("dev"))
 app.use(bodyParser.json());
 app.use(express.static("public"));
 // app.use(cookieParser('secret'));
+app.use("/charts", express.static(os.tmpdir())); // Serve charts from temp directory
 
 
 app.set("trust proxy", 1);

@@ -2,6 +2,7 @@ const { ChartJSNodeCanvas } = require("chartjs-node-canvas");
 const path = require("path");
 const fs = require("fs");
 const db = require("../models");
+const os=require("os");
 
 // Chart size
 const width = 900;
@@ -15,7 +16,8 @@ const chartJSNodeCanvas = new ChartJSNodeCanvas({
 });
 
 // Public charts folder
-const chartsDir = path.join(__dirname, "../public/charts");
+// const chartsDir = path.join(__dirname, "../public/charts"); Work in local
+const chartsDir = os.tmpdir(); // Use temp directory for charts in production
 
 // Ensure folder exists
 if (!fs.existsSync(chartsDir)) {
