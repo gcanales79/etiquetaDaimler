@@ -248,6 +248,23 @@ function isSupportedQuestion(text) {
 async function processProductionRequest(from, incomingText) {
   if (!incomingText) return;
 
+    // Init session
+  if (!sessions[from]) {
+    sessions[from] = {};
+  }
+  const session = sessions[from];
+
+  //Reset line on new message
+  //session.line = null;
+
+  try {
+    // 1) If we haven't got a line selected yet, try to detect it.
+    if (!session.line) {
+      // store the original question while we ask for the line
+      if (!session.pendingQuestion) {
+        session.pendingQuestion = incomingText;
+      }
+
   // 1. Check if the message contains ANY known production keywords
   // If it DOES NOT, show the Menu/Help message immediately.
   if (!isSupportedQuestion(incomingText)&& !session.pendingQuestion) {
@@ -274,22 +291,7 @@ I didn't recognize a production request. I can help you with:
     return;
   }
 
-  // Init session
-  if (!sessions[from]) {
-    sessions[from] = {};
-  }
-  const session = sessions[from];
 
-  //Reset line on new message
-  //session.line = null;
-
-  try {
-    // 1) If we haven't got a line selected yet, try to detect it.
-    if (!session.line) {
-      // store the original question while we ask for the line
-      if (!session.pendingQuestion) {
-        session.pendingQuestion = incomingText;
-      }
 
       // If user sends something unsupported (and we don't yet have a pending question),
       // show the menu of capabilities.
