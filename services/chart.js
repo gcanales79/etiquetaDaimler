@@ -3,6 +3,15 @@ const path = require("path");
 const fs = require("fs");
 const db = require("../models");
 const os = require("os");
+const cloudinary = require('cloudinary').v2;
+
+
+// Configure Cloudinary (Add these to your Heroku Config Vars)
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_NAME,
+  api_key: process.env.CLOUDINARY_KEY,
+  api_secret: process.env.CLOUDINARY_SECRET
+});
 
 // Chart size
 const width = 900;
@@ -29,8 +38,12 @@ if (!fs.existsSync(chartsDir)) {
  */
 async function generateWeeklyChart(rows, fileName) {
   console.log("Weekly rows:", rows);
-  // Prepare labels
-  const labels = rows.map((r) => new Date(r.day).toLocaleDateString("es-MX"));
+  // Use the local Monterrey date for labels
+  const labels = rows.map((r) => {
+    const d = new Date(r.day);
+    // Adjusting for the UTC-6 offset manually if toLocaleDateString fails to shift correctly
+    return d.toLocaleDateString("es-MX", { weekday: 'short', day: 'numeric' });
+  });
 
   const dayShift = rows.map((r) => r.shift_day);
   const afternoonShift = rows.map((r) => r.shift_afternoon);
@@ -105,19 +118,26 @@ async function generateWeeklyChart(rows, fileName) {
     },
   };
 
-  // Render image
-  const image = await chartJSNodeCanvas.renderToBuffer(config);
-
-  // Save file
-
+  /*const image = await chartJSNodeCanvas.renderToBuffer(config);
   const filePath = path.join(chartsDir, fileName);
-
   await fs.promises.writeFile(filePath, image);
+  
+  return fileName; // Just return the name, the controller builds the URL*/
 
-  console.log("Chart saved:", filePath);
+  // 1. Render to a Buffer instead of writing a file
+  const imageBuffer = await chartJSNodeCanvas.renderToBuffer(config);
 
-  // Return public URL path
-  return `/charts/${fileName}`;
+  // 2. Upload directly to Cloudinary using a Promise
+  return new Promise((resolve, reject) => {
+    cloudinary.uploader.upload_stream(
+      { folder: "production_charts", public_id: fileName.replace('.png', '') },
+      (error, result) => {
+        if (error) reject(error);
+        else resolve(result.secure_url); // This is the permanent HTTPS link
+      }
+    ).end(imageBuffer);
+  });
+
 }
 
 module.exports = {

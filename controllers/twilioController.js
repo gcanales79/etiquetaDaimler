@@ -5,6 +5,7 @@ const path = require("path");
 const twilio = require("twilio");
 const fs = require("fs");
 const os = require("os");
+const chartDir = path.join(__dirname, "../public/charts");
 
 const client = twilio(
   process.env.TWILIO_ACCOUNT_SID,
@@ -57,6 +58,7 @@ function replyWithImage(res, text, imageUrl) {
 
 //Twilio message sender (for charts)
 async function sendGraphMessage(to, text, imageUrl) {
+  console.log("Sending graph message to:", to);
   await client.messages.create({
     from: `whatsapp:${process.env.TWILIO_PHONE}`, // Twilio sandbox or your WA number
     to: to,
@@ -72,7 +74,6 @@ async function sendTextMessage(to, text) {
     body: text,
   });
 }
-
 
 function getWeekRangeUTC(lastWeek = false) {
   const now = new Date();
@@ -235,16 +236,41 @@ function isSupportedQuestion(text) {
     t.includes("shift") ||
     t.includes("turno") ||
     t.includes("today") ||
+    t.includes("graph") ||
+    t.includes("chart") ||
+    t.includes("grafica") ||
+    t.includes("gráfica") ||
     t.includes("hoy")
   );
 }
 
 async function processProductionRequest(from, incomingText) {
+  if (!incomingText) return;
 
-  if (!incomingText) {
-    await sendTextMessage(from, "Please send a valid message.");
-return;
+  // 1. Check if the message contains ANY known production keywords
+  // If it DOES NOT, show the Menu/Help message immediately.
+  if (!isSupportedQuestion(incomingText)) {
+    const menuMessage = `
+🤖 *Production Bot Menu*
 
+I didn't recognize a production request. I can help you with:
+
+📊 *Reports:*
+• "Weekly Graph" (Grafica semanal)
+• "Last week chart"
+
+🏭 *Real-time Data:*
+• "Production today" (Hoy)
+• "Current shift" (Turno actual)
+• "Last record" (Ultimo)
+
+*Please include a line in your request:* (Daimler, FA-1, FA-9, FA-11, or FA-13)`.trim();
+
+    await sendTextMessage(from, menuMessage);
+
+    // Reset the session so they start fresh next time
+    if (sessions[from]) delete sessions[from];
+    return;
   }
 
   // Init session
@@ -267,7 +293,10 @@ return;
       // If user sends something unsupported (and we don't yet have a pending question),
       // show the menu of capabilities.
       if (!isSupportedQuestion(incomingText) && !session.pendingQuestion) {
-        await sendTextMessage(from, "I can help with: \n\n• Production today / producción hoy\n• Production this shift / producción turno actual\n• Last production / última producción\n• Production by line (Daimler, FA-1, FA-9, FA-11, FA-13)\n\nExamples:\n• \"production today fa-9\"\n• \"producción turno actual\"\n• \"last production fa-11\"");
+        await sendTextMessage(
+          from,
+          'I can help with: \n\n• Production today / producción hoy\n• Production this shift / producción turno actual\n• Last production / última producción\n• Production by line (Daimler, FA-1, FA-9, FA-11, FA-13)\n\nExamples:\n• "production today fa-9"\n• "producción turno actual"\n• "last production fa-11"',
+        );
         /*return reply(
           res,
           `
@@ -305,8 +334,11 @@ Examples:
 
       // If still no line, ask
       if (!session.line) {
-        await sendTextMessage(from, "Which line? Daimler, FA-1, FA-9, FA-11, or FA-13");
-return;
+        await sendTextMessage(
+          from,
+          "Which line? Daimler, FA-1, FA-9, FA-11, or FA-13",
+        );
+        return;
       }
 
       // The user picked a line — restore the original question (if we had one)
@@ -395,6 +427,8 @@ return;
       normalizedIncoming.includes("esta turno") ||
       normalizedIncoming.includes("esta turno") ||
       normalizedIncoming.includes("hoy turno") ||
+      normalizedIncoming.includes("production today") ||
+      normalizedIncoming.includes("produccion hoy") ||
       normalizedIncoming.includes("turno de hoy");
 
     //LAST RECORD
@@ -442,171 +476,128 @@ return;
     // ===============================
 
     if (isGraphRequest) {
-       // Respond immediately to Twilio (avoid timeout)
+      // Respond immediately to Twilio (avoid timeout)
       await sendTextMessage(from, "📊 Gathering weekly data...");
       const moment = require("moment-timezone");
       const sequelize = db.sequelize;
 
-        const tz = "America/Monterrey";
+      const tz = "America/Monterrey";
+
+      let startMoment = moment()
+        .tz(tz)
+        .startOf("isoWeek");
+      if (isLastWeek) startMoment.subtract(1, "week");
+
+      // 1. Get the Monday of the requested week
+      let mondayLocal = moment()
+        .tz(tz)
+        .startOf("isoWeek");
+      if (isLastWeek) mondayLocal.subtract(1, "week");
+
+      // 2. Window starts Sunday at 23:00 (The start of Monday's Night Shift)
+      const startUTC = mondayLocal
+        .clone()
+        .subtract(1, "hour")
+        .utc()
+        .format("YYYY-MM-DD HH:mm:ss");
+      // Window ends the following Sunday at 22:59:59
+      const endUTC = mondayLocal
+        .clone()
+        .add(7, "days")
+        .subtract(1, "second")
+        .subtract(1, "hour")
+        .utc()
+        .format("YYYY-MM-DD HH:mm:ss");
+
+      // THE OFFSET QUERY:
+      // We subtract 6 hours from createdAt to get the "Local" time for grouping
+      const rows = await db.sequelize.query(
+        `
+          SELECT 
+        -- 1. ALIGN THE DATE: 
+        -- We subtract 6 hours for Monterrey + 1 hour so that 23:00 Sunday becomes 16:00 Sunday,
+        -- BUT we actually want 23:00 Sunday to count as MONDAY. 
+        -- To make 23:00 (Night Start) the start of the "next" day, we ADD 1 hour before getting the date.
+        DATE(DATE_SUB(DATE_ADD(createdAt, INTERVAL 1 HOUR), INTERVAL 6 HOUR)) as day,
+
+        -- 2. DEFINE THE SHIFTS (Monterrey Local Time):
+        -- Night: 23:00 - 06:59
+        COUNT(CASE WHEN HOUR(DATE_SUB(createdAt, INTERVAL 6 HOUR)) >= 23 
+                    OR HOUR(DATE_SUB(createdAt, INTERVAL 6 HOUR)) < 7 THEN 1 END) as shift_night,
         
-        let startMoment = moment().tz(tz).startOf('isoWeek');
-        if (isLastWeek) startMoment.subtract(1, 'week');
-
-        // We search in UTC, so we define the window clearly
-        const startUTC = startMoment.clone().utc().format('YYYY-MM-DD HH:mm:ss');
-        const endUTC = startMoment.clone().add(7, 'days').utc().format('YYYY-MM-DD HH:mm:ss');
-
-        // THE OFFSET QUERY:
-        // We subtract 6 hours from createdAt to get the "Local" time for grouping
-        const rows = await db.sequelize.query(`
-            SELECT 
-                DATE(DATE_SUB(createdAt, INTERVAL 6 HOUR)) as day,
-                COUNT(CASE WHEN HOUR(DATE_SUB(createdAt, INTERVAL 6 HOUR)) BETWEEN 7 AND 14 THEN 1 END) as shift_day,
-                COUNT(CASE WHEN HOUR(DATE_SUB(createdAt, INTERVAL 6 HOUR)) BETWEEN 15 AND 22 THEN 1 END) as shift_afternoon,
-                COUNT(CASE WHEN HOUR(DATE_SUB(createdAt, INTERVAL 6 HOUR)) >= 23 OR HOUR(DATE_SUB(createdAt, INTERVAL 6 HOUR)) < 7 THEN 1 END) as shift_night,
-                COUNT(*) as total
+        -- Day: 07:00 - 14:59
+        COUNT(CASE WHEN HOUR(DATE_SUB(createdAt, INTERVAL 6 HOUR)) BETWEEN 7 AND 14 THEN 1 END) as shift_day,
+        
+        -- Afternoon: 15:00 - 22:59
+        COUNT(CASE WHEN HOUR(DATE_SUB(createdAt, INTERVAL 6 HOUR)) BETWEEN 15 AND 22 THEN 1 END) as shift_afternoon,
+        
+        COUNT(*) as total
             FROM ${tableName}
             WHERE createdAt BETWEEN :startUTC AND :endUTC
             GROUP BY day
             ORDER BY day ASC
-        `, { 
-            replacements: { startUTC, endUTC },
-            type: db.sequelize.QueryTypes.SELECT 
-        });
+        `,
+        {
+          replacements: { startUTC, endUTC },
+          type: db.sequelize.QueryTypes.SELECT,
+        },
+      );
 
-        console.log("Weekly data rows:", rows);
+      console.log("Weekly data rows:", rows);
 
-        if (!rows || rows.length === 0) {
-            await sendTextMessage(from, "No data found for the requested period.");
-            return;
-        }
-
-        const file = `week-${Date.now()}.png`;
-        await generateWeeklyChart(rows, file);
-        
-        const url = `${process.env.APP_URL}/charts/${file}`;
-        await sendGraphMessage(from, `📊 Weekly Report (${session.line.toUpperCase()})`, url);
-        
-        delete sessions[from];
+      if (!rows || rows.length === 0) {
+        await sendTextMessage(from, "No data found for the requested period.");
         return;
-
-     /* const weekStart = moment()
-        .tz("America/Monterrey")
-        .startOf("isoWeek");
-
-      if (isLastWeek) {
-        weekStart.subtract(1, "week");
       }
 
-      let rows = [];
+      // Calculate the grand total from the database results
+      const weeklyTotal = rows.reduce(
+        (sum, r) => sum + Number(r.total || 0),
+        0,
+      );
 
-      for (let i = 0; i < 7; i++) {
-        const baseDay = weekStart.clone().add(i, "days");
+      const fileName = `week-${Date.now()}.png`;
 
-        const labelDay = baseDay.format("YYYY-MM-DD");
+      /*await generateWeeklyChart(rows, fileName);
 
-        // DAY SHIFT
-        const dayStart = baseDay
-          .clone()
-          .hour(7)
-          .minute(0)
-          .second(0);
-        const dayEnd = baseDay
-          .clone()
-          .hour(14)
-          .minute(59)
-          .second(59);
+      const url = `${process.env.APP_URL}/charts/${fileName}`;
+      console.log("Sending URL to Twilio:", url);*/
 
-        // AFTERNOON SHIFT
-        const afternoonStart = baseDay
-          .clone()
-          .hour(15)
-          .minute(0)
-          .second(0);
-        const afternoonEnd = baseDay
-          .clone()
-          .hour(22)
-          .minute(59)
-          .second(59);
+      // Now this returns a REAL https://res.cloudinary.com/... URL
+      const chartUrl = await generateWeeklyChart(rows, fileName);
 
-        // NIGHT SHIFT (previous day 23:00 → 06:59)
-        const nightStart = baseDay
-          .clone()
-          .subtract(1, "day")
-          .hour(23)
-          .minute(0)
-          .second(0);
-        const nightEnd = baseDay
-          .clone()
-          .hour(6)
-          .minute(59)
-          .second(59);
+      console.log("Generated chart URL:", chartUrl);
 
-        // Convert to UTC
-        const formatUTC = (m) =>
-          m
-            .clone()
-            .tz("UTC")
-            .format("YYYY-MM-DD HH:mm:ss");
-
-        const [dayRows] = await sequelize.query(`
-      SELECT COUNT(*) AS total
-      FROM ${tableName}
-      WHERE createdAt BETWEEN '${formatUTC(dayStart)}'
-      AND '${formatUTC(dayEnd)}'
-    `);
-
-        const [afternoonRows] = await sequelize.query(`
-      SELECT COUNT(*) AS total
-      FROM ${tableName}
-      WHERE createdAt BETWEEN '${formatUTC(afternoonStart)}'
-      AND '${formatUTC(afternoonEnd)}'
-    `);
-
-        const [nightRows] = await sequelize.query(`
-      SELECT COUNT(*) AS total
-      FROM ${tableName}
-      WHERE createdAt BETWEEN '${formatUTC(nightStart)}'
-      AND '${formatUTC(nightEnd)}'
-    `);
-
-        const d = dayRows[0].total;
-        const a = afternoonRows[0].total;
-        const n = nightRows[0].total;
-
-        rows.push({
-          day: labelDay,
-          shift_day: d,
-          shift_afternoon: a,
-          shift_night: n,
-          total: d + a + n,
-        });
-      }
-
-      const file = `week-${Date.now()}.png`;
-
-      await generateWeeklyChart(rows, file);
-
-      //Debug info
-      const fullPath = path.join(os.tmpdir(), file);
-      console.log("Chart full path:", fullPath);
-      console.log("Chart file exists:", fs.existsSync(fullPath));
-
-      const url = `${process.env.APP_URL}/charts/${file}`;
-
-      console.log("Generated chart URL:", url);
-
-     
-      //reply(res, "📊 Generating weekly report...");
-
-      // Send media AFTER webhook response
+      // 2. Send to WhatsApp
       try {
-        await sendGraphMessage(from, "📊 Weekly Production Report", url);
+        await sendGraphMessage(
+          from,
+          `📊 Weekly Production: ${session.line.toUpperCase()} \nTotal for the week: ${weeklyTotal}`,
+          chartUrl,
+        );
       } catch (err) {
-        console.error("Media send failed:", err);
+        console.error("Twilio Media Error:", err);
+        await sendTextMessage(
+          from,
+          "The chart was generated but I couldn't send it via WhatsApp. Please check the server.",
+        );
       }
 
-      return;*/
+      // 3. Delete from Cloudinary after a 60-second delay
+      // We wait 60 seconds to ensure Twilio's servers have finished downloading it.
+      setTimeout(async () => {
+        try {
+          const cloudinary = require("cloudinary").v2;
+          // The 'public_id' is the folder + filename without extension
+          await cloudinary.uploader.destroy(`production_charts/${fileName}`);
+          console.log(`Cloudinary file ${fileName} deleted.`);
+        } catch (err) {
+          console.error("Failed to delete Cloudinary image:", err);
+        }
+      }, 60000); // 60,000ms = 1 minute
+
+      delete sessions[from];
+      return;
     }
 
     console.log("Final SQL:", sql);
@@ -662,7 +653,7 @@ Repeated: ${r.repetida ? "Yes" : "No"}
 
       if (!rows || rows.length === 0) {
         await sendTextMessage(from, "No data found for that week.");
-        return
+        return;
         //return reply(res, "No data found for that week.");
       }
 
@@ -678,7 +669,7 @@ Repeated: ${r.repetida ? "Yes" : "No"}
     // 9) Clear session and reply
     delete sessions[from];
     await sendTextMessage(from, answer);
-return;
+    return;
   } catch (error) {
     console.error("Error:", error);
     let msg = "Sorry, I couldn’t process that.";
@@ -699,16 +690,17 @@ async function handleTwilioMessage(req, res) {
   console.log("Raw message:", incomingText);
 
   // Immediately acknowledge Twilio (avoid timeout)
-  res.status(200).type("text/xml").send(`<Response></Response>`);
+  res
+    .status(200)
+    .type("text/xml")
+    .send(`<Response></Response>`);
 
   // Run the logic in the background
-    try {
-        await processProductionRequest(from, incomingText);
-    } catch (err) {
-        console.error("Background Processing Error:", err);
-    }
+  try {
+    await processProductionRequest(from, incomingText);
+  } catch (err) {
+    console.error("Background Processing Error:", err);
   }
-
- 
+}
 
 module.exports = { handleTwilioMessage };

@@ -37,6 +37,7 @@ app.use(express.static(path.join(__dirname, "public"),{
   }
 })
 );
+app.use('/charts', express.static(path.join(__dirname, 'public/charts')));
 // app.use(cookieParser('secret'));
 
 //Serve charts from temp directory
