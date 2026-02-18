@@ -231,6 +231,7 @@ function isSupportedQuestion(text) {
     t.includes("last") ||
     t.includes("latest") ||
     t.includes("recent") ||
+    t.includes("current") ||
     t.includes("ultimo") ||
     t.includes("último") ||
     t.includes("shift") ||
@@ -422,6 +423,9 @@ Examples:
       normalizedIncoming.includes("shift") ||
       normalizedIncoming.includes("current shift") ||
       normalizedIncoming.includes("this shift") ||
+      normalizedIncoming.includes("current production") ||
+      normalizedIncoming.includes("produccion actual") ||
+      normalizedIncoming.includes("producción actual") ||
       normalizedIncoming.includes("turno") ||
       normalizedIncoming.includes("turno actual") ||
       normalizedIncoming.includes("esta turno") ||
