@@ -75,38 +75,7 @@ async function sendTextMessage(to, text) {
   });
 }
 
-function getWeekRangeUTC(lastWeek = false) {
-  const now = new Date();
 
-  // Get Monday of current week
-  const day = now.getUTCDay() || 7; // Sunday = 7
-  const diff = now.getUTCDate() - day + 1;
-
-  const monday = new Date(now);
-  monday.setUTCDate(diff);
-  monday.setUTCHours(0, 0, 0, 0);
-
-  // Move to last week if needed
-  if (lastWeek) {
-    monday.setUTCDate(monday.getUTCDate() - 7);
-  }
-
-  // Get Sunday 23:59:59
-  const sunday = new Date(monday);
-  sunday.setUTCDate(monday.getUTCDate() + 8);
-  sunday.setUTCHours(23, 59, 59, 999);
-
-  return {
-    start: monday
-      .toISOString()
-      .slice(0, 19)
-      .replace("T", " "),
-    end: sunday
-      .toISOString()
-      .slice(0, 19)
-      .replace("T", " "),
-  };
-}
 
 function getWeekRangeUTC(lastWeek = false) {
   const now = new Date();
@@ -137,48 +106,77 @@ function getWeekRangeUTC(lastWeek = false) {
 }
 
 function getCurrentShiftUtcWindow() {
-  const now = new Date(); // UTC
-  const hour = now.getUTCHours();
+  const moment = require("moment-timezone");
+  const tz = "America/Monterrey";
 
-  let start = new Date(now);
-  let end = new Date(now);
+  // Get current time in Monterrey
+  const now = moment().tz(tz);
+  const hour = now.hour();
 
-  // 🌙 Night: 23:00–06:59
+  let start = now.clone();
+  let end = now.clone();
+
+  // 🌙 Night Shift: 23:00–06:59 (Monterrey Time)
   if (hour >= 23 || hour < 7) {
     if (hour >= 23) {
-      // Night started today
-      start.setUTCHours(23, 0, 0, 0);
-      end.setUTCDate(end.getUTCDate() + 1);
-      end.setUTCHours(7, 0, 0, 0);
+      // It's between 23:00 and midnight
+      start
+        .hour(23)
+        .minute(0)
+        .second(0)
+        .millisecond(0);
+      end
+        .add(1, "day")
+        .hour(7)
+        .minute(0)
+        .second(0)
+        .millisecond(0);
     } else {
-      // After midnight (still night)
-      start.setUTCDate(start.getUTCDate() - 1);
-      start.setUTCHours(23, 0, 0, 0);
-      end.setUTCHours(7, 0, 0, 0);
+      // It's after midnight but before 07:00
+      start
+        .subtract(1, "day")
+        .hour(23)
+        .minute(0)
+        .second(0)
+        .millisecond(0);
+      end
+        .hour(7)
+        .minute(0)
+        .second(0)
+        .millisecond(0);
     }
   }
-
-  // ☀️ Day: 07:00–14:59
+  // ☀️ Day Shift: 07:00–14:59 (Monterrey Time)
   else if (hour >= 7 && hour < 15) {
-    start.setUTCHours(7, 0, 0, 0);
-    end.setUTCHours(15, 0, 0, 0);
+    start
+      .hour(7)
+      .minute(0)
+      .second(0)
+      .millisecond(0);
+    end
+      .hour(15)
+      .minute(0)
+      .second(0)
+      .millisecond(0);
   }
-
-  // 🌇 Afternoon: 15:00–22:59
+  // 🌇 Afternoon Shift: 15:00–22:59 (Monterrey Time)
   else {
-    start.setUTCHours(15, 0, 0, 0);
-    end.setUTCHours(23, 0, 0, 0);
+    start
+      .hour(15)
+      .minute(0)
+      .second(0)
+      .millisecond(0);
+    end
+      .hour(23)
+      .minute(0)
+      .second(0)
+      .millisecond(0);
   }
 
+  // Convert these Local Monterrey shift times back to UTC for the SQL query
   return {
-    start: start
-      .toISOString()
-      .slice(0, 19)
-      .replace("T", " "),
-    end: end
-      .toISOString()
-      .slice(0, 19)
-      .replace("T", " "),
+    start: start.utc().format("YYYY-MM-DD HH:mm:ss"),
+    end: end.utc().format("YYYY-MM-DD HH:mm:ss"),
   };
 }
 
@@ -248,7 +246,7 @@ function isSupportedQuestion(text) {
 async function processProductionRequest(from, incomingText) {
   if (!incomingText) return;
 
-    // Init session
+  // Init session
   if (!sessions[from]) {
     sessions[from] = {};
   }
@@ -265,10 +263,10 @@ async function processProductionRequest(from, incomingText) {
         session.pendingQuestion = incomingText;
       }
 
-  // 1. Check if the message contains ANY known production keywords
-  // If it DOES NOT, show the Menu/Help message immediately.
-  if (!isSupportedQuestion(incomingText)&& !session.pendingQuestion) {
-    const menuMessage = `
+      // 1. Check if the message contains ANY known production keywords
+      // If it DOES NOT, show the Menu/Help message immediately.
+      if (!isSupportedQuestion(incomingText) && !session.pendingQuestion) {
+        const menuMessage = `
 🤖 *Production Bot Menu*
 
 I didn't recognize a production request. I can help you with:
@@ -284,14 +282,12 @@ I didn't recognize a production request. I can help you with:
 
 *Please include a line in your request:* (Daimler, FA-1, FA-9, FA-11, or FA-13)`.trim();
 
-    await sendTextMessage(from, menuMessage);
+        await sendTextMessage(from, menuMessage);
 
-    // Reset the session so they start fresh next time
-    if (sessions[from]) delete sessions[from];
-    return;
-  }
-
-
+        // Reset the session so they start fresh next time
+        if (sessions[from]) delete sessions[from];
+        return;
+      }
 
       // If user sends something unsupported (and we don't yet have a pending question),
       // show the menu of capabilities.
@@ -636,7 +632,7 @@ Examples:
         rows[0].total ??
         rows[0]["COUNT(*)"] ??
         rows[0][Object.keys(rows[0])[0]];
-      answer = `Current shift production: ${total}`;
+      answer = `📊 *Current Shift Production*\nLine: ${session.line.toUpperCase()}\nTotal: *${total}* units`;
     } else if (isLastRequest) {
       const r = rows[0];
       answer = `
