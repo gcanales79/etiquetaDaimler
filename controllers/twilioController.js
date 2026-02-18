@@ -75,8 +75,6 @@ async function sendTextMessage(to, text) {
   });
 }
 
-
-
 function getWeekRangeUTC(lastWeek = false) {
   const now = new Date();
 
@@ -296,22 +294,6 @@ I didn't recognize a production request. I can help you with:
           from,
           'I can help with: \n\n• Production today / producción hoy\n• Production this shift / producción turno actual\n• Last production / última producción\n• Production by line (Daimler, FA-1, FA-9, FA-11, FA-13)\n\nExamples:\n• "production today fa-9"\n• "producción turno actual"\n• "last production fa-11"',
         );
-        /*return reply(
-          res,
-          `
-I can help with:
-
-• Production today / producción hoy
-• Production this shift / producción turno actual
-• Last production / última producción
-• Production by line (Daimler, FA-1, FA-9, FA-11, FA-13)
-
-Examples:
-• "production today fa-9"
-• "producción turno actual"
-• "last production fa-11"
-`.trim(),
-        );*/
       }
 
       // detect line robustly: normalize both incoming text and known keys
@@ -344,6 +326,8 @@ Examples:
       if (session.pendingQuestion) {
         incomingText = session.pendingQuestion;
         delete session.pendingQuestion;
+        // IMPORTANT: Redefine normalizedIncoming so intents catch the restored question
+        var normalizedIncoming = incomingText.toLowerCase();
         console.log("Restored question:", incomingText);
       }
     }
