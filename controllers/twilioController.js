@@ -75,8 +75,6 @@ async function sendTextMessage(to, text) {
   });
 }
 
-
-
 function getWeekRangeUTC(lastWeek = false) {
   const now = new Date();
 
@@ -246,6 +244,18 @@ function isSupportedQuestion(text) {
 async function processProductionRequest(from, incomingText) {
   if (!incomingText) return;
 
+  // detect line robustly: normalize both incoming text and known keys
+  let normalizedIncoming = normalize(incomingText);
+
+  // 2. GATEKEEPER: If it's not a valid question and no line is pending, show Menu
+  if (!isSupportedQuestion(incomingText) && !sessions[from]?.line) {
+    const menu = `🤖 *Production Bot*\n\nI can help with:\n• "Graph this week"\n• "Turno actual"\n• "Hoy"\n\n*Which line?* (Daimler, FA-1, FA-9, FA-11, FA-13)`;
+    await sendTextMessage(from, menu);
+    // Reset the session so they start fresh next time
+    if (sessions[from]) delete sessions[from];
+    return;
+  }
+
   // Init session
   if (!sessions[from]) {
     sessions[from] = {};
@@ -256,67 +266,20 @@ async function processProductionRequest(from, incomingText) {
   //session.line = null;
 
   try {
-    // 1) If we haven't got a line selected yet, try to detect it.
+    // 3. Line Detection
     if (!session.line) {
-      // store the original question while we ask for the line
-      if (!session.pendingQuestion) {
-        session.pendingQuestion = incomingText;
-      }
+      if (!session.pendingQuestion) session.pendingQuestion = incomingText;
 
-      // 1. Check if the message contains ANY known production keywords
-      // If it DOES NOT, show the Menu/Help message immediately.
-      if (!isSupportedQuestion(incomingText) && !session.pendingQuestion) {
-        const menuMessage = `
-🤖 *Production Bot Menu*
-
-I didn't recognize a production request. I can help you with:
-
-📊 *Reports:*
-• "Weekly Graph" (Grafica semanal)
-• "Last week chart"
-
-🏭 *Real-time Data:*
-• "Production today" (Hoy)
-• "Current shift" (Turno actual)
-• "Last record" (Ultimo)
-
-*Please include a line in your request:* (Daimler, FA-1, FA-9, FA-11, or FA-13)`.trim();
-
-        await sendTextMessage(from, menuMessage);
-
-        // Reset the session so they start fresh next time
-        if (sessions[from]) delete sessions[from];
-        return;
-      }
-
-      // If user sends something unsupported (and we don't yet have a pending question),
-      // show the menu of capabilities.
-      if (!isSupportedQuestion(incomingText) && !session.pendingQuestion) {
-        await sendTextMessage(
-          from,
-          'I can help with: \n\n• Production today / producción hoy\n• Production this shift / producción turno actual\n• Last production / última producción\n• Production by line (Daimler, FA-1, FA-9, FA-11, FA-13)\n\nExamples:\n• "production today fa-9"\n• "producción turno actual"\n• "last production fa-11"',
-        );
-
-      }
-
-      // detect line robustly: normalize both incoming text and known keys
-      const normalizedIncoming = normalize(incomingText);
-      // sort keys by length to prefer 'fa-11' before 'fa-1'
       const sortedKeys = Object.keys(TABLES).sort(
         (a, b) => b.length - a.length,
       );
-
       for (const key of sortedKeys) {
-        if (
-          normalizedIncoming === normalize(key) ||
-          normalizedIncoming.includes(normalize(key))
-        ) {
+        if (normalizedIncoming.includes(normalize(key))) {
           session.line = key;
           break;
         }
       }
 
-      // If still no line, ask
       if (!session.line) {
         await sendTextMessage(
           from,
@@ -325,12 +288,12 @@ I didn't recognize a production request. I can help you with:
         return;
       }
 
-      // The user picked a line — restore the original question (if we had one)
-      if (session.pendingQuestion) {
-        incomingText = session.pendingQuestion;
-        delete session.pendingQuestion;
-        console.log("Restored question:", incomingText);
-      }
+      // Restore the original question now that we have a line
+      incomingText = session.pendingQuestion;
+      delete session.pendingQuestion;
+
+      // REASSIGNMENT (No 'var' or 'const' here to avoid SyntaxError)
+      normalizedIncoming = incomingText.toLowerCase();
     }
 
     // 2) Table name
@@ -446,16 +409,19 @@ I didn't recognize a production request. I can help you with:
     }
 
     if (isShiftRequest) {
-      manualSQL = true;
-      const { start, end } = getCurrentShiftUtcWindow();
+      const { start, end } = getCurrentShiftUtcWindow(); // Uses the moment-timezone fix
+      const [rows] = await db.sequelize.query(
+        `SELECT COUNT(*) AS total FROM ${tableName} WHERE createdAt BETWEEN :start AND :end`,
+        { replacements: { start, end } },
+      );
 
-      console.log("SHIFT WINDOW UTC:", start, "→", end);
-
-      sql = `
-    SELECT COUNT(*) AS total
-    FROM ${tableName}
-    WHERE createdAt BETWEEN '${start}' AND '${end}'
-  `;
+      const total = rows[0].total ?? rows[0]["COUNT(*)"] ?? 0;
+      await sendTextMessage(
+        from,
+        `📊 *Shift Production (${session.line.toUpperCase()})*\nTotal: *${total}* units`,
+      );
+      delete sessions[from];
+      return;
     }
 
     // ===============================
@@ -664,6 +630,7 @@ Repeated: ${r.repetida ? "Yes" : "No"}
       msg = "AI service unavailable. Contact admin.";
     }
     await sendTextMessage(from, msg);
+    delete sessions[from];
     return;
     //return reply(res, msg);
   }
