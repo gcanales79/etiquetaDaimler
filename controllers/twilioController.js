@@ -244,24 +244,44 @@ function isSupportedQuestion(text) {
 async function processProductionRequest(from, incomingText) {
   if (!incomingText) return;
 
-  // detect line robustly: normalize both incoming text and known keys
-  let normalizedIncoming = normalize(incomingText);
-
-  // 2. GATEKEEPER: If it's not a valid question and no line is pending, show Menu
-  if (!isSupportedQuestion(incomingText) && !sessions[from]?.line) {
-    const menu = `🤖 *Production Bot*\n\nI can help with:\n• "Graph this week"\n• "Turno actual"\n• "Hoy"\n\n*Which line?* (Daimler, FA-1, FA-9, FA-11, FA-13)`;
-    await sendTextMessage(from, menu);
-    // Reset the session so they start fresh next time
-    if (sessions[from]) delete sessions[from];
-    return;
-  }
-
   // Init session
   if (!sessions[from]) {
     sessions[from] = {};
   }
   const session = sessions[from];
 
+
+  // detect line robustly: normalize both incoming text and known keys
+  let normalizedIncoming = normalize(incomingText);
+
+  // 2. GATEKEEPER: If it's not a valid question and no line is pending, show Menu
+  // Only show the menu if:
+  // - It's NOT a supported question AND
+  // - We don't have a line selected AND
+  // - We aren't waiting for a line for a previous question
+  if (!isSupportedQuestion(incomingText) && !sessions[from]?.line&& !session.pendingQuestion) {
+    const menu = `
+🤖 *Production Bot Menu*
+
+I didn't recognize a production request. I can help you with:
+
+📊 *Reports:*
+• "Weekly Graph" (Grafica semanal)
+• "Last week chart"
+
+🏭 *Real-time Data:*
+• "Production today" (Hoy)
+• "Current shift" (Turno actual)
+• "Last record" (Ultimo)
+
+*Please include a line in your request:* (Daimler, FA-1, FA-9, FA-11, or FA-13)`.trim();
+    await sendTextMessage(from, menu);
+    // Reset the session so they start fresh next time
+    if (sessions[from]) delete sessions[from];
+    return;
+  }
+
+  
   //Reset line on new message
   //session.line = null;
 
@@ -348,7 +368,7 @@ async function processProductionRequest(from, incomingText) {
     }
 
     // 5) Special intents: last/latest, shift
-    const normalizedIncoming = incomingText.toLowerCase();
+    //const normalizedIncoming = incomingText.toLowerCase();
 
     // GRAPH (first priority)
     const isGraphRequest =
@@ -379,7 +399,12 @@ async function processProductionRequest(from, incomingText) {
       normalizedIncoming.includes("hoy turno") ||
       normalizedIncoming.includes("production today") ||
       normalizedIncoming.includes("produccion hoy") ||
-      normalizedIncoming.includes("turno de hoy");
+      normalizedIncoming.includes("turno de hoy")||
+      normalizedIncoming.includes("today")||
+      normalizedIncoming.includes("Today")||
+      normalizedIncoming.includes("hoy")||
+      normalizedIncoming.includes("Hoy");
+      
 
     //LAST RECORD
     const isLastRequest =
