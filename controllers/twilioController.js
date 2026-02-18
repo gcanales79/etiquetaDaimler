@@ -250,7 +250,7 @@ async function processProductionRequest(from, incomingText) {
 
   // 1. Check if the message contains ANY known production keywords
   // If it DOES NOT, show the Menu/Help message immediately.
-  if (!isSupportedQuestion(incomingText)) {
+  if (!isSupportedQuestion(incomingText)&& !session.pendingQuestion) {
     const menuMessage = `
 🤖 *Production Bot Menu*
 
