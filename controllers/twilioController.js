@@ -1,12 +1,10 @@
-const { getSQLfromQuestion, explainResult } = require("../services/ai");
+//const { getSQLfromQuestion, explainResult } = require("../services/ai");
+const { getIntent } = require("../services/geminiai"); // Import your new AI router
 const db = require("../models");
 const { generateWeeklyChart } = require("../services/chart");
 const path = require("path");
 const twilio = require("twilio");
-const fs = require("fs");
-const os = require("os");
-const chartDir = path.join(__dirname, "../public/charts");
-
+const moment = require("moment-timezone");
 const client = twilio(
   process.env.TWILIO_ACCOUNT_SID,
   process.env.TWILIO_AUTH_TOKEN,
@@ -24,37 +22,6 @@ const TABLES = {
 // In-memory sessions
 const sessions = {};
 
-function sendTwiml(res, xml) {
-  res
-    .status(200)
-    .type("text/xml")
-    .send(xml);
-}
-
-function reply(res, message) {
-  const twiml = `
-<Response>
-  <Message>${message}</Message>
-</Response>
-`.trim();
-
-  sendTwiml(res, twiml);
-}
-
-function replyWithImage(res, text, imageUrl) {
-  const twiml = `
-<Response>
-  <Message>
-    <Body>${text}</Body>
-    <Media>${imageUrl}</Media>
-  </Message>
-</Response>
-`.trim();
-
-  console.log("TWIML RESPONSE:\n", twiml);
-
-  sendTwiml(res, twiml);
-}
 
 //Twilio message sender (for charts)
 async function sendGraphMessage(to, text, imageUrl) {
@@ -75,33 +42,7 @@ async function sendTextMessage(to, text) {
   });
 }
 
-function getWeekRangeUTC(lastWeek = false) {
-  const now = new Date();
 
-  const day = now.getUTCDay() || 7;
-  const diff = now.getUTCDate() - day + 1;
-
-  const monday = new Date(now.setUTCDate(diff));
-  monday.setUTCHours(0, 0, 0, 0);
-
-  if (lastWeek) {
-    monday.setUTCDate(monday.getUTCDate() - 7);
-  }
-
-  const sunday = new Date(monday);
-  sunday.setUTCDate(sunday.getUTCDate() + 7);
-
-  return {
-    start: monday
-      .toISOString()
-      .slice(0, 19)
-      .replace("T", " "),
-    end: sunday
-      .toISOString()
-      .slice(0, 19)
-      .replace("T", " "),
-  };
-}
 
 function getCurrentShiftUtcWindow() {
   const moment = require("moment-timezone");
@@ -178,487 +119,304 @@ function getCurrentShiftUtcWindow() {
   };
 }
 
-// Normalize a string: lowercase + remove non-alphanum (so "FA-11","fa11","Fa 11" -> "fa11")
-function normalize(text = "") {
-  return text
-    .toString()
-    .toLowerCase()
-    .replace(/[^a-z0-9]/g, "");
-}
 
-function containsAny(text, list) {
-  const t = normalize(text);
-  return list.some((kw) => t.includes(normalize(kw)));
-}
 
-// SQL safety check (keeps your current rules)
-function isSafeSQL(sql) {
-  const lower = sql.toLowerCase().trim();
-
-  if (!lower.startsWith("select")) return false;
-
-  const blocked = [
-    "drop",
-    "delete",
-    "update",
-    "insert",
-    "alter",
-    "truncate",
-    "--",
-    ";--",
-    "/*",
-    "*/",
-  ];
-
-  for (const word of blocked) {
-    if (lower.includes(word)) return false;
-  }
-
-  return true;
-}
-
-// Supported question detection (english + spanish)
-function isSupportedQuestion(text) {
-  const t = text.toLowerCase();
-  return (
-    t.includes("production") ||
-    t.includes("producción") ||
-    t.includes("produccion") ||
-    t.includes("last") ||
-    t.includes("latest") ||
-    t.includes("recent") ||
-    t.includes("current") ||
-    t.includes("ultimo") ||
-    t.includes("último") ||
-    t.includes("shift") ||
-    t.includes("turno") ||
-    t.includes("today") ||
-    t.includes("graph") ||
-    t.includes("chart") ||
-    t.includes("grafica") ||
-    t.includes("gráfica") ||
-    t.includes("hoy")
-  );
+async function generateAndSendGraph(from, line, isLastWeek) {
+  console.log(`Generating graph for table ${line}, lastWeek=${isLastWeek}`);
+  const tz = "America/Monterrey";
+  const tableName = TABLES[line];
+  
+        let startMoment = moment()
+          .tz(tz)
+          .startOf("isoWeek");
+        if (isLastWeek) startMoment.subtract(1, "week");
+  
+        // 1. Get the Monday of the requested week
+        let mondayLocal = moment()
+          .tz(tz)
+          .startOf("isoWeek");
+        if (isLastWeek) mondayLocal.subtract(1, "week");
+  
+        // 2. Window starts Sunday at 23:00 (The start of Monday's Night Shift)
+        const startUTC = mondayLocal
+          .clone()
+          .subtract(1, "hour")
+          .utc()
+          .format("YYYY-MM-DD HH:mm:ss");
+        // Window ends the following Sunday at 22:59:59
+        const endUTC = mondayLocal
+          .clone()
+          .add(7, "days")
+          .subtract(1, "second")
+          .subtract(1, "hour")
+          .utc()
+          .format("YYYY-MM-DD HH:mm:ss");
+  
+        // THE OFFSET QUERY:
+        // We subtract 6 hours from createdAt to get the "Local" time for grouping
+        const rows = await db.sequelize.query(
+          `
+            SELECT 
+          -- 1. ALIGN THE DATE: 
+          -- We subtract 6 hours for Monterrey + 1 hour so that 23:00 Sunday becomes 16:00 Sunday,
+          -- BUT we actually want 23:00 Sunday to count as MONDAY. 
+          -- To make 23:00 (Night Start) the start of the "next" day, we ADD 1 hour before getting the date.
+          DATE(DATE_SUB(DATE_ADD(createdAt, INTERVAL 1 HOUR), INTERVAL 6 HOUR)) as day,
+  
+          -- 2. DEFINE THE SHIFTS (Monterrey Local Time):
+          -- Night: 23:00 - 06:59
+          COUNT(CASE WHEN HOUR(DATE_SUB(createdAt, INTERVAL 6 HOUR)) >= 23 
+                      OR HOUR(DATE_SUB(createdAt, INTERVAL 6 HOUR)) < 7 THEN 1 END) as shift_night,
+          
+          -- Day: 07:00 - 14:59
+          COUNT(CASE WHEN HOUR(DATE_SUB(createdAt, INTERVAL 6 HOUR)) BETWEEN 7 AND 14 THEN 1 END) as shift_day,
+          
+          -- Afternoon: 15:00 - 22:59
+          COUNT(CASE WHEN HOUR(DATE_SUB(createdAt, INTERVAL 6 HOUR)) BETWEEN 15 AND 22 THEN 1 END) as shift_afternoon,
+          
+          COUNT(*) as total
+              FROM ${tableName}
+              WHERE createdAt BETWEEN :startUTC AND :endUTC
+              GROUP BY day
+              ORDER BY day ASC
+          `,
+          {
+            replacements: { startUTC, endUTC },
+            type: db.sequelize.QueryTypes.SELECT,
+          },
+        );
+  
+        console.log("Weekly data rows:", rows);
+  
+        if (!rows || rows.length === 0) {
+          await sendTextMessage(from, "No data found for the requested period.");
+          return;
+        }
+  
+        // Calculate the grand total from the database results
+        const weeklyTotal = rows.reduce(
+          (sum, r) => sum + Number(r.total || 0),
+          0,
+        );
+  
+        const fileName = `week-${Date.now()}.png`;
+  
+        /*await generateWeeklyChart(rows, fileName);
+  
+        const url = `${process.env.APP_URL}/charts/${fileName}`;
+        console.log("Sending URL to Twilio:", url);*/
+  
+        // Now this returns a REAL https://res.cloudinary.com/... URL
+        const chartUrl = await generateWeeklyChart(rows, fileName);
+  
+        console.log("Generated chart URL:", chartUrl);
+  
+        // 2. Send to WhatsApp
+        try {
+          await sendGraphMessage(
+            from,
+            `📊 Weekly Production: ${line.toUpperCase()} \nTotal for the week: ${weeklyTotal}`,
+            chartUrl,
+          );
+        } catch (err) {
+          console.error("Twilio Media Error:", err);
+          await sendTextMessage(
+            from,
+            "The chart was generated but I couldn't send it via WhatsApp. Please check the server.",
+          );
+        }
+  
+        // 3. Delete from Cloudinary after a 60-second delay
+        // We wait 60 seconds to ensure Twilio's servers have finished downloading it.
+        setTimeout(async () => {
+          try {
+            const cloudinary = require("cloudinary").v2;
+            // The 'public_id' is the folder + filename without extension
+            await cloudinary.uploader.destroy(`production_charts/${fileName}`);
+            console.log(`Cloudinary file ${fileName} deleted.`);
+          } catch (err) {
+            console.error("Failed to delete Cloudinary image:", err);
+          }
+        }, 60000); // 60,000ms = 1 minute
+  
+        return;
 }
 
 async function processProductionRequest(from, incomingText) {
   if (!incomingText) return;
 
-  // Init session
-  if (!sessions[from]) {
-    sessions[from] = {};
+  // 1. ASK THE AI ROUTER
+  // It returns { intent, line, timeframe }
+  const aiResult = await getIntent(incomingText);
+  console.log("🤖 AI Decision:", aiResult);
+
+  const { intent, timeframe } = aiResult;
+  let { line } = aiResult;
+
+  // If AI extracted a line, verify it actually exists in our TABLES config
+  if (line) {
+    const normalizedLine = line.toLowerCase(); // Ensure matching case with TABLES keys
+    
+    if (!TABLES[normalizedLine]) {
+      // 🛑 STOP! This line doesn't exist (e.g., "FA-8")
+      const validLines = Object.keys(TABLES).map(k => k.toUpperCase()).join(", ");
+      
+      await sendTextMessage(from, `⚠️ The line *"${line}"* is not valid.\n\nAvailable lines: ${validLines}`);
+      return; // Exit function so we don't crash
+    }
+    
+    // If valid, use the normalized version
+    line = normalizedLine;
   }
+
+  // Initialize session
+  if (!sessions[from]) sessions[from] = {};
   const session = sessions[from];
 
+  // 2. LINE MANAGEMENT
+  // If AI found a line, update the session.
+  if (line) session.line = line;
+  
+  // If we still don't have a line, checking if it's a known intent that needs one
+  if (intent !== "unknown" && !session.line) {
+    // Store the intent so we can run it after they answer "Which line?"
+    session.pendingIntent = { intent, timeframe };
+    await sendTextMessage(from, "Which line? (Daimler, FA-1, FA-9, FA-11, FA-13)");
+    return;
+  }
 
-  // detect line robustly: normalize both incoming text and known keys
-  let normalizedIncoming = normalize(incomingText);
+  // If they just answered the "Which line?" question:
+  if (!line && session.line && session.pendingIntent) {
+    // Restore the previous intent (e.g., they asked for "Graph" before)
+    return routeRequest(from, session.pendingIntent.intent, session.line, session.pendingIntent.timeframe);
+  }
 
-  // 2. GATEKEEPER: If it's not a valid question and no line is pending, show Menu
-  // Only show the menu if:
-  // - It's NOT a supported question AND
-  // - We don't have a line selected AND
-  // - We aren't waiting for a line for a previous question
-  if (!isSupportedQuestion(incomingText) && !sessions[from]?.line&& !session.pendingQuestion) {
-    const menu = `
+  // 3. FALLBACK MENU
+  // If intent is unknown and we aren't waiting for a line, show the menu.
+  if (intent === "unknown") {
+    const menuMessage = `
 🤖 *Production Bot Menu*
 
-I didn't recognize a production request. I can help you with:
+I didn't recognize a production request. Try asking:
 
-📊 *Reports:*
-• "Weekly Graph" (Grafica semanal)
-• "Last week chart"
+📊 *"Graph this week for FA-11"*
+🏭 *"How is Daimler doing today?"*
+🔢 *"Current shift FA-9"*
+📋 *"Last record FA-1"*
 
-🏭 *Real-time Data:*
-• "Production today" (Hoy)
-• "Current shift" (Turno actual)
-• "Last record" (Ultimo)
-
-*Please include a line in your request:* (Daimler, FA-1, FA-9, FA-11, or FA-13)`.trim();
-    await sendTextMessage(from, menu);
-    // Reset the session so they start fresh next time
-    if (sessions[from]) delete sessions[from];
+*Active Line:* ${session.line ? session.line.toUpperCase() : "None"}
+`.trim();
+    await sendTextMessage(from, menuMessage);
     return;
   }
 
-  
-  //Reset line on new message
-  //session.line = null;
+  // 4. EXECUTE THE REQUEST
+  await routeRequest(from, intent, session.line, timeframe);
+}
+
+// ---------------------------------------------------------
+// 🚦 THE ROUTER
+// ---------------------------------------------------------
+async function routeRequest(from, intent, line, timeframe) {
+  // Clear any pending intent now that we are executing
+  if (sessions[from]) delete sessions[from].pendingIntent;
 
   try {
-    // 3. Line Detection
-    if (!session.line) {
-      if (!session.pendingQuestion) session.pendingQuestion = incomingText;
-
-      const sortedKeys = Object.keys(TABLES).sort(
-        (a, b) => b.length - a.length,
-      );
-      for (const key of sortedKeys) {
-        if (normalizedIncoming.includes(normalize(key))) {
-          session.line = key;
-          break;
-        }
-      }
-
-      if (!session.line) {
-        await sendTextMessage(
-          from,
-          "Which line? Daimler, FA-1, FA-9, FA-11, or FA-13",
-        );
-        return;
-      }
-
-      // Restore the original question now that we have a line
-      incomingText = session.pendingQuestion;
-      delete session.pendingQuestion;
-
-      // REASSIGNMENT (No 'var' or 'const' here to avoid SyntaxError)
-      normalizedIncoming = incomingText.toLowerCase();
+    switch (intent) {
+      case "production_count":
+        await handleProductionCount(from, line, timeframe);
+        break;
+      case "graph":
+        await handleGraphReport(from, line, timeframe);
+        break;
+      case "last_record":
+        await handleLastRecord(from, line);
+        break;
+      default:
+        await sendTextMessage(from, "I understood the request but don't have a function for it yet.");
     }
-
-    // 2) Table name
-    const tableName = TABLES[session.line];
-    if (!tableName) {
-      throw new Error("Invalid line: " + session.line);
-    }
-    console.log("Using table:", tableName);
-
-    // 3) Generate SQL (AI)
-    let sql;
-    let manualSQL = false;
-    sql = await getSQLfromQuestion(
-      incomingText,
-      session.line.toUpperCase(),
-      tableName,
-    );
-
-    // Clean up markdown
-    sql = sql
-      .replace(/```sql/g, "")
-      .replace(/```/g, "")
-      .trim();
-
-    // 4) Normalize SQL so it fits our schema and allowed columns
-    // ===============================
-    // 4️⃣ NORMALIZE SQL (AI ONLY)
-    // ===============================
-
-    if (!manualSQL) {
-      // Force correct table
-      sql = sql.replace(/from\s+\w+/i, `FROM ${tableName}`);
-
-      // Remove invalid "line = 'FA-X'"
-      sql = sql.replace(/where\s+line\s*=\s*'[^']+'\s*(and\s*)?/i, "WHERE ");
-
-      // Fix production_date → createdAt
-      sql = sql.replace(/production_date/gi, "createdAt");
-
-      // Fix CURRENT_DATE → CURDATE()
-      sql = sql.replace(/current_date/gi, "CURDATE()");
-
-      // Fix today filter
-      sql = sql.replace(
-        /createdAt\s*=\s*CURDATE\(\)/i,
-        "DATE(createdAt) = CURDATE()",
-      );
-
-      // Clean broken WHERE
-      sql = sql.replace(/where\s+and/i, "WHERE");
-      sql = sql.replace(/where\s*$/i, "");
-    }
-
-    // 5) Special intents: last/latest, shift
-    //const normalizedIncoming = incomingText.toLowerCase();
-
-    // GRAPH (first priority)
-    const isGraphRequest =
-      normalizedIncoming.includes("graph") ||
-      normalizedIncoming.includes("chart") ||
-      normalizedIncoming.includes("grafica") ||
-      normalizedIncoming.includes("gráfica") ||
-      normalizedIncoming.includes("week") ||
-      normalizedIncoming.includes("semana");
-
-    // LAST WEEK (Only for graphs)
-    const isLastWeek =
-      normalizedIncoming.includes("last week") ||
-      normalizedIncoming.includes("semana pasada");
-
-    //SHIFT
-    const isShiftRequest =
-      normalizedIncoming.includes("shift") ||
-      normalizedIncoming.includes("current shift") ||
-      normalizedIncoming.includes("this shift") ||
-      normalizedIncoming.includes("current production") ||
-      normalizedIncoming.includes("produccion actual") ||
-      normalizedIncoming.includes("producción actual") ||
-      normalizedIncoming.includes("turno") ||
-      normalizedIncoming.includes("turno actual") ||
-      normalizedIncoming.includes("esta turno") ||
-      normalizedIncoming.includes("esta turno") ||
-      normalizedIncoming.includes("hoy turno") ||
-      normalizedIncoming.includes("production today") ||
-      normalizedIncoming.includes("produccion hoy") ||
-      normalizedIncoming.includes("turno de hoy")||
-      normalizedIncoming.includes("today")||
-      normalizedIncoming.includes("Today")||
-      normalizedIncoming.includes("hoy")||
-      normalizedIncoming.includes("Hoy");
-      
-
-    //LAST RECORD
-    const isLastRequest =
-      !isGraphRequest &&
-      (normalizedIncoming.includes("last") ||
-        normalizedIncoming.includes("latest") ||
-        normalizedIncoming.includes("recent") ||
-        normalizedIncoming.includes("previous") ||
-        normalizedIncoming.includes("ultimo") ||
-        normalizedIncoming.includes("último"));
-
-    console.log("INTENTS:", {
-      isGraphRequest,
-      isLastWeek,
-      isLastRequest,
-      isShiftRequest,
-    });
-
-    if (isLastRequest) {
-      manualSQL = true;
-      sql = `
-        SELECT *
-        FROM ${tableName}
-        ORDER BY createdAt DESC
-        LIMIT 1
-      `;
-    }
-
-    if (isShiftRequest) {
-      const { start, end } = getCurrentShiftUtcWindow(); // Uses the moment-timezone fix
-      const [rows] = await db.sequelize.query(
-        `SELECT COUNT(*) AS total FROM ${tableName} WHERE createdAt BETWEEN :start AND :end`,
-        { replacements: { start, end } },
-      );
-
-      const total = rows[0].total ?? rows[0]["COUNT(*)"] ?? 0;
-      await sendTextMessage(
-        from,
-        `📊 *Shift Production (${session.line.toUpperCase()})*\nTotal: *${total}* units`,
-      );
-      delete sessions[from];
-      return;
-    }
-
-    // ===============================
-    // WEEKLY GRAPH
-    // ===============================
-
-    if (isGraphRequest) {
-      // Respond immediately to Twilio (avoid timeout)
-      await sendTextMessage(from, "📊 Gathering weekly data...");
-      const moment = require("moment-timezone");
-      const sequelize = db.sequelize;
-
-      const tz = "America/Monterrey";
-
-      let startMoment = moment()
-        .tz(tz)
-        .startOf("isoWeek");
-      if (isLastWeek) startMoment.subtract(1, "week");
-
-      // 1. Get the Monday of the requested week
-      let mondayLocal = moment()
-        .tz(tz)
-        .startOf("isoWeek");
-      if (isLastWeek) mondayLocal.subtract(1, "week");
-
-      // 2. Window starts Sunday at 23:00 (The start of Monday's Night Shift)
-      const startUTC = mondayLocal
-        .clone()
-        .subtract(1, "hour")
-        .utc()
-        .format("YYYY-MM-DD HH:mm:ss");
-      // Window ends the following Sunday at 22:59:59
-      const endUTC = mondayLocal
-        .clone()
-        .add(7, "days")
-        .subtract(1, "second")
-        .subtract(1, "hour")
-        .utc()
-        .format("YYYY-MM-DD HH:mm:ss");
-
-      // THE OFFSET QUERY:
-      // We subtract 6 hours from createdAt to get the "Local" time for grouping
-      const rows = await db.sequelize.query(
-        `
-          SELECT 
-        -- 1. ALIGN THE DATE: 
-        -- We subtract 6 hours for Monterrey + 1 hour so that 23:00 Sunday becomes 16:00 Sunday,
-        -- BUT we actually want 23:00 Sunday to count as MONDAY. 
-        -- To make 23:00 (Night Start) the start of the "next" day, we ADD 1 hour before getting the date.
-        DATE(DATE_SUB(DATE_ADD(createdAt, INTERVAL 1 HOUR), INTERVAL 6 HOUR)) as day,
-
-        -- 2. DEFINE THE SHIFTS (Monterrey Local Time):
-        -- Night: 23:00 - 06:59
-        COUNT(CASE WHEN HOUR(DATE_SUB(createdAt, INTERVAL 6 HOUR)) >= 23 
-                    OR HOUR(DATE_SUB(createdAt, INTERVAL 6 HOUR)) < 7 THEN 1 END) as shift_night,
-        
-        -- Day: 07:00 - 14:59
-        COUNT(CASE WHEN HOUR(DATE_SUB(createdAt, INTERVAL 6 HOUR)) BETWEEN 7 AND 14 THEN 1 END) as shift_day,
-        
-        -- Afternoon: 15:00 - 22:59
-        COUNT(CASE WHEN HOUR(DATE_SUB(createdAt, INTERVAL 6 HOUR)) BETWEEN 15 AND 22 THEN 1 END) as shift_afternoon,
-        
-        COUNT(*) as total
-            FROM ${tableName}
-            WHERE createdAt BETWEEN :startUTC AND :endUTC
-            GROUP BY day
-            ORDER BY day ASC
-        `,
-        {
-          replacements: { startUTC, endUTC },
-          type: db.sequelize.QueryTypes.SELECT,
-        },
-      );
-
-      console.log("Weekly data rows:", rows);
-
-      if (!rows || rows.length === 0) {
-        await sendTextMessage(from, "No data found for the requested period.");
-        return;
-      }
-
-      // Calculate the grand total from the database results
-      const weeklyTotal = rows.reduce(
-        (sum, r) => sum + Number(r.total || 0),
-        0,
-      );
-
-      const fileName = `week-${Date.now()}.png`;
-
-      /*await generateWeeklyChart(rows, fileName);
-
-      const url = `${process.env.APP_URL}/charts/${fileName}`;
-      console.log("Sending URL to Twilio:", url);*/
-
-      // Now this returns a REAL https://res.cloudinary.com/... URL
-      const chartUrl = await generateWeeklyChart(rows, fileName);
-
-      console.log("Generated chart URL:", chartUrl);
-
-      // 2. Send to WhatsApp
-      try {
-        await sendGraphMessage(
-          from,
-          `📊 Weekly Production: ${session.line.toUpperCase()} \nTotal for the week: ${weeklyTotal}`,
-          chartUrl,
-        );
-      } catch (err) {
-        console.error("Twilio Media Error:", err);
-        await sendTextMessage(
-          from,
-          "The chart was generated but I couldn't send it via WhatsApp. Please check the server.",
-        );
-      }
-
-      // 3. Delete from Cloudinary after a 60-second delay
-      // We wait 60 seconds to ensure Twilio's servers have finished downloading it.
-      setTimeout(async () => {
-        try {
-          const cloudinary = require("cloudinary").v2;
-          // The 'public_id' is the folder + filename without extension
-          await cloudinary.uploader.destroy(`production_charts/${fileName}`);
-          console.log(`Cloudinary file ${fileName} deleted.`);
-        } catch (err) {
-          console.error("Failed to delete Cloudinary image:", err);
-        }
-      }, 60000); // 60,000ms = 1 minute
-
-      delete sessions[from];
-      return;
-    }
-
-    console.log("Final SQL:", sql);
-
-    // 6) Validate SQL
-    if (!isSafeSQL(sql)) {
-      throw new Error("Unsafe SQL blocked");
-    }
-
-    // 7) Run query (Sequelize)
-    const sequelize = db.sequelize;
-    if (!sequelize) {
-      throw new Error("Database connection not found");
-    }
-
-    // debug info (good to remove in prod)
-    console.log("DB HOST:", sequelize.config?.host);
-    console.log("DB NAME:", sequelize.config?.database);
-    console.log("TABLE:", tableName);
-
-    const [rows] = await sequelize.query(sql);
-
-    // 8) Build answer
-    let answer;
-    if (!rows || rows.length === 0) {
-      answer = "No production records were found.";
-    } else if (isShiftRequest) {
-      // some DB drivers return [{ total: 42 }] or [{ "COUNT(*)": 42 }] — we handle both
-      const total =
-        rows[0].total ??
-        rows[0]["COUNT(*)"] ??
-        rows[0][Object.keys(rows[0])[0]];
-      answer = `📊 *Current Shift Production*\nLine: ${session.line.toUpperCase()}\nTotal: *${total}* units`;
-    } else if (isLastRequest) {
-      const r = rows[0];
-      answer = `
-Last production:
-
-Date: ${r.createdAt}
-Part: ${r.numero_parte}
-Serial: ${r.numero_serie}
-Repeated: ${r.repetida ? "Yes" : "No"}
-`.trim();
-    } else if (isGraphRequest) {
-      const fileName = `week-${Date.now()}.png`;
-
-      await generateWeeklyChart(rows, fileName);
-
-      const url = `${process.env.APP_URL}/charts/${fileName}`;
-      console.log("Chart filename:", fileName);
-      console.log("Chart URL:", url);
-      const sum = rows.reduce((a, b) => a + Number(b.total), 0);
-
-      if (!rows || rows.length === 0) {
-        await sendTextMessage(from, "No data found for that week.");
-        return;
-        //return reply(res, "No data found for that week.");
-      }
-
-      return replyWithImage(
-        res,
-        `📊 Weekly Production Report\nTotal: ${sum}`,
-        url,
-      );
-    } else {
-      answer = await explainResult(incomingText, rows);
-    }
-
-    // 9) Clear session and reply
-    delete sessions[from];
-    await sendTextMessage(from, answer);
-    return;
   } catch (error) {
-    console.error("Error:", error);
-    let msg = "Sorry, I couldn’t process that.";
-    if (error.code === "insufficient_quota") {
-      msg = "AI service unavailable. Contact admin.";
-    }
-    await sendTextMessage(from, msg);
-    delete sessions[from];
-    return;
-    //return reply(res, msg);
+    console.error("Routing Error:", error);
+    await sendTextMessage(from, "⚠️ Error processing request. Please check the logs.");
   }
+}
+
+// ---------------------------------------------------------
+// 🏭 HANDLER: Production Counts (Shift / Today)
+// ---------------------------------------------------------
+async function handleProductionCount(from, line, timeframe) {
+  const tableName = TABLES[line];
+  if (!tableName) return sendTextMessage(from, "Error: Unknown table for line " + line);
+
+  let start, end, label;
+  const tz = "America/Monterrey";
+
+  if (timeframe === "today") {
+    // MONTERREY LOGIC: "Today" starts at 23:00 of the PREVIOUS day
+    const now = moment().tz(tz);
+    const startWindow = now.hour() >= 23 
+        ? now.clone().hour(23).startOf('hour') 
+        : now.clone().subtract(1, 'day').hour(23).startOf('hour');
+
+    start = startWindow.utc().format("YYYY-MM-DD HH:mm:ss");
+    end = moment().utc().format("YYYY-MM-DD HH:mm:ss");
+    label = "Today's Total";
+  } else {
+    // Default to Current Shift
+    const window = getCurrentShiftUtcWindow(); // Uses your existing function
+    start = window.start;
+    end = window.end;
+    label = "Current Shift";
+  }
+
+  const [rows] = await db.sequelize.query(
+    `SELECT COUNT(*) AS total FROM ${tableName} WHERE createdAt BETWEEN :start AND :end`,
+    { replacements: { start, end } }
+  );
+
+  const total = rows[0].total ?? 0;
+  await sendTextMessage(from, `📊 *${label} (${line.toUpperCase()})*\nTotal: *${total}* units`);
+}
+
+// ---------------------------------------------------------
+// 📊 HANDLER: Weekly Graphs
+// ---------------------------------------------------------
+async function handleGraphReport(from, line, timeframe) {
+  const isLastWeek = timeframe === "last_week";
+  // Reuse your existing graph logic here. 
+  // You can wrap your previous "isGraphRequest" code into a function called 'generateAndSendGraph'
+  // checking 'isLastWeek' to adjust the date range.
+  
+  await sendTextMessage(from, `📉 Generating ${isLastWeek ? "Last Week's" : "Weekly"} Graph for ${line.toUpperCase()}...`);
+  
+  // Call your existing graph generation logic logic here...
+  // (Let me know if you need me to repackage your graph code too!)
+
+  await generateAndSendGraph(from,line,isLastWeek);
+}
+
+// ---------------------------------------------------------
+// 📋 HANDLER: Last Record
+// ---------------------------------------------------------
+async function handleLastRecord(from, line) {
+  const tableName = TABLES[line];
+  const [rows] = await db.sequelize.query(
+    `SELECT * FROM ${tableName} ORDER BY createdAt DESC LIMIT 1`
+  );
+
+  if (rows.length === 0) {
+    return sendTextMessage(from, "No records found.");
+  }
+
+  const r = rows[0];
+  const msg = `
+🆕 *Last Scan (${line.toUpperCase()})*
+📅 ${moment(r.createdAt).tz("America/Monterrey").format("DD/MM HH:mm:ss")}
+📦 Part: ${r.numero_parte || "N/A"}
+Serial: ${r.numero_serie || "N/A"}
+`.trim();
+
+  await sendTextMessage(from, msg);
 }
 
 async function handleTwilioMessage(req, res) {
