@@ -5,6 +5,7 @@ const { generateWeeklyChart } = require("../services/chart");
 const path = require("path");
 const twilio = require("twilio");
 const moment = require("moment-timezone");
+const { error } = require("console");
 const client = twilio(
   process.env.TWILIO_ACCOUNT_SID,
   process.env.TWILIO_AUTH_TOKEN,
@@ -21,7 +22,6 @@ const TABLES = {
 
 // In-memory sessions
 const sessions = {};
-
 
 //Twilio message sender (for charts)
 async function sendGraphMessage(to, text, imageUrl) {
@@ -41,8 +41,6 @@ async function sendTextMessage(to, text) {
     body: text,
   });
 }
-
-
 
 function getCurrentShiftUtcWindow() {
   const moment = require("moment-timezone");
@@ -119,43 +117,41 @@ function getCurrentShiftUtcWindow() {
   };
 }
 
-
-
 async function generateAndSendGraph(from, line, isLastWeek) {
   console.log(`Generating graph for table ${line}, lastWeek=${isLastWeek}`);
   const tz = "America/Monterrey";
   const tableName = TABLES[line];
-  
-        let startMoment = moment()
-          .tz(tz)
-          .startOf("isoWeek");
-        if (isLastWeek) startMoment.subtract(1, "week");
-  
-        // 1. Get the Monday of the requested week
-        let mondayLocal = moment()
-          .tz(tz)
-          .startOf("isoWeek");
-        if (isLastWeek) mondayLocal.subtract(1, "week");
-  
-        // 2. Window starts Sunday at 23:00 (The start of Monday's Night Shift)
-        const startUTC = mondayLocal
-          .clone()
-          .subtract(1, "hour")
-          .utc()
-          .format("YYYY-MM-DD HH:mm:ss");
-        // Window ends the following Sunday at 22:59:59
-        const endUTC = mondayLocal
-          .clone()
-          .add(7, "days")
-          .subtract(1, "second")
-          .subtract(1, "hour")
-          .utc()
-          .format("YYYY-MM-DD HH:mm:ss");
-  
-        // THE OFFSET QUERY:
-        // We subtract 6 hours from createdAt to get the "Local" time for grouping
-        const rows = await db.sequelize.query(
-          `
+
+  let startMoment = moment()
+    .tz(tz)
+    .startOf("isoWeek");
+  if (isLastWeek) startMoment.subtract(1, "week");
+
+  // 1. Get the Monday of the requested week
+  let mondayLocal = moment()
+    .tz(tz)
+    .startOf("isoWeek");
+  if (isLastWeek) mondayLocal.subtract(1, "week");
+
+  // 2. Window starts Sunday at 23:00 (The start of Monday's Night Shift)
+  const startUTC = mondayLocal
+    .clone()
+    .subtract(1, "hour")
+    .utc()
+    .format("YYYY-MM-DD HH:mm:ss");
+  // Window ends the following Sunday at 22:59:59
+  const endUTC = mondayLocal
+    .clone()
+    .add(7, "days")
+    .subtract(1, "second")
+    .subtract(1, "hour")
+    .utc()
+    .format("YYYY-MM-DD HH:mm:ss");
+
+  // THE OFFSET QUERY:
+  // We subtract 6 hours from createdAt to get the "Local" time for grouping
+  const rows = await db.sequelize.query(
+    `
             SELECT 
           -- 1. ALIGN THE DATE: 
           -- We subtract 6 hours for Monterrey + 1 hour so that 23:00 Sunday becomes 16:00 Sunday,
@@ -180,66 +176,67 @@ async function generateAndSendGraph(from, line, isLastWeek) {
               GROUP BY day
               ORDER BY day ASC
           `,
-          {
-            replacements: { startUTC, endUTC },
-            type: db.sequelize.QueryTypes.SELECT,
-          },
-        );
-  
-        console.log("Weekly data rows:", rows);
-  
-        if (!rows || rows.length === 0) {
-          await sendTextMessage(from, "No data found for the requested period.");
-          return;
-        }
-  
-        // Calculate the grand total from the database results
-        const weeklyTotal = rows.reduce(
-          (sum, r) => sum + Number(r.total || 0),
-          0,
-        );
-  
-        const fileName = `week-${Date.now()}.png`;
-  
-        /*await generateWeeklyChart(rows, fileName);
+    {
+      replacements: { startUTC, endUTC },
+      type: db.sequelize.QueryTypes.SELECT,
+    },
+  );
+
+  console.log("Weekly data rows:", rows);
+
+  if (!rows || rows.length === 0) {
+    errorMsg=language === "es" ? "No se encontraron datos para el período solicitado." : "No data found for the requested period.";
+    await sendTextMessage(from, errorMsg);
+    return;
+  }
+
+  // Calculate the grand total from the database results
+  const weeklyTotal = rows.reduce((sum, r) => sum + Number(r.total || 0), 0);
+
+  const fileName = `week-${Date.now()}.png`;
+
+  /*await generateWeeklyChart(rows, fileName);
   
         const url = `${process.env.APP_URL}/charts/${fileName}`;
         console.log("Sending URL to Twilio:", url);*/
-  
-        // Now this returns a REAL https://res.cloudinary.com/... URL
-        const chartUrl = await generateWeeklyChart(rows, fileName);
-  
-        console.log("Generated chart URL:", chartUrl);
-  
-        // 2. Send to WhatsApp
-        try {
-          await sendGraphMessage(
-            from,
-            `📊 Weekly Production: ${line.toUpperCase()} \nTotal for the week: ${weeklyTotal}`,
-            chartUrl,
-          );
-        } catch (err) {
-          console.error("Twilio Media Error:", err);
-          await sendTextMessage(
-            from,
-            "The chart was generated but I couldn't send it via WhatsApp. Please check the server.",
-          );
-        }
-  
-        // 3. Delete from Cloudinary after a 60-second delay
-        // We wait 60 seconds to ensure Twilio's servers have finished downloading it.
-        setTimeout(async () => {
-          try {
-            const cloudinary = require("cloudinary").v2;
-            // The 'public_id' is the folder + filename without extension
-            await cloudinary.uploader.destroy(`production_charts/${fileName}`);
-            console.log(`Cloudinary file ${fileName} deleted.`);
-          } catch (err) {
-            console.error("Failed to delete Cloudinary image:", err);
-          }
-        }, 60000); // 60,000ms = 1 minute
-  
-        return;
+
+  // Now this returns a REAL https://res.cloudinary.com/... URL
+  const chartUrl = await generateWeeklyChart(rows, fileName);
+
+  console.log("Generated chart URL:", chartUrl);
+
+  // 2. Send to WhatsApp
+  try {
+    labelOne=language === "es" ? "Gráfica Semanal" : "Weekly Chart";
+    labelTwo=language === "es" ? "Total de la Semana" : "Weekly Total";
+    await sendGraphMessage(
+      from,
+      `📊 ${labelOne}: ${line.toUpperCase()} \n${labelTwo}: ${weeklyTotal}`,
+      chartUrl,
+    );
+  } catch (err) {
+    console.error("Twilio Media Error:", err);
+    crashMsg=language === "es" ? "La gráfica se generó pero no pude enviarla por WhatsApp. Por favor revisa el servidor." : "The chart was generated but I couldn't send it via WhatsApp. Please check the server.";
+    await sendTextMessage(
+      from,
+      crashMsg,
+    );
+  }
+
+  // 3. Delete from Cloudinary after a 60-second delay
+  // We wait 60 seconds to ensure Twilio's servers have finished downloading it.
+  setTimeout(async () => {
+    try {
+      const cloudinary = require("cloudinary").v2;
+      // The 'public_id' is the folder + filename without extension
+      await cloudinary.uploader.destroy(`production_charts/${fileName}`);
+      console.log(`Cloudinary file ${fileName} deleted.`);
+    } catch (err) {
+      console.error("Failed to delete Cloudinary image:", err);
+    }
+  }, 60000); // 60,000ms = 1 minute
+
+  return;
 }
 
 async function processProductionRequest(from, incomingText) {
@@ -250,21 +247,28 @@ async function processProductionRequest(from, incomingText) {
   const aiResult = await getIntent(incomingText);
   console.log("🤖 AI Decision:", aiResult);
 
-  const { intent, timeframe } = aiResult;
+  const { intent, timeframe, language } = aiResult;
   let { line } = aiResult;
 
   // If AI extracted a line, verify it actually exists in our TABLES config
   if (line) {
     const normalizedLine = line.toLowerCase(); // Ensure matching case with TABLES keys
-    
+
     if (!TABLES[normalizedLine]) {
       // 🛑 STOP! This line doesn't exist (e.g., "FA-8")
-      const validLines = Object.keys(TABLES).map(k => k.toUpperCase()).join(", ");
-      
-      await sendTextMessage(from, `⚠️ The line *"${line}"* is not valid.\n\nAvailable lines: ${validLines}`);
+      const validLines = Object.keys(TABLES)
+        .map((k) => k.toUpperCase())
+        .join(", ");
+
+        wrongLineMsg=language === "es" ? `⚠️ La línea *"${line}"* no es válida.\n\nLíneas disponibles: ${validLines}` : `⚠️ The line *"${line}"* is not valid.\n\nAvailable lines: ${validLines}`;
+
+      await sendTextMessage(
+        from,
+        wrongLineMsg,
+      );
       return; // Exit function so we don't crash
     }
-    
+
     // If valid, use the normalized version
     line = normalizedLine;
   }
@@ -276,25 +280,38 @@ async function processProductionRequest(from, incomingText) {
   // 2. LINE MANAGEMENT
   // If AI found a line, update the session.
   if (line) session.line = line;
-  
+
   // If we still don't have a line, checking if it's a known intent that needs one
+  // 2. Bilingual "Which Line?" Prompt
   if (intent !== "unknown" && !session.line) {
     // Store the intent so we can run it after they answer "Which line?"
-    session.pendingIntent = { intent, timeframe };
-    await sendTextMessage(from, "Which line? (Daimler, FA-1, FA-9, FA-11, FA-13)");
+    session.pendingIntent = { intent, timeframe, language };
+
+    const askLineMsg =
+      language === "es"
+        ? "¿De qué línea? (Daimler, FA-1, FA-9, FA-11, FA-13)"
+        : "Which line? (Daimler, FA-1, FA-9, FA-11, FA-13)";
+
+    await sendTextMessage(from, askLineMsg);
     return;
   }
 
   // If they just answered the "Which line?" question:
   if (!line && session.line && session.pendingIntent) {
     // Restore the previous intent (e.g., they asked for "Graph" before)
-    return routeRequest(from, session.pendingIntent.intent, session.line, session.pendingIntent.timeframe);
+    return routeRequest(
+      from,
+      session.pendingIntent.intent,
+      session.line,
+      session.pendingIntent.timeframe,
+    );
   }
 
   // 3. FALLBACK MENU
   // If intent is unknown and we aren't waiting for a line, show the menu.
+  // 3. Bilingual Fallback Menu
   if (intent === "unknown") {
-    const menuMessage = `
+    const menuEn = `
 🤖 *Production Bot Menu*
 
 I didn't recognize a production request. Try asking:
@@ -306,38 +323,59 @@ I didn't recognize a production request. Try asking:
 
 *Active Line:* ${session.line ? session.line.toUpperCase() : "None"}
 `.trim();
-    await sendTextMessage(from, menuMessage);
+
+    const menuEs = `
+🤖 *Menú de Producción*
+
+No reconocí la solicitud. Intenta preguntar:
+
+📊 *"Gráfica de esta semana de FA-11"*
+🏭 *"¿Cómo va Daimler hoy?"*
+🔢 *"Turno actual FA-9"*
+
+*Linea Seleccionada:* ${session.line ? session.line.toUpperCase() : "None"}
+`.trim();
+
+    await sendTextMessage(from, language === "es" ? menuEs : menuEn);
     return;
   }
 
   // 4. EXECUTE THE REQUEST
-  await routeRequest(from, intent, session.line, timeframe);
+  await routeRequest(from, intent, session.line, timeframe, language);
 }
 
 // ---------------------------------------------------------
 // 🚦 THE ROUTER
 // ---------------------------------------------------------
-async function routeRequest(from, intent, line, timeframe) {
+async function routeRequest(from, intent, line, timeframe, language) {
   // Clear any pending intent now that we are executing
   if (sessions[from]) delete sessions[from].pendingIntent;
 
   try {
     switch (intent) {
       case "production_count":
-        await handleProductionCount(from, line, timeframe);
+        await handleProductionCount(from, line, timeframe, language);
         break;
       case "graph":
-        await handleGraphReport(from, line, timeframe);
+        await handleGraphReport(from, line, timeframe, language);
         break;
       case "last_record":
-        await handleLastRecord(from, line);
+        await handleLastRecord(from, line, language);
         break;
       default:
-        await sendTextMessage(from, "I understood the request but don't have a function for it yet.");
+        const errorMsg =
+          language === "es"
+            ? "Entendí la solicitud, pero aún no tengo una función para ella."
+            : "I understood the request but don't have a function for it yet.";
+        await sendTextMessage(from, errorMsg);
     }
   } catch (error) {
     console.error("Routing Error:", error);
-    await sendTextMessage(from, "⚠️ Error processing request. Please check the logs.");
+    const crashMsg =
+      language === "es"
+        ? "⚠️ Error procesando la solicitud."
+        : "⚠️ Error processing request.";
+    await sendTextMessage(from, crashMsg);
   }
 }
 
@@ -346,7 +384,8 @@ async function routeRequest(from, intent, line, timeframe) {
 // ---------------------------------------------------------
 async function handleProductionCount(from, line, timeframe) {
   const tableName = TABLES[line];
-  if (!tableName) return sendTextMessage(from, "Error: Unknown table for line " + line);
+  if (!tableName)
+    return sendTextMessage(from, "Error: Unknown table for line " + line);
 
   let start, end, label;
   const tz = "America/Monterrey";
@@ -354,28 +393,46 @@ async function handleProductionCount(from, line, timeframe) {
   if (timeframe === "today") {
     // MONTERREY LOGIC: "Today" starts at 23:00 of the PREVIOUS day
     const now = moment().tz(tz);
-    const startWindow = now.hour() >= 23 
-        ? now.clone().hour(23).startOf('hour') 
-        : now.clone().subtract(1, 'day').hour(23).startOf('hour');
+    const startWindow =
+      now.hour() >= 23
+        ? now
+            .clone()
+            .hour(23)
+            .startOf("hour")
+        : now
+            .clone()
+            .subtract(1, "day")
+            .hour(23)
+            .startOf("hour");
 
     start = startWindow.utc().format("YYYY-MM-DD HH:mm:ss");
-    end = moment().utc().format("YYYY-MM-DD HH:mm:ss");
-    label = "Today's Total";
+    end = moment()
+      .utc()
+      .format("YYYY-MM-DD HH:mm:ss");
+
+    l; // Bilingual Label
+    label = language === "es" ? "Total de Hoy" : "Today's Total";
   } else {
-    // Default to Current Shift
-    const window = getCurrentShiftUtcWindow(); // Uses your existing function
+    const window = getCurrentShiftUtcWindow();
     start = window.start;
     end = window.end;
-    label = "Current Shift";
+
+    // Bilingual Label
+    label = language === "es" ? "Turno Actual" : "Current Shift";
   }
 
   const [rows] = await db.sequelize.query(
     `SELECT COUNT(*) AS total FROM ${tableName} WHERE createdAt BETWEEN :start AND :end`,
-    { replacements: { start, end } }
+    { replacements: { start, end } },
   );
 
   const total = rows[0].total ?? 0;
-  await sendTextMessage(from, `📊 *${label} (${line.toUpperCase()})*\nTotal: *${total}* units`);
+  // Translate the word "units"
+  const unitsText = language === "es" ? "unidades" : "units";
+  await sendTextMessage(
+    from,
+    `📊 *${label} (${line.toUpperCase()})*\nTotal: *${total}* ${unitsText}`,
+  );
 }
 
 // ---------------------------------------------------------
@@ -383,16 +440,21 @@ async function handleProductionCount(from, line, timeframe) {
 // ---------------------------------------------------------
 async function handleGraphReport(from, line, timeframe) {
   const isLastWeek = timeframe === "last_week";
-  // Reuse your existing graph logic here. 
+  // Reuse your existing graph logic here.
   // You can wrap your previous "isGraphRequest" code into a function called 'generateAndSendGraph'
   // checking 'isLastWeek' to adjust the date range.
-  
-  await sendTextMessage(from, `📉 Generating ${isLastWeek ? "Last Week's" : "Weekly"} Graph for ${line.toUpperCase()}...`);
-  
+
+  await sendTextMessage(
+    from,
+    `📉 Generating ${
+      isLastWeek ? "Last Week's" : "Weekly"
+    } Graph for ${line.toUpperCase()}...`,
+  );
+
   // Call your existing graph generation logic logic here...
   // (Let me know if you need me to repackage your graph code too!)
 
-  await generateAndSendGraph(from,line,isLastWeek);
+  await generateAndSendGraph(from, line, isLastWeek);
 }
 
 // ---------------------------------------------------------
@@ -401,19 +463,38 @@ async function handleGraphReport(from, line, timeframe) {
 async function handleLastRecord(from, line) {
   const tableName = TABLES[line];
   const [rows] = await db.sequelize.query(
-    `SELECT * FROM ${tableName} ORDER BY createdAt DESC LIMIT 1`
+    `SELECT * FROM ${tableName} ORDER BY createdAt DESC LIMIT 1`,
   );
 
   if (rows.length === 0) {
-    return sendTextMessage(from, "No records found.");
+    const noRecordsMsg =
+      language === "es" ? "No se encontraron registros." : "No records found.";
+    return sendTextMessage(from, noRecordsMsg);
   }
 
   const r = rows[0];
+
+  // Set up bilingual dictionary for the labels
+  const t =
+    language === "es"
+      ? {
+          title: "Último Registro",
+          part: "No. Parte",
+          serial: "No. Serie",
+        }
+      : {
+          title: "Last Scan",
+          part: "Part",
+          serial: "Serial",
+        };
+
   const msg = `
-🆕 *Last Scan (${line.toUpperCase()})*
-📅 ${moment(r.createdAt).tz("America/Monterrey").format("DD/MM HH:mm:ss")}
-📦 Part: ${r.numero_parte || "N/A"}
-Serial: ${r.numero_serie || "N/A"}
+🆕 *${t.title} (${line.toUpperCase()})*
+📅 ${moment(r.createdAt)
+    .tz("America/Monterrey")
+    .format("DD/MM HH:mm:ss")}
+📦 ${t.part}: ${r.numero_parte || "N/A"}
+${t.serial}: ${r.numero_serie || "N/A"}
 `.trim();
 
   await sendTextMessage(from, msg);

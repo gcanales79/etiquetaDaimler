@@ -15,17 +15,21 @@ async function getIntent(incomingText) {
     - intent: ("graph", "production_count", "last_record", or "unknown")
     - line: ("daimler", "fa-1", "fa-9", "fa-11", "fa-13", or null)
     - timeframe: ("current_shift", "today", "last_week", "this_week", or null)
+    - language: ("es" or "en")
 
     Operational Business Rules:
     - "Production Day" starts at 23:00 of the previous calendar day.
     - Normalize line names: "fa11" or "fa 11" becomes "fa-11". "daimler line" becomes "daimler".
+    - Set the "language" key to "es" if the user speaks Spanish, or "en" if English. Default to "en" if unsure.
+
+    Language Mapping Rules:
 
     Language Mapping Rules:
     - "hoy", "el día de hoy", "today" -> timeframe: "today"
     - "turno", "turno actual", "este turno", "current shift" -> timeframe: "current_shift"
     - "gráfica", "grafica", "reporte visual", "graph", "chart" -> intent: "graph"
     - "último", "ultimo registro", "reciente", "last record" -> intent: "last_record"
-    - "producción", "cuántos llevamos", "números", "production" -> intent: "production_count"
+    - "producción", "cuántos llevamos", "números", "como va", "production" -> intent: "production_count"
   `.trim();
 
   const result = await model.generateContent(systemPrompt);
