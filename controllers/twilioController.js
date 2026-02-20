@@ -117,7 +117,7 @@ function getCurrentShiftUtcWindow() {
   };
 }
 
-async function generateAndSendGraph(from, line, isLastWeek) {
+async function generateAndSendGraph(from, line, isLastWeek, language) {
   console.log(`Generating graph for table ${line}, lastWeek=${isLastWeek}`);
   const tz = "America/Monterrey";
   const tableName = TABLES[line];
@@ -185,7 +185,10 @@ async function generateAndSendGraph(from, line, isLastWeek) {
   console.log("Weekly data rows:", rows);
 
   if (!rows || rows.length === 0) {
-    errorMsg=language === "es" ? "No se encontraron datos para el período solicitado." : "No data found for the requested period.";
+    errorMsg =
+      language === "es"
+        ? "No se encontraron datos para el período solicitado."
+        : "No data found for the requested period.";
     await sendTextMessage(from, errorMsg);
     return;
   }
@@ -207,8 +210,8 @@ async function generateAndSendGraph(from, line, isLastWeek) {
 
   // 2. Send to WhatsApp
   try {
-    labelOne=language === "es" ? "Gráfica Semanal" : "Weekly Chart";
-    labelTwo=language === "es" ? "Total de la Semana" : "Weekly Total";
+    labelOne = language === "es" ? "Gráfica Semanal" : "Weekly Chart";
+    labelTwo = language === "es" ? "Total de la Semana" : "Weekly Total";
     await sendGraphMessage(
       from,
       `📊 ${labelOne}: ${line.toUpperCase()} \n${labelTwo}: ${weeklyTotal}`,
@@ -216,11 +219,11 @@ async function generateAndSendGraph(from, line, isLastWeek) {
     );
   } catch (err) {
     console.error("Twilio Media Error:", err);
-    crashMsg=language === "es" ? "La gráfica se generó pero no pude enviarla por WhatsApp. Por favor revisa el servidor." : "The chart was generated but I couldn't send it via WhatsApp. Please check the server.";
-    await sendTextMessage(
-      from,
-      crashMsg,
-    );
+    crashMsg =
+      language === "es"
+        ? "La gráfica se generó pero no pude enviarla por WhatsApp. Por favor revisa el servidor."
+        : "The chart was generated but I couldn't send it via WhatsApp. Please check the server.";
+    await sendTextMessage(from, crashMsg);
   }
 
   // 3. Delete from Cloudinary after a 60-second delay
@@ -247,39 +250,59 @@ async function processProductionRequest(from, incomingText) {
   const aiResult = await getIntent(incomingText);
   console.log("🤖 AI Decision:", aiResult);
 
-  const { intent, timeframe, language } = aiResult;
-  let { line } = aiResult;
+  let { intent, timeframe, language, line } = aiResult;
+
+  // Initialize session
+  if (!sessions[from]) sessions[from] = {};
+  const session = sessions[from];
+
+  // ---------------------------------------------------------
+  // 🛡️ 2. VALIDATION GATE (Fixed to remember the intent)
+  // ---------------------------------------------------------
 
   // If AI extracted a line, verify it actually exists in our TABLES config
   if (line) {
     const normalizedLine = line.toLowerCase(); // Ensure matching case with TABLES keys
 
     if (!TABLES[normalizedLine]) {
+      // 🧠 NEW: Save what they wanted to do before stopping them
+      if (intent !== "unknown") {
+        session.pendingIntent = { intent, timeframe, language };
+      }
       // 🛑 STOP! This line doesn't exist (e.g., "FA-8")
       const validLines = Object.keys(TABLES)
         .map((k) => k.toUpperCase())
         .join(", ");
 
-        wrongLineMsg=language === "es" ? `⚠️ La línea *"${line}"* no es válida.\n\nLíneas disponibles: ${validLines}` : `⚠️ The line *"${line}"* is not valid.\n\nAvailable lines: ${validLines}`;
+      wrongLineMsg =
+        language === "es"
+          ? `⚠️ La línea *"${line}"* no es válida.\n\nLíneas disponibles: ${validLines}`
+          : `⚠️ The line *"${line}"* is not valid.\n\nAvailable lines: ${validLines}`;
 
-      await sendTextMessage(
-        from,
-        wrongLineMsg,
-      );
+      await sendTextMessage(from, wrongLineMsg);
       return; // Exit function so we don't crash
     }
 
     // If valid, use the normalized version
     line = normalizedLine;
+    session.line = line;
   }
 
-  // Initialize session
-  if (!sessions[from]) sessions[from] = {};
-  const session = sessions[from];
-
-  // 2. LINE MANAGEMENT
-  // If AI found a line, update the session.
-  if (line) session.line = line;
+  // ---------------------------------------------------------
+  // 🧠 3. RESTORE PENDING INTENT
+  // ---------------------------------------------------------
+  // If the user just replied with a line ("FA11"), the AI intent is "unknown".
+  // We restore the original intent here so the bot remembers the context.
+  if (session.pendingIntent && session.line) {
+    if (intent === "unknown") {
+      intent = session.pendingIntent.intent;
+      timeframe = session.pendingIntent.timeframe || timeframe;
+      // 🐛 EL ARREGLO: Rescatar el idioma original ("es")
+      language = session.pendingIntent.language || language
+    }
+    // Clear it so it doesn't get stuck in a loop later
+    delete session.pendingIntent;
+  }
 
   // If we still don't have a line, checking if it's a known intent that needs one
   // 2. Bilingual "Which Line?" Prompt
@@ -296,7 +319,7 @@ async function processProductionRequest(from, incomingText) {
     return;
   }
 
-  // If they just answered the "Which line?" question:
+ /* // If they just answered the "Which line?" question:
   if (!line && session.line && session.pendingIntent) {
     // Restore the previous intent (e.g., they asked for "Graph" before)
     return routeRequest(
@@ -305,7 +328,7 @@ async function processProductionRequest(from, incomingText) {
       session.line,
       session.pendingIntent.timeframe,
     );
-  }
+  }*/
 
   // 3. FALLBACK MENU
   // If intent is unknown and we aren't waiting for a line, show the menu.
@@ -333,7 +356,7 @@ No reconocí la solicitud. Intenta preguntar:
 🏭 *"¿Cómo va Daimler hoy?"*
 🔢 *"Turno actual FA-9"*
 
-*Linea Seleccionada:* ${session.line ? session.line.toUpperCase() : "None"}
+*Linea Seleccionada:* ${session.line ? session.line.toUpperCase() : "Ninguna"}
 `.trim();
 
     await sendTextMessage(from, language === "es" ? menuEs : menuEn);
@@ -382,7 +405,7 @@ async function routeRequest(from, intent, line, timeframe, language) {
 // ---------------------------------------------------------
 // 🏭 HANDLER: Production Counts (Shift / Today)
 // ---------------------------------------------------------
-async function handleProductionCount(from, line, timeframe) {
+async function handleProductionCount(from, line, timeframe, language) {
   const tableName = TABLES[line];
   if (!tableName)
     return sendTextMessage(from, "Error: Unknown table for line " + line);
@@ -438,23 +461,27 @@ async function handleProductionCount(from, line, timeframe) {
 // ---------------------------------------------------------
 // 📊 HANDLER: Weekly Graphs
 // ---------------------------------------------------------
-async function handleGraphReport(from, line, timeframe) {
+async function handleGraphReport(from, line, timeframe, language) {
   const isLastWeek = timeframe === "last_week";
   // Reuse your existing graph logic here.
   // You can wrap your previous "isGraphRequest" code into a function called 'generateAndSendGraph'
   // checking 'isLastWeek' to adjust the date range.
 
-  await sendTextMessage(
-    from,
-    `📉 Generating ${
-      isLastWeek ? "Last Week's" : "Weekly"
-    } Graph for ${line.toUpperCase()}...`,
-  );
+  waitMsg =
+    language === "es"
+      ? `📉 Generando la gráfica de ${
+          isLastWeek ? "la semana pasada" : "esta semana"
+        } para ${line.toUpperCase()}...`
+      : `📉 Generating ${
+          isLastWeek ? "Last Week's" : "Weekly"
+        } Graph for ${line.toUpperCase()}...`;
+
+  await sendTextMessage(from, waitMsg);
 
   // Call your existing graph generation logic logic here...
   // (Let me know if you need me to repackage your graph code too!)
 
-  await generateAndSendGraph(from, line, isLastWeek);
+  await generateAndSendGraph(from, line, isLastWeek, language);
 }
 
 // ---------------------------------------------------------
