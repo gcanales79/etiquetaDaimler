@@ -22,6 +22,11 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.STRING, 
       allowNull: true // Puede ser true por ahora para no romper los usuarios que ya existen
     },
+    alertas: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      defaultValue: "" // Por defecto lo dejamos vacío
+    },
     role:{
         type:DataTypes.STRING,
         allowNull:false,

@@ -32,6 +32,7 @@ $(document).ready(function() {
         pageSize: 5,
         pageNumber: pageNumber,
         callback: function(data, pagination) {
+          //console.log(data);
           $("#usersList").empty();
           for (let i = 0; i < data.length; i++) {
             newItem = $("<tr>");
@@ -51,6 +52,32 @@ $(document).ready(function() {
             }
             roleUser = $("<td>").addClass("align-middle");
             roleUser.text(data[i].role);
+
+            // ALERTAS
+            let alertasUser = $("<td>").addClass("align-middle");
+
+            if (!data[i].alertas || data[i].alertas.trim() === "") {
+              // Si no tiene alertas, ponemos un guion elegante
+              alertasUser.text("-");
+            } else {
+              // Si tiene, separamos el texto por las comas
+              let arregloAlertas = data[i].alertas.split(",");
+
+              // Por cada alerta, creamos una etiqueta (badge) de Bootstrap
+              arregloAlertas.forEach((alerta) => {
+                // Ponemos el texto en mayúsculas (ej. "fa1" -> "FA1")
+                let textoFormateado = alerta.toUpperCase();
+                // Excepción estética: Si es Daimler, solo la primera en mayúscula
+                if (textoFormateado === "DAIMLER") textoFormateado = "Daimler";
+
+                let etiqueta = $("<span>")
+                  .addClass("badge badge-info mr-1") // Clases de Bootstrap para estilo
+                  .text(textoFormateado);
+
+                alertasUser.append(etiqueta);
+              });
+            }
+
             actionUser = $("<td>").addClass("align-middle");
 
             //Button Edit
@@ -79,10 +106,7 @@ $(document).ready(function() {
             actionUser.append(buttonEdit);
             actionUser.append(buttonDelete);
 
-            newItem.append(emailUser);
-            newItem.append(phoneUser);
-            newItem.append(roleUser);
-            newItem.append(actionUser);
+            newItem.append(emailUser, phoneUser, roleUser, alertasUser, actionUser);
 
             //Append Item to List
             $("#usersList").append(newItem);
@@ -104,7 +128,7 @@ $(document).ready(function() {
       if (code !== "200") {
         notificationToast(code, message);
       } else {
-        // ¡NUEVA LÍNEA! Obligamos al formulario a mostrarse
+        // Obligamos al formulario a mostrarse
         $("#userForm").show();
         $("#userDataSection").show();
         $("#otpSection").hide();
@@ -114,11 +138,6 @@ $(document).ready(function() {
         $("#passwordUser").prop("required", false);
         $("#repeatPasswordUser").prop("required", false);
 
-        // Usamos setNumber para que la librería ponga la bandera correcta
-        phoneInput.setNumber(user.telefono || "");
-        // Guardamos el número exacto como atributo oculto para compararlo después
-        $("#telefonoUser").attr("data-original", user.telefono || "");
-
         $("#modalUserLongTitle").text("Editar Usuario");
         $("#createUser").text("Actualizar Usuario");
         $("#createUser").attr("userId", userId);
@@ -126,6 +145,32 @@ $(document).ready(function() {
         $("#modalUserCenter").attr("type", "Update");
         $("#emailUser").val(user.email);
         $("#roleUser").val(user.role);
+        // Usamos setNumber para que la librería ponga la bandera correcta
+        phoneInput.setNumber(user.telefono || "");
+        // Guardamos el número exacto como atributo oculto para compararlo después
+        $("#telefonoUser").attr("data-original", user.telefono || "");
+        
+        // --- INICIO CÓDIGO DE CHECKBOXES ---
+        // 1. Primero, desmarcamos todos los cuadritos (por si abriste a otro usuario antes)
+        $(".alerta-checkbox").prop("checked", false);
+
+        //console.log("Datos completos del usuario que llegaron del servidor:", user);
+
+        // 2. Revisamos si el usuario tiene alertas guardadas
+        if (user.alertas && user.alertas.trim() !== "") {
+            //console.log("Alertas crudas de la BD:", user.alertas); // Ver qué trajo exactamente
+            // Separamos el texto por las comas (ej. "fa1,daimler" -> ["fa1", "daimler"])
+            let arregloAlertas = user.alertas.split(","); 
+           ;
+            // Recorremos cada alerta y buscamos su cuadrito para marcarlo
+            arregloAlertas.forEach(alerta => {
+                let alertaLimpia = alerta.trim().toLowerCase(); // Limpiamos espacios invisibles por seguridad
+                //console.log("Intentando marcar el cuadrito con value:", alertaLimpia);
+                $(`.alerta-checkbox[value="${alertaLimpia}"]`).prop("checked", true);
+            });
+        }else{
+          console.log("El usuario no tiene alertas o llegaron vacías.");
+        }
         $("#modalUserCenter").modal("show");
       }
     });
@@ -229,7 +274,7 @@ $(document).ready(function() {
     $("#otpCode").val("");
     $("#createUser").text("Añadir Usuario");
 
-    // ¡NUEVA LÍNEA! Obligamos al formulario a mostrarse
+    // Obligamos al formulario a mostrarse
     $("#userForm").show();
 
     $("#modalUserLongTitle").text("Añadir Nuevo Usuario");
@@ -262,6 +307,17 @@ $(document).ready(function() {
       $("#telefonoUser").val(),
     );
     console.log("Número procesado (lo que se enviará a BD):", telefono);*/
+
+    // ¡Recolectar las alertas marcadas
+    let alertasArray = [];
+    $(".alerta-checkbox:checked").each(function() {
+      alertasArray.push($(this).val());
+    });
+    let alertas = alertasArray.join(","); // Convierte ["fa1", "fa11"] en "fa1,fa11"
+
+    // Revisamos en consola las alertas para asegurarnos que se están recolectando bien
+    //console.log("Alertas detectadas en el Frontend:", alertas);
+
     // 3. Validamos que el número sea un celular real y válido para ese país
     if (!phoneInput.isValidNumber()) {
       notificationToast(
@@ -295,7 +351,7 @@ $(document).ready(function() {
       }
     } else if (buttonType === "Update") {
       // Al editar, el Email es obligatorio, pero la contraseña es opcional
-      if (email.length === 0 || telefono.length === 0)  {
+      if (email.length === 0 || telefono.length === 0) {
         return notificationToast(
           "500",
           "El email y teléfono no pueden estar vacíos",
@@ -348,6 +404,7 @@ $(document).ready(function() {
           telefono: telefono,
           role: role,
           otpCode: otpCode,
+          alertas: alertas,
         })
           .then((data) => {
             //console.log(data);
@@ -379,6 +436,7 @@ $(document).ready(function() {
         password: password,
         telefono: telefono,
         role: role,
+        alertas: alertas,
       };
 
       // Solo enviamos la contraseña si el usuario escribió algo

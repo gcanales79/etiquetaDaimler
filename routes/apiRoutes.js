@@ -722,7 +722,7 @@ module.exports = function(app) {
   //Get all user
   app.get("/get-all-users", isAuthenticated, (req, res) => {
     db.User.findAll({
-      attributes: ["id", "email", "role","telefono"],
+      attributes: ["id", "email", "role","telefono","alertas"],
     })
       .then((usersList) => {
         if (!usersList) {
@@ -738,7 +738,7 @@ module.exports = function(app) {
 
   //Add User
   app.post("/add-user", isAuthenticated, async (req, res) => {
-    const { email, password, role, telefono,otpCode } = req.body;
+    const { email, password, role, telefono,otpCode,alertas } = req.body;
     const serviceSid = process.env.TWILIO_VERIFY_SID;
 
   try {
@@ -754,7 +754,8 @@ module.exports = function(app) {
           email: email,
           password: password,
           role: role,
-          telefono: telefono
+          telefono: telefono,
+          alertas:alertas,
         });
 
         res.status(200).send({ code: "200", message: "Usuario agregado exitosamente" });
@@ -800,7 +801,7 @@ module.exports = function(app) {
           [Op.eq]: id,
         },
       },
-      attributes: ["id", "email", "role","telefono"],
+      attributes: ["id", "email", "role","telefono","alertas"],
     })
       .then((userStored) => {
         if (!userStored) {
@@ -845,7 +846,7 @@ module.exports = function(app) {
   //Edit User by id
   app.put("/update-user/:id", isAuthenticated, async(req, res) => {
     const { id } = req.params;
-    const { email, password, role,telefono,otpCode } = req.body;
+    const { email, password, role,telefono,otpCode,alertas } = req.body;
     const serviceSid = process.env.TWILIO_VERIFY_SID;
    try {
       // 1. Si viene un otpCode, significa que cambió el número y debemos verificarlo
@@ -860,7 +861,7 @@ module.exports = function(app) {
       }
 
       // 2. Construimos el objeto de actualización de forma dinámica
-      let updateData = { email: email, role: role, telefono: telefono };
+      let updateData = { email: email, role: role, telefono: telefono,alertas: alertas };
       
       // Solo agregamos la contraseña al objeto si el usuario escribió una nueva
       if (password && password.trim() !== "") {
