@@ -18,6 +18,10 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.STRING,
       allowNull: false
     },
+    telefono: {
+      type: DataTypes.STRING, 
+      allowNull: true // Puede ser true por ahora para no romper los usuarios que ya existen
+    },
     role:{
         type:DataTypes.STRING,
         allowNull:false,

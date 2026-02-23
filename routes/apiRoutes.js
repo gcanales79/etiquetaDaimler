@@ -48,6 +48,7 @@ module.exports = function(app) {
       // They won't get this or even be able to access this page if they aren't authed
       //console.log(req.user)
       //console.log(info)
+      //console.log("Datos recibidos en el servidor",user);
       if (err) {
         console.log(err);
         // res.send({ message: "Error de Servidor", alert: "Error" });
@@ -721,7 +722,7 @@ module.exports = function(app) {
   //Get all user
   app.get("/get-all-users", isAuthenticated, (req, res) => {
     db.User.findAll({
-      attributes: ["id", "email", "role"],
+      attributes: ["id", "email", "role","telefono"],
     })
       .then((usersList) => {
         if (!usersList) {
@@ -736,27 +737,58 @@ module.exports = function(app) {
   });
 
   //Add User
-  app.post("/add-user", isAuthenticated, (req, res) => {
-    const { email, password, role } = req.body;
-    db.User.create({
-      email: email,
-      password: password,
-      role: role,
-    })
-      .then((userCreated) => {
-        if (!userCreated) {
-          res.status(404).send({ code: "404", message: "Usuario no agregado" });
-        } else {
-          res
-            .status(200)
-            .send({ code: "200", message: "Usuario agregado exitosamente" });
-        }
-      })
-      .catch((err) => {
-        res
-          .status(500)
-          .send({ code: "500", message: "Error del servidor", err: err });
-      });
+  app.post("/add-user", isAuthenticated, async (req, res) => {
+    const { email, password, role, telefono,otpCode } = req.body;
+    const serviceSid = process.env.TWILIO_VERIFY_SID;
+
+  try {
+      // 1. Preguntamos a Twilio si el código es válido
+      const verificationCheck = await client.verify.v2.services(serviceSid)
+        .verificationChecks
+        .create({ to: telefono, code: otpCode });
+
+      // 2. Si Twilio dice que está aprobado, guardamos en la BD
+      if (verificationCheck.status === 'approved') {
+        
+        const userCreated = await db.User.create({
+          email: email,
+          password: password,
+          role: role,
+          telefono: telefono
+        });
+
+        res.status(200).send({ code: "200", message: "Usuario agregado exitosamente" });
+        
+      } else {
+        // El código era incorrecto o ya expiró
+        res.status(400).send({ code: "400", message: "Código de verificación incorrecto" });
+      }
+
+    } catch (err) {
+      console.log("Error creando usuario:", err);
+      res.status(500).send({ code: "500", message: "Error del servidor", err: err });
+    }
+    
+  });
+
+  //Send OTP thru Whatsapp
+  app.post("/api/send-otp", isAuthenticated, async (req, res) => {
+    const { telefono } = req.body;
+    
+    // Lo ideal es process.env.TWILIO_VERIFY_SID, pero usamos tu código:
+    const serviceSid = process.env.TWILIO_VERIFY_SID; 
+
+    try {
+      // Le pedimos a Twilio que envíe el código usando el canal 'whatsapp'
+      const verification = await client.verify.v2.services(serviceSid)
+        .verifications
+        .create({ to: telefono, channel: 'whatsapp' });
+        
+      res.status(200).send({ code: "200", message: "Código enviado por WhatsApp" });
+    } catch (error) {
+      console.log("Error Twilio:", error);
+      res.status(500).send({ code: "500", message: "Error al enviar el código de WhatsApp" });
+    }
   });
 
   //Get user by id
@@ -768,7 +800,7 @@ module.exports = function(app) {
           [Op.eq]: id,
         },
       },
-      attributes: ["id", "email", "role"],
+      attributes: ["id", "email", "role","telefono"],
     })
       .then((userStored) => {
         if (!userStored) {
@@ -813,12 +845,13 @@ module.exports = function(app) {
   //Edit User by id
   app.put("/update-user/:id", isAuthenticated, (req, res) => {
     const { id } = req.params;
-    const { email, password, role } = req.body;
+    const { email, password, role,telefono } = req.body;
     db.User.update(
       {
         email: email,
         password: password,
         role: role,
+        telefono:telefono
       },
       {
         where: {
