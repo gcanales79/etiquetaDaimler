@@ -106,6 +106,18 @@ $(document).ready(function() {
       } else {
         // ¡NUEVA LÍNEA! Obligamos al formulario a mostrarse
         $("#userForm").show();
+        $("#userDataSection").show();
+        $("#otpSection").hide();
+        $("#otpCode").val("");
+
+        // 2. Quitamos lo OBLIGATORIO a las contraseñas al editar
+        $("#passwordUser").prop("required", false);
+        $("#repeatPasswordUser").prop("required", false);
+
+        // Usamos setNumber para que la librería ponga la bandera correcta
+        phoneInput.setNumber(user.telefono || "");
+        // Guardamos el número exacto como atributo oculto para compararlo después
+        $("#telefonoUser").attr("data-original", user.telefono || "");
 
         $("#modalUserLongTitle").text("Editar Usuario");
         $("#createUser").text("Actualizar Usuario");
@@ -198,6 +210,20 @@ $(document).ready(function() {
     console.log("Añadir Usuario");
     $("#userForm")[0].reset();
 
+    // 1. Reseteamos las vistas
+    $("#userForm").show();
+    $("#userDataSection").show();
+    $("#otpSection").hide();
+    $("#otpCode").val("");
+
+    // 2. Hacemos las contraseñas OBLIGATORIAS al crear
+    $("#passwordUser").prop("required", true);
+    $("#repeatPasswordUser").prop("required", true);
+
+    // 3. Limpiamos cualquier rastro de teléfono anterior
+    $("#telefonoUser").attr("data-original", "");
+    phoneInput.setNumber(""); // Limpia la banderita
+
     $("#userDataSection").show();
     $("#otpSection").hide();
     $("#otpCode").val("");
@@ -254,100 +280,175 @@ $(document).ready(function() {
     let userId = $(this)
       .find("#createUser")
       .attr("userId");
+    if (buttonType === "Create") {
+      // Al crear, TODO es obligatorio
+      if (
+        email.length === 0 ||
+        password.length === 0 ||
+        repeatPassword.length === 0 ||
+        telefono.length === 0
+      ) {
+        return notificationToast("500", "Todos los datos son obligatorios");
+      }
+      if (password !== repeatPassword) {
+        return notificationToast("500", "Las contraseñas no coinciden");
+      }
+    } else if (buttonType === "Update") {
+      // Al editar, el Email es obligatorio, pero la contraseña es opcional
+      if (email.length === 0 || telefono.length === 0)  {
+        return notificationToast(
+          "500",
+          "El email y teléfono no pueden estar vacíos",
+        );
+      }
+      // Solo revisamos contraseñas si el usuario intentó escribir una nueva
+      if (password.length > 0 || repeatPassword.length > 0) {
+        if (password !== repeatPassword) {
+          return notificationToast("500", "Las contraseñas no coinciden");
+        }
+      }
+    }
     //console.log(pageNum);
     //console.log(postId);
-    if (
-      email.length !== 0 &&
-      password.length !== 0 &&
-      repeatPassword.length !== 0 &&
-      password === repeatPassword &&
-      telefono.length !== 0
-    ) {
-      if (buttonType == "Create") {
-        let isOtpVisible = $("#otpSection").is(":visible");
-        // console.log("Create")
-        if (!isOtpVisible) {
-          // PASO 1: Aún no pedimos el código, le decimos a Node.js que mande el WhatsApp
-          // Bloqueamos el botón para evitar clics dobles
-          $("#createUser")
-            .prop("disabled", true)
-            .text("Enviando...");
-          $.post("/api/send-otp", { telefono: telefono }).then((data) => {
-            $("#createUser").prop("disabled", false);
-            if (data.code === "200") {
-              notificationToast("200", data.message);
-              // Ocultamos los datos, mostramos la sección del código y cambiamos el botón
-              $("#userDataSection").hide();
-              $("#otpSection").show();
-              $("#createUser").text("Verificar Código y Guardar");
-            } else {
-              notificationToast("500", data.message);
-            }
-          });
-        } else {
-          // PASO 2: El administrador ya ingresó el código, enviamos todo al servidor
-          let otpCode = $("#otpCode")
-            .val()
-            .trim();
-          if (otpCode.length === 0) {
-            return notificationToast(
-              "500",
-              "Debes ingresar el código de verificación",
-            );
+    if (buttonType == "Create") {
+      let isOtpVisible = $("#otpSection").is(":visible");
+      // console.log("Create")
+      if (!isOtpVisible) {
+        // PASO 1: Aún no pedimos el código, le decimos a Node.js que mande el WhatsApp
+        // Bloqueamos el botón para evitar clics dobles
+        $("#createUser")
+          .prop("disabled", true)
+          .text("Enviando...");
+        $.post("/api/send-otp", { telefono: telefono }).then((data) => {
+          $("#createUser").prop("disabled", false);
+          if (data.code === "200") {
+            notificationToast("200", data.message);
+            // Ocultamos los datos, mostramos la sección del código y cambiamos el botón
+            $("#userDataSection").hide();
+            $("#otpSection").show();
+            $("#createUser").text("Verificar Código y Guardar");
+          } else {
+            notificationToast("500", data.message);
           }
-          $.post("/add-user", {
-            email: email,
-            password: password,
-            telefono: telefono,
-            role: role,
-            otpCode: otpCode,
-          }).then((data) => {
-            //console.log(data);
-            const { code, message } = data;
-            $("#modalUserCenter").modal("hide");
-            //Limpiar la forma despues de hacer submit
-            $("#userForm")[0].reset();
-            notificationToast(code, message);
-            getUsers();
-          });
+        });
+      } else {
+        // PASO 2: El administrador ya ingresó el código, enviamos todo al servidor
+        let otpCode = $("#otpCode")
+          .val()
+          .trim();
+        if (otpCode.length === 0) {
+          return notificationToast(
+            "500",
+            "Debes ingresar el código de verificación",
+          );
         }
-      } else if (buttonType == "Update") {
-        // console.log("Update");
-        let changes = {
+        $.post("/add-user", {
           email: email,
           password: password,
           telefono: telefono,
           role: role,
-        };
-        $.ajax({
-          url: `/update-user/${userId}`,
-          type: "PUT",
-          contentType: "application/json",
-          data: JSON.stringify(changes),
-          success: function(data) {
+          otpCode: otpCode,
+        })
+          .then((data) => {
+            //console.log(data);
             const { code, message } = data;
-            //console.log(code)
-            if (code !== "200") {
-              notificationToast(code, message);
-            } else {
-              $();
+            if (code === "200") {
               $("#modalUserCenter").modal("hide");
               //Limpiar la forma despues de hacer submit
               $("#userForm")[0].reset();
               notificationToast(code, message);
-              getUsers(pageNum);
+              getUsers();
             }
-          },
-        });
+          })
+          .fail((err) => {
+            let errorData = err.responseJSON;
+            let mensajeError = errorData
+              ? errorData.message
+              : "Error al verificar el código OTP";
+            notificationToast("500", mensajeError);
+          });
       }
-    } else {
-      if (password !== repeatPassword) {
-        notificationToast("500", "Las contraseñas no coinciden");
-        return false;
-      } else {
-        notificationToast("500", "Todos los datos son obligatorios");
-        return false;
+    } else if (buttonType == "Update") {
+      // console.log("Update");
+      // 1. Comparamos los teléfonos
+      let originalPhone = $("#telefonoUser").attr("data-original");
+      let phoneChanged = telefono !== originalPhone;
+
+      let changes = {
+        email: email,
+        password: password,
+        telefono: telefono,
+        role: role,
+      };
+
+      // Solo enviamos la contraseña si el usuario escribió algo
+      if (password.length > 0) {
+        changes.password = password;
       }
+
+      // 3. ¿El teléfono cambió? Entonces necesitamos flujo Twilio
+      if (phoneChanged) {
+        let isOtpVisible = $("#otpSection").is(":visible");
+
+        if (!isOtpVisible) {
+          // Pedimos el WhatsApp al nuevo número
+          $("#createUser")
+            .prop("disabled", true)
+            .text("Enviando...");
+          $.post("/api/send-otp", { telefono: telefono })
+            .then((data) => {
+              $("#createUser").prop("disabled", false);
+              if (data.code === "200") {
+                notificationToast("200", "Código enviado al nuevo número");
+                $("#userDataSection").hide();
+                $("#otpSection").show();
+                $("#createUser").text("Verificar y Actualizar");
+              }
+            })
+            .fail((err) => {
+              $("#createUser").prop("disabled", false);
+              notificationToast(
+                "500",
+                err.responseJSON ? err.responseJSON.message : "Error",
+              );
+            });
+          return; // Detenemos la ejecución aquí hasta que ponga el código
+        } else {
+          // Ya se ve el código, lo atrapamos
+          let otpCode = $("#otpCode")
+            .val()
+            .trim();
+          if (otpCode.length === 0)
+            return notificationToast("500", "Ingresa el código");
+          changes.otpCode = otpCode; // Lo agregamos a los datos a enviar
+        }
+      }
+
+      $.ajax({
+        url: `/update-user/${userId}`,
+        type: "PUT",
+        contentType: "application/json",
+        data: JSON.stringify(changes),
+        success: function(data) {
+          const { code, message } = data;
+          //console.log(code)
+          if (code !== "200") {
+            notificationToast(code, message);
+          } else {
+            $();
+            $("#modalUserCenter").modal("hide");
+            //Limpiar la forma despues de hacer submit
+            $("#userForm")[0].reset();
+            notificationToast(code, message);
+            getUsers(pageNum);
+          }
+        },
+      }).fail((err) => {
+        notificationToast(
+          "500",
+          err.responseJSON ? err.responseJSON.message : "Error al actualizar",
+        );
+      });
     }
   });
 

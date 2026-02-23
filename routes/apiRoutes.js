@@ -843,41 +843,42 @@ module.exports = function(app) {
   });
 
   //Edit User by id
-  app.put("/update-user/:id", isAuthenticated, (req, res) => {
+  app.put("/update-user/:id", isAuthenticated, async(req, res) => {
     const { id } = req.params;
-    const { email, password, role,telefono } = req.body;
-    db.User.update(
-      {
-        email: email,
-        password: password,
-        role: role,
-        telefono:telefono
-      },
-      {
-        where: {
-          id: id,
-        },
-        individualHooks: true,
-      }
-    )
-      .then((userStore) => {
-        console.log(userStore);
-        if (userStore[0] === 0) {
-          res.status(200).send({
-            message: "Usuario no encontrado",
-            code: "404",
-          });
-        } else {
-          res.status(200).send({
-            message: "Usuario actualizado correctamente",
-            code: "200",
-          });
+    const { email, password, role,telefono,otpCode } = req.body;
+    const serviceSid = process.env.TWILIO_VERIFY_SID;
+   try {
+      // 1. Si viene un otpCode, significa que cambió el número y debemos verificarlo
+      if (otpCode) {
+        const check = await client.verify.v2.services(serviceSid)
+          .verificationChecks
+          .create({ to: telefono, code: otpCode });
+
+        if (check.status !== 'approved') {
+          return res.status(400).send({ code: "400", message: "Código de verificación incorrecto" });
         }
-      })
-      .catch((err) => {
-        console.log(err);
-        res.status(500).send({ code: "500", message: "Error del servidor" });
+      }
+
+      // 2. Construimos el objeto de actualización de forma dinámica
+      let updateData = { email: email, role: role, telefono: telefono };
+      
+      // Solo agregamos la contraseña al objeto si el usuario escribió una nueva
+      if (password && password.trim() !== "") {
+        updateData.password = password;
+      }
+
+      // 3. Actualizamos en la Base de Datos
+      await db.User.update(updateData, {
+        where: { id: id },
+        individualHooks: true // Súper importante para que encripte la nueva contraseña si la hay
       });
+
+      res.status(200).send({ code: "200", message: "Usuario actualizado exitosamente" });
+
+    } catch (err) {
+      console.log("Error en Update:", err);
+      res.status(500).send({ code: "500", message: "Error al actualizar el usuario" });
+    }
   });
 
   //Add Part Number
