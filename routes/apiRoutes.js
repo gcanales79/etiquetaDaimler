@@ -41,6 +41,26 @@ module.exports = function(app) {
 
   //  })
 
+  // NUEVO MIDDLEWARE HÍBRIDO PARA LA API
+function isApiAuthenticated(req, res, next) {
+  // 1. ¿Es un usuario humano desde el navegador web (con sesión)?
+  if (req.isAuthenticated && req.isAuthenticated()) {
+    return next();
+  }
+  
+  // 2. ¿Es nuestro Cron Job "robot" usando la Llave Maestra secreta?
+  const apiKey = req.headers['x-api-key'];
+
+  const secretKey =process.env.SECRET_KEY;
+  
+  if (apiKey === secretKey) {
+    return next();
+  }
+
+  // 3. Si no es un humano logueado ni el Cron Job autorizado, ¡bloqueamos!
+  return res.status(401).json({ error: "Acceso no autorizado" });
+}
+
   app.post("/login", function(req, res, next) {
     passport.authenticate("local", function(err, user, info) {
       // Since we're doing a POST with javascript, we can't actually redirect that post into a GET request

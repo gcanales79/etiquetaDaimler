@@ -24,14 +24,14 @@ function obtenerHorarios(turno) {
     let horaEsperada; // Aquí guardaremos a qué hora DEBERÍA correr el script
 
     if (turno === "dia") {
-        horaEsperada = isDST ? 20 : 21;
+        horaEsperada = 15;
         inicio = isDST ? mty.format("YYYY-MM-DD") + " 12:00:00" : mty.format("YYYY-MM-DD") + " 13:00:00";
         fin = isDST ? mty.format("YYYY-MM-DD") + " 20:00:00" : mty.format("YYYY-MM-DD") + " 21:00:00";
         diaFinNumero = moment(fin).day();
         if (diaFinNumero === 0) ejecutar = false; 
     } 
     else if (turno === "tarde") {
-        horaEsperada = isDST ? 4 : 5;
+        horaEsperada = 23;
         // Para la tarde, el inicio fue "ayer"
         inicio = isDST ? mty.clone().subtract(1, "day").format("YYYY-MM-DD") + " 20:00:00" : mty.clone().subtract(1, "day").format("YYYY-MM-DD") + " 21:00:00";
         fin = isDST ? mty.format("YYYY-MM-DD") + " 04:00:00" : mty.format("YYYY-MM-DD") + " 05:00:00";
@@ -39,7 +39,7 @@ function obtenerHorarios(turno) {
         if (diaFinNumero === 1) ejecutar = false;
     } 
     else if (turno === "noche") {
-        horaEsperada = isDST ? 12 : 13;
+        horaEsperada = 7;
         inicio = isDST ? mty.format("YYYY-MM-DD") + " 04:00:00" : mty.format("YYYY-MM-DD") + " 05:00:00";
         fin = isDST ? mty.format("YYYY-MM-DD") + " 12:00:00" : mty.format("YYYY-MM-DD") + " 13:00:00";
         diaFinNumero = moment(fin).day();
