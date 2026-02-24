@@ -28,11 +28,11 @@ $(document).ready(function() {
             $("#partNumberList").empty();
             for (let i = 0; i < data.length; i++) {
               newItem = $("<tr>");
-              partNumber = $("<td>");
+              partNumber = $("<td>").addClass("align-middle");
               partNumber.text(data[i].numero_parte);
-              lineNumber = $("<td>");
+              lineNumber = $("<td>").addClass("align-middle");
               lineNumber.text(data[i].linea);
-              actionPartNumber = $("<td>");
+              actionPartNumber = $("<td>").addClass("align-middle");
               //!No se esta usando para cada NP los detales
              /* serialLength=$("<td>");
               serialLength.text(data[i].largo_etiqueta)

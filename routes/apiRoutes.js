@@ -490,6 +490,58 @@ module.exports = function(app) {
       });
   });
 
+    //Get data between hour
+  app.get("/daimler/produccionhora/:fechainicial/:fechafinal", function(req, res) {
+    let fechainicial = moment
+      .unix(req.params.fechainicial)
+      .format("YYYY-MM-DD HH:mm:ss");
+    let fechafinal = moment
+      .unix(req.params.fechafinal)
+      .format("YYYY-MM-DD HH:mm:ss");
+    //console.log(fechainicial)
+    //console.log(fechafinal)
+    //console.log(req.params.fechafinal)
+    db.Daimler.count()
+      .then((count) => {
+        // console.log(count)
+        db.Daimler.findAndCountAll({
+          where: {
+            id: {
+              [Op.gte]: count * 0.9,
+            },
+            createdAt: {
+              [Op.gte]: fechainicial,
+              [Op.lte]: fechafinal,
+            },
+            //Le agregue esto para que no cuente las cambiadas
+            etiqueta_remplazada: null,
+            registro_auto: {
+              [Op.eq]: 1,
+            },
+          },
+          distinct: true,
+          col: "serial",
+        })
+          .then((data) => {
+            if (!data) {
+              res
+                .status(404)
+                .send({ message: "Datos no encontrados", alert: "Error" });
+            } else {
+              res.status(200).send({ data: data, alert: "Success" });
+            }
+          })
+          .catch(function(err) {
+            res
+              .status(500)
+              .send({ message: "Error de servidor", err: err, alert: "Error" });
+          });
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  });
+
   //* SMS Produccion del turno
   app.post("/reporte", function(req, res) {
     var telefonos = [

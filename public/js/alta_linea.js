@@ -29,9 +29,9 @@ $(document).ready(function() {
             for (let i = 0; i < data.length; i++) {
               newItem = $("<tr>");
            
-              lineNumber = $("<td>");
+              lineNumber = $("<td>").addClass("align-middle");
               lineNumber.text(data[i].linea);
-              actionLine = $("<td>");
+              actionLine = $("<td>").addClass("align-middle");
   
               //Button Edit
               buttonEdit = $("<button>");
