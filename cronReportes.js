@@ -15,10 +15,10 @@ const url = process.env.APP_URL;
 function obtenerHorarios(turno) {
     // Usamos explícitamente la zona horaria de Monterrey para todos los cálculos
     const mty = moment()
-    console.log(mty)
+    //console.log(mty)
     const isDST = mty.isDST();
     const horaLocal = mty.tz("America/Monterrey").hour(); // Nos devuelve la hora actual del 0 al 23
-    console.log(`Hora local en Monterrey: ${horaLocal}`);
+    //console.log(`Hora local en Monterrey: ${horaLocal}`);
     
     let inicio, fin;
     let diaFinNumero; 
@@ -29,24 +29,24 @@ function obtenerHorarios(turno) {
         horaEsperada = 15;
         inicio = isDST ? mty.format("YYYY-MM-DD") + " 12:00:00" : mty.format("YYYY-MM-DD") + " 13:00:00";
         fin = isDST ? mty.format("YYYY-MM-DD") + " 20:00:00" : mty.format("YYYY-MM-DD") + " 21:00:00";
-        diaFinNumero = moment(fin).day();
-        if (diaFinNumero === 0) ejecutar = false; 
+        //diaFinNumero = moment(fin).day();
+        //if (diaFinNumero === 0) ejecutar = false; 
     } 
     else if (turno === "tarde") {
         horaEsperada = 23;
         // Para la tarde, el inicio fue "ayer"
         inicio = isDST ? mty.subtract(1, "day").format("YYYY-MM-DD") + " 20:00:00" : mty.subtract(1, "day").format("YYYY-MM-DD") + " 21:00:00";
         fin = isDST ? mty.format("YYYY-MM-DD") + " 04:00:00" : mty.format("YYYY-MM-DD") + " 05:00:00";
-        diaFinNumero = moment(fin).day();
-        console.log(`Día de la semana para el fin del turno tarde: ${diaFinNumero} (0=Domingo, 1=Lunes, ..., 6=Sábado)`);
-        if (diaFinNumero === 0) ejecutar = false;
+        //diaFinNumero = moment(fin).day();
+        //console.log(`Día de la semana para el fin del turno tarde: ${diaFinNumero} (0=Domingo, 1=Lunes, ..., 6=Sábado)`);
+        //if (diaFinNumero === 0) ejecutar = false;
     } 
     else if (turno === "noche") {
         horaEsperada = 7;
         inicio = isDST ? mty.format("YYYY-MM-DD") + " 04:00:00" : mty.format("YYYY-MM-DD") + " 05:00:00";
         fin = isDST ? mty.format("YYYY-MM-DD") + " 12:00:00" : mty.format("YYYY-MM-DD") + " 13:00:00";
-        diaFinNumero = moment(fin).day();
-        if (diaFinNumero === 0) ejecutar = false;
+        //diaFinNumero = moment(fin).day();
+        //if (diaFinNumero === 0) ejecutar = false;
     }
 
     // EL GUARDIÁN DEL TIEMPO (Evita la doble ejecución de Heroku)
@@ -115,7 +115,8 @@ async function procesarReportes(turno) {
       //const mensajeWa = `*Reporte de Producción*\n🏭 Línea: *${linea.toUpperCase()}*\n⏱️ Turno: *${turno}*\n⚙️ Piezas producidas: *${piezas}*`;
 
       for (let usuario of usuarios) {
-        if (usuario.telefono) {
+        if (usuario.telefono && piezas>0) {
+          
           await client.messages.create({
             contentSid: "HXb454791f97e9b548a336957d567d7c9d",
             from: `whatsapp:${twilioWhatsAppNumber}`,
@@ -134,6 +135,7 @@ async function procesarReportes(turno) {
       console.error(`Error procesando la línea ${linea}:`, error.message);
       // No detenemos el script, dejamos que siga con la siguiente línea
     }
+
   }
 
   console.log("\n=== REPORTE MAESTRO FINALIZADO ===");
