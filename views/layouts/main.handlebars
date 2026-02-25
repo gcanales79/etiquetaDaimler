@@ -15,6 +15,7 @@
   <link rel="stylesheet" href="/styles/pagination.css" />
   <link rel="stylesheet" href="/styles/styles.css" />
   <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css" />
 
 </head>
 
@@ -77,7 +78,10 @@
           <a class="nav-link" href="/gp12">GP12</a>
         </li>
         {{/ifCond}}
+        {{#ifCond inspector "||" produccion}}<li class="nav-item {{#if active_perfil}}active{{/if}}">
+          <a class="nav-link" href="/perfil">Mi Perfil</a>
         </li>
+        {{/ifCond}}
         <li class="nav-item">
           <a class="nav-link" href="/logout">Logout</a>
         </li>

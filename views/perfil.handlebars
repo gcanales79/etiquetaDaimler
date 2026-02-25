@@ -1,0 +1,109 @@
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <h2 class="mb-4">Mi Perfil</h2>
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">Mis Datos Personales</h5>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label>Correo Electrónico</label>
+                        <input type="email" class="form-control" value="{{user.email}}" disabled>
+                        <small class="text-muted">El correo no puede ser modificado por seguridad.</small>
+                    </div>
+
+                    <hr>
+
+                    <div class="form-group">
+                        <label>Número de WhatsApp</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="perfilTelefono" value="{{user.telefono}}"
+                                placeholder="+52...">
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-primary" type="button" id="btnSolicitarCambioTel">Cambiar
+                                    Número</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="seccionVerificarTel" class="d-none mt-3 p-3 border rounded bg-light">
+                        <label class="text-primary font-weight-bold">Ingresa el código de 6 dígitos enviado a tu nuevo
+                            WhatsApp:</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="perfilOtpTelefono" placeholder="123456"
+                                maxlength="6">
+                            <div class="input-group-append">
+                                <button class="btn btn-success" type="button" id="btnVerificarTel">Verificar y
+                                    Guardar</button>
+                            </div>
+                        </div>
+                        <button class="btn btn-sm btn-link text-danger mt-1" id="btnCancelarCambioTel">Cancelar</button>
+                    </div>
+
+                    <div id="mensajeTelefono" class="mt-2"></div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">Mis Alertas de WhatsApp</h5>
+                </div>
+                <div class="card-body">
+                    <p>Selecciona de qué líneas de producción deseas recibir notificaciones:</p>
+
+                    <input type="hidden" id="misAlertasGuardadas" value="{{user.alertas}}">
+
+                    <div class="form-group" id="alertasUserForm">
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input alerta-checkbox" type="checkbox" id="perfilFA1" value="fa1">
+                            <label class="form-check-label" for="perfilFA1">FA1</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input alerta-checkbox" type="checkbox" id="perfilFA9" value="fa9">
+                            <label class="form-check-label" for="perfilFA9">FA9</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input alerta-checkbox" type="checkbox" id="perfilFA11"
+                                value="fa11">
+                            <label class="form-check-label" for="perfilFA11">FA11</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input alerta-checkbox" type="checkbox" id="perfilFA13"
+                                value="fa13">
+                            <label class="form-check-label" for="perfilFA13">FA13</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input alerta-checkbox" type="checkbox" id="perfilDaimler"
+                                value="daimler">
+                            <label class="form-check-label" for="perfilDaimler">Daimler</label>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary mt-2" id="btnGuardarAlertas">Guardar Preferencias</button>
+                    <div id="mensajeAlertas" class="mt-2"></div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">Cambiar Contraseña</h5>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label>Nueva Contraseña</label>
+                        <input type="password" class="form-control" id="perfilNuevaPass"
+                            placeholder="Ingresa tu nueva contraseña">
+                    </div>
+                    <div class="form-group">
+                        <label>Confirmar Nueva Contraseña</label>
+                        <input type="password" class="form-control" id="perfilConfirmarPass"
+                            placeholder="Repite la contraseña">
+                    </div>
+                    <button class="btn btn-warning mt-2" id="btnCambiarPass">Actualizar Contraseña</button>
+                    <div id="mensajePass" class="mt-2"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>

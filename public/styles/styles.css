@@ -119,3 +119,18 @@
 .card-title {
   text-align: center;
 }
+
+.input-group .iti {
+        flex: 1 1 auto;
+        width: 1%; /* Truco de Bootstrap para forzar el flexbox */
+    }
+
+.iti .form-control {
+        width: 100%;
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+}
+
+.iti__flag-container {
+        z-index: 10 !important;
+    }

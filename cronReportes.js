@@ -33,7 +33,7 @@ function obtenerHorarios(turno) {
     else if (turno === "tarde") {
         horaEsperada = 23;
         // Para la tarde, el inicio fue "ayer"
-        inicio = isDST ? mty.clone().subtract(1, "day").format("YYYY-MM-DD") + " 20:00:00" : mty.clone().subtract(1, "day").format("YYYY-MM-DD") + " 21:00:00";
+        inicio = isDST ? mty.subtract(1, "day").format("YYYY-MM-DD") + " 20:00:00" : mty.subtract(1, "day").format("YYYY-MM-DD") + " 21:00:00";
         fin = isDST ? mty.format("YYYY-MM-DD") + " 04:00:00" : mty.format("YYYY-MM-DD") + " 05:00:00";
         diaFinNumero = moment(fin).day();
         if (diaFinNumero === 1) ejecutar = false;

@@ -17,6 +17,7 @@ const Fa1Controller = require("../controllers/fa1");
 const Fa9Controller = require("../controllers/fa9");
 const Fa11Controller = require("../controllers/fa11");
 const Fa13Controller = require("../controllers/fa13");
+const PerfilController = require("../controllers/perfil");
 const { fa9, fa11, fa13 } = require("../models"); // Adjust if your models are imported differently
 const models = { fa9: fa9, fa11: fa11, fa13: fa13 };
 const {handleTwilioMessage}=require("../controllers/twilioController")
@@ -1295,6 +1296,18 @@ app.post("/api/reset-password", async (req, res) => {
 
   //Twilio Webhook
   app.post("/sms",handleTwilioMessage)
+
+  //Actualizar alertas de usuario
+  app.put("/api/perfil/alertas", isAuthenticated, PerfilController.updateAlertas)
+
+  //Update Password by user
+  app.put("/api/perfil/password", isAuthenticated, PerfilController.updatePassword)
+
+  //Solicitar Codigo para cambiar telefono
+  app.post("/api/perfil/solicitar-telefono", isAuthenticated, PerfilController.solicitarTelefono)
+
+  //Verificar codigo para cambiar telefono y actualizarlo
+  app.post("/api/perfil/verificar-telefono", isAuthenticated, PerfilController.verificarTelefono)
 
 };
 
