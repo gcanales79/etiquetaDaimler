@@ -711,6 +711,68 @@ function isApiAuthenticated(req, res, next) {
     );
   });
 
+  // Request Password Reset
+app.post("/api/forgot-password", async (req, res) => {
+    try {
+        const { email } = req.body;
+        
+        // 1. Find the user
+        const user = await db.User.findOne({ where: { email: email } });
+        
+        if (!user) {
+            return res.status(404).json({ error: "Usuario no encontrado." });
+        }
+
+        // 2. Check if they have a phone number on record
+        if (!user.telefono || user.telefono.trim() === "") {
+            return res.status(400).json({ 
+                error: "No tienes un número de teléfono registrado. Contacta al administrador para restablecer tu contraseña." 
+            });
+        }
+
+        // 3. Send Twilio Verify OTP via WhatsApp
+        await client.verify.v2.services(process.env.TWILIO_VERIFY_SID)
+            .verifications
+            .create({ to: user.telefono, channel: 'whatsapp' }); // Use 'sms' if you prefer text messages
+
+        res.json({message: "Código de verificación enviado exitosamente." });
+
+    } catch (error) {
+        console.error("Error in forgot-password:", error);
+        res.status(500).json({ error: "Error de servidor. Inténtalo de nuevo más tarde." });
+    }
+});
+
+// Route 2: Verify OTP and Reset Password
+app.post("/api/reset-password", async (req, res) => {
+    try {
+        const { email, otpCode, newPassword } = req.body;
+
+        const user = await db.User.findOne({ where: { email: email } });
+        if (!user || !user.telefono) return res.status(400).json({ error: "No se encontró un usuario válido con ese correo o no tiene un número de teléfono registrado." });
+
+        // 1. Verify the OTP with Twilio
+        const verificationCheck = await client.verify.v2.services(process.env.TWILIO_VERIFY_SID)
+            .verificationChecks
+            .create({ to: user.telefono, code: otpCode });
+
+        if (verificationCheck.status !== "approved") {
+            return res.status(400).json({ error: "Código inválido o expirado." });
+        }
+
+        // 2. Update the password in the database
+        // (Assuming your Sequelize User model has a beforeUpdate/beforeSave hook to hash the password)
+        user.password = newPassword;
+        await user.save();
+
+        res.json({ message: "Contraseña actualizada exitosamente! Ahora puedes iniciar sesión." });
+
+    } catch (error) {
+        console.error("Error in reset-password:", error);
+        res.status(500).json({ error: "Error de servidor al restablecer la contraseña." });
+    }
+});
+
   //Route to establish new password
 
   app.post("/reset/:token", function(req, res) {
