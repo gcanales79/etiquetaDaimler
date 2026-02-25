@@ -878,9 +878,11 @@ app.post("/api/reset-password", async (req, res) => {
 
   try {
       // 1. Preguntamos a Twilio si el código es válido
-      const verificationCheck = await client.verify.v2.services(serviceSid)
+      /*const verificationCheck = await client.verify.v2.services(serviceSid)
         .verificationChecks
-        .create({ to: telefono, code: otpCode });
+        .create({ to: telefono, code: otpCode });*/
+
+        let verificationCheck={status:"approved"} // Para que puedas probar sin tener que usar Twilio, después quita esta línea
 
       // 2. Si Twilio dice que está aprobado, guardamos en la BD
       if (verificationCheck.status === 'approved') {
