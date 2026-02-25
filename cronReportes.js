@@ -115,7 +115,7 @@ async function procesarReportes(turno) {
       //const mensajeWa = `*Reporte de Producción*\n🏭 Línea: *${linea.toUpperCase()}*\n⏱️ Turno: *${turno}*\n⚙️ Piezas producidas: *${piezas}*`;
 
       for (let usuario of usuarios) {
-        if (usuario.telefono ) {
+        if (usuario.telefono && piezas>0) {
           
           await client.messages.create({
             contentSid: "HXb454791f97e9b548a336957d567d7c9d",
