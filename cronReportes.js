@@ -15,10 +15,10 @@ const url = process.env.APP_URL;
 function obtenerHorarios(turno) {
     // Usamos explícitamente la zona horaria de Monterrey para todos los cálculos
     const mty = moment()
-    //console.log(mty)
+    console.log(mty)
     const isDST = mty.isDST();
     const horaLocal = mty.tz("America/Monterrey").hour(); // Nos devuelve la hora actual del 0 al 23
-    //console.log(`Hora local en Monterrey: ${horaLocal}`);
+    console.log(`Hora local en Monterrey: ${horaLocal}`);
     
     let inicio, fin;
     let diaFinNumero; 
@@ -38,7 +38,7 @@ function obtenerHorarios(turno) {
         inicio = isDST ? mty.subtract(1, "day").format("YYYY-MM-DD") + " 20:00:00" : mty.subtract(1, "day").format("YYYY-MM-DD") + " 21:00:00";
         fin = isDST ? mty.format("YYYY-MM-DD") + " 04:00:00" : mty.format("YYYY-MM-DD") + " 05:00:00";
         diaFinNumero = moment(fin).day();
-        //console.log(`Día de la semana para el fin del turno tarde: ${diaFinNumero} (0=Domingo, 1=Lunes, ..., 6=Sábado)`);
+        console.log(`Día de la semana para el fin del turno tarde: ${diaFinNumero} (0=Domingo, 1=Lunes, ..., 6=Sábado)`);
         if (diaFinNumero === 0) ejecutar = false;
     } 
     else if (turno === "noche") {
