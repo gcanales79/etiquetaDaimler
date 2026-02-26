@@ -35,9 +35,13 @@ function obtenerHorarios(turno) {
     else if (turno === "tarde") {
         horaEsperada = 23;
         // Para la tarde, el inicio fue "ayer"
-        inicio = isDST ? mty.subtract(1, "day").format("YYYY-MM-DD") + " 20:00:00" : mty.subtract(1, "day").format("YYYY-MM-DD") + " 21:00:00";
-        fin = isDST ? mty.format("YYYY-MM-DD") + " 04:00:00" : mty.format("YYYY-MM-DD") + " 05:00:00";
-        //diaFinNumero = moment(fin).day();
+        inicio = isDST ? mty.clone().subtract(1, "day").format("YYYY-MM-DD") + " 20:00:00" : mty.clone().subtract(1, "day").format("YYYY-MM-DD") + " 21:00:00";
+        console.log(`Inicio del turno tarde: ${inicio}`);
+        fin = isDST ? mty.clone().format("YYYY-MM-DD") + " 04:00:00" : mty.clone().format("YYYY-MM-DD") + " 05:00:00";
+        console.log(`Fin del turno tarde: ${fin}`);
+        console.log(moment.utc(inicio).format("X"))
+        console.log(moment.utc(fin).format("X"))
+                //diaFinNumero = moment(fin).day();
         //console.log(`Día de la semana para el fin del turno tarde: ${diaFinNumero} (0=Domingo, 1=Lunes, ..., 6=Sábado)`);
         //if (diaFinNumero === 0) ejecutar = false;
     } 
