@@ -17,7 +17,7 @@ function obtenerHorarios(turno) {
     const mty = moment()
     //console.log(mty)
     const isDST = mty.isDST();
-    const horaLocal = mty.tz("America/Monterrey").hour(); // Nos devuelve la hora actual del 0 al 23
+    const horaLocal = moment().tz("America/Monterrey").hour(); // Nos devuelve la hora actual del 0 al 23
     //console.log(`Hora local en Monterrey: ${horaLocal}`);
     
     let inicio, fin;
