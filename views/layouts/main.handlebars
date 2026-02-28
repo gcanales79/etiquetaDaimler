@@ -180,11 +180,9 @@
     <span class="katcon-footer__copy">&copy; 2025 Katcon</span>
   </footer>
 
-<!-- ══ DARK MODE SCRIPT ══ -->
+<!-- ══ DARK MODE + CLEANUP SCRIPT ══ -->
 <script>
   (function() {
-    // Aplica el tema guardado ANTES de que el navegador pinte la página
-    // Esto evita el "flash" de tema incorrecto al cargar
     var saved = localStorage.getItem('katcon-theme');
     var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     var theme = saved || (prefersDark ? 'dark' : 'light');
@@ -192,16 +190,34 @@
   })();
 
   document.addEventListener('DOMContentLoaded', function() {
+    // Theme toggle
     var btn = document.getElementById('themeToggle');
-    if (!btn) return;
+    if (btn) {
+      btn.addEventListener('click', function() {
+        var current = document.documentElement.getAttribute('data-theme');
+        var next = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('katcon-theme', next);
+      });
+    }
 
-    btn.addEventListener('click', function() {
-      var current = document.documentElement.getAttribute('data-theme');
-      var next = current === 'dark' ? 'light' : 'dark';
-      document.documentElement.setAttribute('data-theme', next);
-      // Guardamos en localStorage para que persista entre páginas y sesiones
-      localStorage.setItem('katcon-theme', next);
+    // ── Eliminar checkboxes sueltos que inyectan plugins (paginationjs, etc.) ──
+    // Se ejecuta al cargar y observa cambios futuros en el DOM
+    function removeStrayCheckboxes() {
+      document.querySelectorAll('input[type="checkbox"]').forEach(function(el) {
+        // Conservar solo checkboxes dentro de modales o formularios
+        if (!el.closest('.modal') && !el.closest('form')) {
+          el.remove();
+        }
+      });
+    }
+
+    removeStrayCheckboxes();
+
+    var observer = new MutationObserver(function() {
+      removeStrayCheckboxes();
     });
+    observer.observe(document.body, { childList: true, subtree: true });
   });
 </script>
 </body>

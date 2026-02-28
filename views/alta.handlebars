@@ -49,12 +49,9 @@
 
 </div>
 
-{{!-- ── STYLES específicos de esta página ── --}}
 <style>
-  /* Intl Tel Input ancho completo */
   .iti { width: 100%; }
 
-  /* Badges de alertas */
   .alerta-badge {
     display: inline-flex;
     align-items: center;
@@ -69,40 +66,12 @@
     margin: 2px 2px 2px 0;
   }
 
-  /* Botones de acción en tabla */
-  .btn-action {
-    width: 32px; height: 32px;
-    border-radius: 8px;
-    border: none;
-    display: inline-grid; place-items: center;
-    cursor: pointer;
-    transition: all .18s;
-    margin: 0 2px;
-  }
-  .btn-action--edit {
-    background: var(--blue-light);
-    color: var(--blue-deep);
-  }
-  .btn-action--edit:hover { background: var(--blue); color: #fff; }
-  .btn-action--delete {
-    background: #fee2e2;
-    color: #dc2626;
-  }
-  .btn-action--delete:hover { background: #dc2626; color: #fff; }
-
-  /* Pagination override */
   .alta-pagination {
     display: flex;
     justify-content: center;
     margin-top: 20px;
   }
-  .paginationjs .paginationjs-pages ul li a {
-    border-radius: 8px !important;
-    font-family: 'DM Sans', sans-serif;
-    font-size: .82rem;
-  }
 
-  /* Rol pill */
   .role-pill {
     display: inline-block;
     padding: 3px 10px;
@@ -110,7 +79,7 @@
     font-size: .75rem;
     font-weight: 600;
   }
-  .role-pill--admin    { background: #fef3c7; color: #92400e; }
+  .role-pill--admin      { background: #fef3c7; color: #92400e; }
   .role-pill--produccion { background: #dcfce7; color: #166534; }
   .role-pill--inspector  { background: #ede9fe; color: #5b21b6; }
 
@@ -119,16 +88,8 @@
     color: var(--blue);
     border-color: rgba(56,189,248,.2);
   }
-  [data-theme="dark"] .btn-action--edit {
-    background: rgba(56,189,248,.12);
-    color: var(--blue);
-  }
-  [data-theme="dark"] .btn-action--delete {
-    background: rgba(220,38,38,.12);
-    color: #f87171;
-  }
-  [data-theme="dark"] .role-pill--admin    { background: rgba(251,191,36,.12); color: #fbbf24; }
-  [data-theme="dark"] .role-pill--produccion { background: rgba(34,197,94,.12); color: #4ade80; }
+  [data-theme="dark"] .role-pill--admin      { background: rgba(251,191,36,.12); color: #fbbf24; }
+  [data-theme="dark"] .role-pill--produccion { background: rgba(34,197,94,.12);  color: #4ade80; }
   [data-theme="dark"] .role-pill--inspector  { background: rgba(139,92,246,.12); color: #a78bfa; }
 </style>
 

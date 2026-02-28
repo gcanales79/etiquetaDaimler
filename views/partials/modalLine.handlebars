@@ -1,29 +1,52 @@
-<div class="modal fadeIn" id="modalLineCenter" role="dialog" aria-labelledby="exampleModalCenterTitle"
-    aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered" id="modalLineDialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="modalLineLongTitle"></h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body" id="modalLineBody">
-                <form role="form" id="lineForm">
-                    <div class="form-group" id="lineForm">
-                        <label for="Numero de Parte">Linea</label>
-                        <input type="text" class="form-control" id="lineName" aria-describedby="Numero de Parte"
-                            placeholder="Introducir Nombre de la Línea" required>
-                    </div>
-                  
-                
-                    <div class="col">
-                        <button type="submit" style="width: 100%" id="createLine" class="btn btn-primary"></button>
-                    </div>
-                </form>
+<div class="modal fadeIn" id="modalLineCenter" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" id="modalLineDialog" role="document">
+    <div class="modal-content fa-modal">
 
-
-            </div>
+      <div class="fa-modal__header">
+        <div class="fa-modal__icon fa-modal__icon--blue">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+            <line x1="8" y1="6" x2="21" y2="6"/>
+            <line x1="8" y1="12" x2="21" y2="12"/>
+            <line x1="8" y1="18" x2="21" y2="18"/>
+            <line x1="3" y1="6" x2="3.01" y2="6"/>
+            <line x1="3" y1="12" x2="3.01" y2="12"/>
+            <line x1="3" y1="18" x2="3.01" y2="18"/>
+          </svg>
         </div>
+        <div>
+          <h5 class="fa-modal__title" id="modalLineLongTitle">Línea</h5>
+          <p class="fa-modal__sub">Ingresa el nombre de la línea</p>
+        </div>
+        <button type="button" class="fa-modal__close" data-dismiss="modal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="fa-modal__body" style="padding: 24px 24px 8px;">
+        <form role="form" id="lineForm">
+          <div class="mf-field">
+            <label class="mf-label" for="lineName">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13">
+                <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/>
+                <line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/>
+                <line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+              </svg>
+              Nombre de la línea
+            </label>
+            <input type="text" class="mf-input" id="lineName"
+              placeholder="Ej. FA-1, Daimler…" required>
+          </div>
+
+          <div style="padding: 8px 0 16px;">
+            <button type="submit" class="fa-scanner__btn"
+              style="width:100%; height:46px; font-size:.95rem; justify-content:center;"
+              id="createLine"></button>
+          </div>
+        </form>
+      </div>
+
     </div>
+  </div>
 </div>

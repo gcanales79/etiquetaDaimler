@@ -742,8 +742,8 @@ html, body {
 }
 .fa-table tbody tr:last-child td { border-bottom: none; }
 .fa-table tbody tr:hover { background: var(--slate-50); }
-/* Serial monospace */
-.fa-table td:first-child { font-family: 'Courier New', monospace; font-size: .8rem; color: var(--slate-800); font-weight: 600; }
+/* Serial monospace — solo en tablas con clase fa-table--serial */
+.fa-table--serial td:first-child { font-family: 'Courier New', monospace; font-size: .8rem; color: var(--slate-800); font-weight: 600; }
 /* Status icons from JS */
 .fa-table .fa-check-circle,
 .fa-table .check { color: #16a34a; font-size: 1.1rem; }
@@ -1142,4 +1142,144 @@ html, body {
 [data-theme="dark"] .iti__country:hover,
 [data-theme="dark"] .iti__country.iti__highlight {
   background: var(--slate-100);
+}
+
+/* ══════════════════════════════════════════════════
+   ACTION BUTTONS (tabla de admin — globales)
+══════════════════════════════════════════════════ */
+.btn-action {
+  width: 34px; height: 34px;
+  border-radius: 8px;
+  border: none !important;
+  display: inline-grid !important;
+  place-items: center;
+  cursor: pointer;
+  transition: background .18s, color .18s, transform .12s;
+  margin: 0 3px;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+.btn-action:active { transform: scale(.93); }
+
+.btn-action--edit {
+  background: var(--blue-light) !important;
+  color: var(--blue-deep) !important;
+}
+.btn-action--edit:hover {
+  background: var(--blue) !important;
+  color: #fff !important;
+}
+.btn-action--delete {
+  background: #fee2e2 !important;
+  color: #dc2626 !important;
+}
+.btn-action--delete:hover {
+  background: #dc2626 !important;
+  color: #fff !important;
+}
+
+[data-theme="dark"] .btn-action--edit {
+  background: rgba(56,189,248,.15) !important;
+  color: var(--blue) !important;
+}
+[data-theme="dark"] .btn-action--edit:hover {
+  background: var(--blue) !important;
+  color: #0f172a !important;
+}
+[data-theme="dark"] .btn-action--delete {
+  background: rgba(220,38,38,.15) !important;
+  color: #f87171 !important;
+}
+[data-theme="dark"] .btn-action--delete:hover {
+  background: #dc2626 !important;
+  color: #fff !important;
+}
+
+/* Pagination centrada — global */
+.alta-pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+/* Role pills */
+.role-pill {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 99px;
+  font-size: .75rem;
+  font-weight: 600;
+}
+.role-pill--admin      { background: #fef3c7; color: #92400e; }
+.role-pill--produccion { background: #dcfce7; color: #166534; }
+.role-pill--inspector  { background: #ede9fe; color: #5b21b6; }
+[data-theme="dark"] .role-pill--admin      { background: rgba(251,191,36,.12); color: #fbbf24; }
+[data-theme="dark"] .role-pill--produccion { background: rgba(34,197,94,.12);  color: #4ade80; }
+[data-theme="dark"] .role-pill--inspector  { background: rgba(139,92,246,.12); color: #a78bfa; }
+
+/* Alert badges */
+.alerta-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 99px;
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  background: var(--blue-light);
+  color: var(--blue-deep);
+  border: 1px solid rgba(14,165,233,.2);
+  margin: 2px 2px 2px 0;
+}
+[data-theme="dark"] .alerta-badge {
+  background: rgba(56,189,248,.12);
+  color: var(--blue);
+  border-color: rgba(56,189,248,.2);
+}
+
+/* ── Ocultar checkboxes que inyecta paginationjs automáticamente ── */
+.fa-page > input[type="checkbox"],
+.fa-page > label,
+.fa-card input[type="checkbox"]:not(.alerta-checkbox),
+.paginationjs input[type="checkbox"],
+/* El checkbox que aparece ANTES de la tabla lo genera paginationjs en el tbody */
+#usersList + input,
+#lineList + input,
+tbody > input[type="checkbox"] {
+  display: none !important;
+}
+
+/* paginationjs inserta un checkbox justo antes del tbody — ocultarlo con CSS
+   usando el selector de hermano adyacente */
+.fa-page input[type="checkbox"]:not(.alerta-checkbox):not(.form-check-input) {
+  display: none !important;
+}
+
+/* ── Ocultar input suelto dentro de fa-table (inyectado por DataTables) ── */
+.fa-table > input,
+.fa-table > tbody > input,
+.fa-table input[type="checkbox"]:not(.form-check-input) {
+  display: none !important;
+  visibility: hidden !important;
+  width: 0 !important;
+  height: 0 !important;
+  position: absolute !important;
+}
+
+/* ── Anular ::before de fa-header (herencia de Bootstrap/styles.css) ── */
+.fa-header::before,
+.fa-page::before,
+.fa-card::before {
+  display: none !important;
+  content: none !important;
+}
+
+/* ── Anular ::before en tablas (herencia de styles.css) ── */
+.fa-table::before,
+.fa-table tbody::before,
+.fa-table tr::before,
+.fa-table td::before,
+.fa-table th::before {
+  display: none !important;
+  content: none !important;
 }

@@ -7,6 +7,21 @@ $(document).ready(function() {
     utilsScript:
       "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/20.3.0/js/utils.min.js",
   });
+
+  // ── Eliminar checkboxes que paginationjs inyecta en el DOM ──
+  function removeStrayCheckboxes() {
+    document.querySelectorAll("input[type='checkbox']").forEach(el => {
+      if (!el.closest("#modalUserCenter") && !el.classList.contains("alerta-checkbox")) {
+        el.remove();
+      }
+    });
+  }
+
+  const observer = new MutationObserver(removeStrayCheckboxes);
+  observer.observe(document.body, { childList: true, subtree: true });
+  setTimeout(removeStrayCheckboxes, 100);
+  setTimeout(removeStrayCheckboxes, 500);
+
   getUsers(1);
 
   function getUsers(pageNum) {
@@ -30,6 +45,8 @@ $(document).ready(function() {
         pageNumber: pageNumber,
         callback: function(data, pagination) {
           $("#usersList").empty();
+          // Eliminar checkboxes que paginationjs inyecta en el DOM
+          setTimeout(() => $("input[type='checkbox']:not(.alerta-checkbox)").remove(), 0);
           for (let i = 0; i < data.length; i++) {
             newItem = $("<tr>");
 
@@ -76,27 +93,29 @@ $(document).ready(function() {
             // Acciones — botones con nuevas clases
             actionUser = $("<td>").addClass("align-middle text-center");
 
-            // ── CAMBIO: btn-action en lugar de btn btn-primary ──
-            buttonEdit = $("<button>");
-            buttonEdit.attr("type", "button");
-            buttonEdit.attr("class", "btn-action btn-action--edit editUser");
-            buttonEdit.attr("value", data[i].id);
-            buttonEdit.attr("page", pagination.pageNumber);
-            buttonEdit.attr("title", "Editar usuario");
-            editIcon = $("<svg>").attr({ viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2", width: "15", height: "15" });
-            editIcon.html('<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>');
-            buttonEdit.append(editIcon);
+            // Botón Editar — HTML string para que el SVG renderice correctamente
+            buttonEdit = $(
+              `<button type="button" class="btn-action btn-action--edit editUser"
+                value="${data[i].id}" page="${pagination.pageNumber}" title="Editar usuario">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+              </button>`
+            );
 
-            // ── CAMBIO: btn-action--delete en lugar de btn btn-danger ──
-            buttonDelete = $("<button>");
-            buttonDelete.attr("type", "button");
-            buttonDelete.attr("class", "btn-action btn-action--delete deleteUser");
-            buttonDelete.attr("value", data[i].id);
-            buttonDelete.attr("page", pagination.pageNumber);
-            buttonDelete.attr("title", "Eliminar usuario");
-            deleteIcon = $("<svg>").attr({ viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2", width: "15", height: "15" });
-            deleteIcon.html('<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>');
-            buttonDelete.append(deleteIcon);
+            // Botón Eliminar
+            buttonDelete = $(
+              `<button type="button" class="btn-action btn-action--delete deleteUser"
+                value="${data[i].id}" page="${pagination.pageNumber}" title="Eliminar usuario">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15">
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                  <path d="M10 11v6M14 11v6"/>
+                  <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                </svg>
+              </button>`
+            );
 
             actionUser.append(buttonEdit);
             actionUser.append(buttonDelete);
