@@ -1,0 +1,95 @@
+<div class="modal fadeIn" id="modalUserCenter" role="dialog" aria-labelledby="exampleModalCenterTitle"
+    aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" id="modalUserDialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalUserLongTitle"></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="modalUserBody">
+                <form role="form" id="userForm">
+                    <div id="userDataSection">
+                        <div class="form-group" id="emailUserForm">
+                            <label for="email">Email</label>
+                            <input type="email" class="form-control" id="emailUser" aria-describedby="emailHelp"
+                                placeholder="Introducir Correo" required>
+                        </div>
+
+                        <div class="form-group" id="telefonoUserForm">
+                            <label for="telefonoUser">Teléfono (WhatsApp)</label>
+                            <input type="tel" class="form-control" id="telefonoUser" required>
+                        </div>
+
+                        <div class="form-group" id="passwordUserForm">
+                            <label for="inputPassword">Contraseña</label>
+                            <input type="password" class="form-control" id="passwordUser" placeholder="Contraseña"
+                                required>
+                        </div>
+                        <div class="form-group" id="repeatPasswordUserForm">
+                            <label for="inputPassword">Repetir Contraseña</label>
+                            <input type="password" class="form-control" id="repeatPasswordUser"
+                                placeholder=" Repetir Contraseña" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="my-1 mr-2" for="roleUser">Rol</label>
+                            <select class="custom-select custom-select-sm" id="roleUser">
+                                <option selected value="produccion">produccion</option>
+                                <option value="inspector">inspector</option>
+                                <option value="admin">admin</option>
+                            </select>
+                        </div>
+                        <div class="form-group mt-3" id="alertasUserForm">
+                            <label class="my-1 mr-2">Alertas de Producción (Opcional)</label>
+                            <div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input alerta-checkbox" type="checkbox" id="alertaFA1"
+                                        value="fa1">
+                                    <label class="form-check-label" for="alertaFA1">FA1</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input alerta-checkbox" type="checkbox" id="alertaFA9"
+                                        value="fa9">
+                                    <label class="form-check-label" for="alertaFA9">FA9</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input alerta-checkbox" type="checkbox" id="alertaFA11"
+                                        value="fa11">
+                                    <label class="form-check-label" for="alertaFA11">FA11</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input alerta-checkbox" type="checkbox" id="alertaFA13"
+                                        value="fa13">
+                                    <label class="form-check-label" for="alertaFA13">FA13</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input alerta-checkbox" type="checkbox" id="alertaDaimler"
+                                        value="daimler">
+                                    <label class="form-check-label" for="alertaDaimler">Daimler</label>
+                                </div>
+                            </div>
+                            <small class="form-text text-muted">Selecciona de qué líneas recibirá reportes por
+                                WhatsApp.</small>
+                        </div>
+                    </div>
+
+                    <div id="otpSection" style="display: none;">
+                        <div class="alert alert-info">
+                            Se ha enviado un código por WhatsApp al número ingresado.
+                        </div>
+                        <div class="form-group">
+                            <label for="otpCode">Código de Verificación</label>
+                            <input type="text" class="form-control" id="otpCode" placeholder="Ingresa los 6 dígitos">
+                        </div>
+                    </div>
+
+                    <div class="col mt-3">
+                        <button type="submit" style="width: 100%" id="createUser" class="btn btn-primary"></button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>

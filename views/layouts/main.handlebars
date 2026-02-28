@@ -4,103 +4,206 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.3/css/bootstrap.min.css">
-  <link rel="stylesheet" href="/styles/styles.css" media="screen" title="no title" charset="utf-8">
-  <title>Label Checker</title>
+  <title>Katcon — Sistema de Etiquetas</title>
+
+  <!-- Bootstrap 4 (single copy, clean) -->
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
     integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+
+  <!-- Fonts (same as login) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Icons -->
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
   <script defer src="https://kit.fontawesome.com/28f98ade22.js" crossorigin="anonymous"></script>
+
+  <!-- App styles -->
   <link rel="stylesheet" href="/styles/toastr.css" />
   <link rel="stylesheet" href="/styles/pagination.css" />
   <link rel="stylesheet" href="/styles/styles.css" />
+  <link rel="stylesheet" href="/styles/app.css" />
   <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css" />
-
 </head>
 
 <body>
 
-  <nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <a class="navbar-brand" href="/">Katcon</a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown"
-      aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    {{#if user}}
-    <div class="collapse navbar-collapse" id="navbarNavDropdown">
-      <ul class="navbar-nav">
-        <!--<li class="nav-item {{#if active_home}} active {{/if}}">
-          <a class="nav-link" href="/">Home
+  <!-- ══ NAVBAR ══ -->
+  <nav class="katcon-nav">
+    <div class="katcon-nav__inner">
 
-          </a>
-        </li>-->
-        {{#ifCond admin "||" produccion}}
-        <li class="nav-item {{#if active_produccion}} active {{/if}}">
-          <a class="nav-link" href="/produccion">Produccion  
-          </a>       
-        </li>
-   
+      <!-- Brand -->
+      <a class="katcon-nav__brand" href="/">
+        <div class="katcon-nav__logomark">K</div>
+        <span class="katcon-nav__logotype">Katcon</span>
+      </a>
 
-        <li class="nav-item">
-          <a class="nav-link {{#if active_pruebas}}active{{/if}}" href=" /pruebas">Registro Manual</a>
-        </li>
-        {{/ifCond}}
-        <!--Para los inspectores-->
-        {{#if inspector}}
-        <!li class="nav-item {{#if active_produccion}} active {{/if}}">
-          <a class="nav-link" href="/produccion">Produccion
-          </a>
-        </li>
-     
+      <!-- Mobile toggle -->
+      <button class="katcon-nav__toggler" type="button"
+        data-toggle="collapse" data-target="#mainNav"
+        aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span></span><span></span><span></span>
+      </button>
 
-        {{/if}}
+      {{#if user}}
+      <div class="collapse navbar-collapse katcon-nav__collapse" id="mainNav">
+        <ul class="katcon-nav__links">
 
-        {{#if admin}}
-        <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle {{#if active_consulta}} active {{/if}}" href="/consulta"
-            id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-            Administración
-          </a>
-          <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-            <a class="dropdown-item" href="/consulta">Consulta No. Serie</a>
-            <a class="dropdown-item" href="/tabla">Ver Registros</a>
-            <a class="dropdown-item" href="/alta">Alta Usuarios</a>
-            <a class="dropdown-item" href="/alta-linea">Alta Línea</a>
-            <a class="dropdown-item" href="/alta-numero-de-parte">Alta Numero de Parte</a>
-            <a class="dropdown-item" href="/buscar-serial">Buscar Serial</a>
+          {{#ifCond admin "||" produccion}}
+          <li>
+            <a class="katcon-nav__link {{#if active_produccion}}is-active{{/if}}" href="/produccion">
+              Producción
+            </a>
+          </li>
+          <li>
+            <a class="katcon-nav__link {{#if active_pruebas}}is-active{{/if}}" href="/pruebas">
+              Registro Manual
+            </a>
+          </li>
+          {{/ifCond}}
 
+          {{#if admin}}
+          <li class="dropdown">
+            <a class="katcon-nav__link katcon-nav__link--dropdown dropdown-toggle {{#if active_consulta}}is-active{{/if}}"
+              href="#" id="adminDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              Administración
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M2 4l4 4 4-4"/>
+              </svg>
+            </a>
+            <div class="dropdown-menu katcon-nav__dropdown" aria-labelledby="adminDropdown">
+              <a class="katcon-nav__dropdown-item" href="/consulta">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6">
+                  <circle cx="9" cy="9" r="6"/><path d="M15 15l3 3"/>
+                </svg>
+                Consulta No. Serie
+              </a>
+              <a class="katcon-nav__dropdown-item" href="/tabla">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6">
+                  <rect x="2" y="4" width="16" height="12" rx="2"/>
+                  <path d="M2 8h16M8 8v8"/>
+                </svg>
+                Ver Registros
+              </a>
+              <div class="katcon-nav__dropdown-divider"></div>
+              <a class="katcon-nav__dropdown-item" href="/alta">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6">
+                  <circle cx="10" cy="7" r="3"/><path d="M4 17c0-3.3 2.7-6 6-6s6 2.7 6 6"/>
+                </svg>
+                Alta Usuarios
+              </a>
+              <a class="katcon-nav__dropdown-item" href="/alta-linea">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6">
+                  <path d="M10 4v12M4 10h12"/>
+                </svg>
+                Alta Línea
+              </a>
+              <a class="katcon-nav__dropdown-item" href="/alta-numero-de-parte">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6">
+                  <rect x="3" y="3" width="14" height="14" rx="2"/>
+                  <path d="M7 10h6M10 7v6"/>
+                </svg>
+                Alta Número de Parte
+              </a>
+              <a class="katcon-nav__dropdown-item" href="/buscar-serial">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6">
+                  <circle cx="9" cy="9" r="5"/><path d="M14 14l3 3"/>
+                </svg>
+                Buscar Serial
+              </a>
+            </div>
+          </li>
+          {{/if}}
+
+          {{#ifCond admin "||" inspector}}
+          <li>
+            <a class="katcon-nav__link {{#if active_gp12}}is-active{{/if}}" href="/gp12">GP12</a>
+          </li>
+          {{/ifCond}}
+
+          {{#ifCond inspector "||" produccion}}
+          <li>
+            <a class="katcon-nav__link {{#if active_perfil}}is-active{{/if}}" href="/perfil">Mi Perfil</a>
+          </li>
+          {{/ifCond}}
+
+        </ul>
+
+        <!-- Theme toggle -->
+        <button class="theme-toggle" id="themeToggle" aria-label="Cambiar tema" title="Modo oscuro / claro">
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" style="position:relative">
+            <circle cx="12" cy="12" r="5"/>
+            <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+            <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+          </svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" style="position:relative">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          </svg>
+        </button>
+
+        <!-- User pill + logout -->
+        <div class="katcon-nav__right">
+          <div class="katcon-nav__user-pill">
+            <div class="katcon-nav__user-avatar">{{#if admin}}A{{else}}{{#if produccion}}P{{else}}I{{/if}}{{/if}}</div>
+            <span class="katcon-nav__user-role">
+              {{#if admin}}Admin{{else}}{{#if produccion}}Producción{{else}}Inspector{{/if}}{{/if}}
+            </span>
           </div>
-        </li>
-        {{/if}}
+          <a class="katcon-nav__logout" href="/logout" title="Cerrar sesión">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+            Salir
+          </a>
+        </div>
+      </div>
+      {{/if}}
 
-        {{#ifCond admin "||" inspector}} <li class="nav-item {{#if active_gp12}}active{{/if}}">
-          <a class="nav-link" href="/gp12">GP12</a>
-        </li>
-        {{/ifCond}}
-        {{#ifCond inspector "||" produccion}}<li class="nav-item {{#if active_perfil}}active{{/if}}">
-          <a class="nav-link" href="/perfil">Mi Perfil</a>
-        </li>
-        {{/ifCond}}
-        <li class="nav-item">
-          <a class="nav-link" href="/logout">Logout</a>
-        </li>
-      </ul>
     </div>
-    {{/if}}
   </nav>
+  <!-- Blue accent line under nav -->
+  <div class="katcon-nav__accent"></div>
 
-  {{{body}}}
+  <!-- ══ PAGE CONTENT ══ -->
+  <main class="katcon-main">
+    {{{body}}}
+  </main>
 
-  <footer class="footer">
-    <div class="row justify-content-center">
-      <img src="../images/Logo_netzwerk.png" width="120" height="70">
-    </div>
+  <!-- ══ FOOTER ══ -->
+  <footer class="katcon-footer">
+    <img src="/images/Logo_netzwerk.png" width="90" height="52" alt="Netzwerk Digital Thinking">
+    <span class="katcon-footer__copy">&copy; 2025 Katcon</span>
   </footer>
 
+<!-- ══ DARK MODE SCRIPT ══ -->
+<script>
+  (function() {
+    // Aplica el tema guardado ANTES de que el navegador pinte la página
+    // Esto evita el "flash" de tema incorrecto al cargar
+    var saved = localStorage.getItem('katcon-theme');
+    var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    var theme = saved || (prefersDark ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-theme', theme);
+  })();
 
+  document.addEventListener('DOMContentLoaded', function() {
+    var btn = document.getElementById('themeToggle');
+    if (!btn) return;
 
-
+    btn.addEventListener('click', function() {
+      var current = document.documentElement.getAttribute('data-theme');
+      var next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      // Guardamos en localStorage para que persista entre páginas y sesiones
+      localStorage.setItem('katcon-theme', next);
+    });
+  });
+</script>
 </body>
 
 <script src="https://code.jquery.com/jquery.js"></script>
@@ -110,15 +213,12 @@
   integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/momentjs/2.12.0/moment.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.21/moment-timezone.js"></script>
+
 {{#each jsarchivo}}
 <script type="text/javascript" charset="utf8" src="{{jsarchivo}}"></script>
 {{/each}}
-
 {{#each jsfile}}
 <script src="{{jsfile}}"></script>
 {{/each}}
-
-
-
 
 </html>

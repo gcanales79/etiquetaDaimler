@@ -1,54 +1,136 @@
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/20.3.0/css/intlTelInput.css" />
-<style>
-    /* Un pequeño ajuste para que la librería no se pelee con Bootstrap */
-    .iti { width: 100%; } 
-</style>
+{{!-- ══ ALTA DE USUARIOS ══ --}}
+<div class="fa-page">
 
-<div id="content">
-
-    <nav class="navbar navbar-expand-lg navbar-light">
-        <div class="container-fluid justify-content-end">
-            <button type="button" id="addUser" class="btn btn-info">
-                <i class="fas fa-plus-square"></i>
-                <span>Usuario</span>
-            </button>
-        </div>
-    </nav>
-<div class="container-fluid mt-4">
-        <div class="row justify-content-center">
-            <div class="col-12 col-lg-10">
-                <div class="table-responsive shadow-sm bg-white rounded">
-                    
-                    <table class="table table-striped table-hover text-center mb-0">
-                        <thead class="thead-dark"> <tr>
-                                <th scope="col" style="width: 25%;">Usuario</th>
-                                <th scope="col" style="width: 20%;">Teléfono</th>
-                                <th scope="col" style="width: 15%;">Rol</th>
-                                <th scope="col" style="width: 25%;">Alertas</th> 
-                                <th scope="col" style="width: 15%;">Acciones</th>
-                            </tr>
-                        </thead>
-
-                        <tbody id="usersList">
-                            </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <div class="data-container"></div>
-        
-        <div class="row justify-content-center mt-4">
-            <div class="paginationjs" id="pagination-containerUsers">
-            </div>
-        </div>
+  {{!-- ── PAGE HEADER ── --}}
+  <div class="fa-header">
+    <div class="fa-header__left">
+      <div class="fa-header__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+      </div>
+      <div>
+        <h1 class="fa-header__title">Usuarios</h1>
+        <p class="fa-header__sub">Gestión de accesos y alertas</p>
+      </div>
     </div>
+    <button type="button" id="addUser" class="fa-scanner__btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      Nuevo Usuario
+    </button>
+  </div>
 
+  {{!-- ── USERS TABLE CARD ── --}}
+  <div class="fa-card">
+    <div class="fa-card__body fa-card__body--flush">
+      <table class="fa-table" id="usersTable">
+        <thead>
+          <tr>
+            <th style="width:28%">Usuario</th>
+            <th style="width:20%">Teléfono</th>
+            <th style="width:12%">Rol</th>
+            <th style="width:25%">Alertas</th>
+            <th style="width:15%; text-align:center">Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="usersList"></tbody>
+      </table>
+    </div>
+  </div>
 
+  {{!-- ── PAGINATION ── --}}
+  <div class="alta-pagination">
+    <div class="paginationjs" id="pagination-containerUsers"></div>
+  </div>
 
 </div>
 
+{{!-- ── STYLES específicos de esta página ── --}}
+<style>
+  /* Intl Tel Input ancho completo */
+  .iti { width: 100%; }
 
+  /* Badges de alertas */
+  .alerta-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 9px;
+    border-radius: 99px;
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    background: var(--blue-light);
+    color: var(--blue-deep);
+    border: 1px solid rgba(14,165,233,.2);
+    margin: 2px 2px 2px 0;
+  }
+
+  /* Botones de acción en tabla */
+  .btn-action {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    border: none;
+    display: inline-grid; place-items: center;
+    cursor: pointer;
+    transition: all .18s;
+    margin: 0 2px;
+  }
+  .btn-action--edit {
+    background: var(--blue-light);
+    color: var(--blue-deep);
+  }
+  .btn-action--edit:hover { background: var(--blue); color: #fff; }
+  .btn-action--delete {
+    background: #fee2e2;
+    color: #dc2626;
+  }
+  .btn-action--delete:hover { background: #dc2626; color: #fff; }
+
+  /* Pagination override */
+  .alta-pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+  }
+  .paginationjs .paginationjs-pages ul li a {
+    border-radius: 8px !important;
+    font-family: 'DM Sans', sans-serif;
+    font-size: .82rem;
+  }
+
+  /* Rol pill */
+  .role-pill {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 99px;
+    font-size: .75rem;
+    font-weight: 600;
+  }
+  .role-pill--admin    { background: #fef3c7; color: #92400e; }
+  .role-pill--produccion { background: #dcfce7; color: #166534; }
+  .role-pill--inspector  { background: #ede9fe; color: #5b21b6; }
+
+  [data-theme="dark"] .alerta-badge {
+    background: rgba(56,189,248,.12);
+    color: var(--blue);
+    border-color: rgba(56,189,248,.2);
+  }
+  [data-theme="dark"] .btn-action--edit {
+    background: rgba(56,189,248,.12);
+    color: var(--blue);
+  }
+  [data-theme="dark"] .btn-action--delete {
+    background: rgba(220,38,38,.12);
+    color: #f87171;
+  }
+  [data-theme="dark"] .role-pill--admin    { background: rgba(251,191,36,.12); color: #fbbf24; }
+  [data-theme="dark"] .role-pill--produccion { background: rgba(34,197,94,.12); color: #4ade80; }
+  [data-theme="dark"] .role-pill--inspector  { background: rgba(139,92,246,.12); color: #a78bfa; }
+</style>
 
 {{>modalUser}}
 {{>modalAdmin}}

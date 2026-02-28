@@ -1,95 +1,145 @@
-<div class="modal fadeIn" id="modalUserCenter" role="dialog" aria-labelledby="exampleModalCenterTitle"
-    aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered" id="modalUserDialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="modalUserLongTitle"></h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body" id="modalUserBody">
-                <form role="form" id="userForm">
-                    <div id="userDataSection">
-                        <div class="form-group" id="emailUserForm">
-                            <label for="email">Email</label>
-                            <input type="email" class="form-control" id="emailUser" aria-describedby="emailHelp"
-                                placeholder="Introducir Correo" required>
-                        </div>
+<div class="modal fadeIn" id="modalUserCenter" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered" id="modalUserDialog" role="document">
+    <div class="modal-content fa-modal">
 
-                        <div class="form-group" id="telefonoUserForm">
-                            <label for="telefonoUser">Teléfono (WhatsApp)</label>
-                            <input type="tel" class="form-control" id="telefonoUser" required>
-                        </div>
-
-                        <div class="form-group" id="passwordUserForm">
-                            <label for="inputPassword">Contraseña</label>
-                            <input type="password" class="form-control" id="passwordUser" placeholder="Contraseña"
-                                required>
-                        </div>
-                        <div class="form-group" id="repeatPasswordUserForm">
-                            <label for="inputPassword">Repetir Contraseña</label>
-                            <input type="password" class="form-control" id="repeatPasswordUser"
-                                placeholder=" Repetir Contraseña" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="my-1 mr-2" for="roleUser">Rol</label>
-                            <select class="custom-select custom-select-sm" id="roleUser">
-                                <option selected value="produccion">produccion</option>
-                                <option value="inspector">inspector</option>
-                                <option value="admin">admin</option>
-                            </select>
-                        </div>
-                        <div class="form-group mt-3" id="alertasUserForm">
-                            <label class="my-1 mr-2">Alertas de Producción (Opcional)</label>
-                            <div>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input alerta-checkbox" type="checkbox" id="alertaFA1"
-                                        value="fa1">
-                                    <label class="form-check-label" for="alertaFA1">FA1</label>
-                                </div>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input alerta-checkbox" type="checkbox" id="alertaFA9"
-                                        value="fa9">
-                                    <label class="form-check-label" for="alertaFA9">FA9</label>
-                                </div>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input alerta-checkbox" type="checkbox" id="alertaFA11"
-                                        value="fa11">
-                                    <label class="form-check-label" for="alertaFA11">FA11</label>
-                                </div>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input alerta-checkbox" type="checkbox" id="alertaFA13"
-                                        value="fa13">
-                                    <label class="form-check-label" for="alertaFA13">FA13</label>
-                                </div>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input alerta-checkbox" type="checkbox" id="alertaDaimler"
-                                        value="daimler">
-                                    <label class="form-check-label" for="alertaDaimler">Daimler</label>
-                                </div>
-                            </div>
-                            <small class="form-text text-muted">Selecciona de qué líneas recibirá reportes por
-                                WhatsApp.</small>
-                        </div>
-                    </div>
-
-                    <div id="otpSection" style="display: none;">
-                        <div class="alert alert-info">
-                            Se ha enviado un código por WhatsApp al número ingresado.
-                        </div>
-                        <div class="form-group">
-                            <label for="otpCode">Código de Verificación</label>
-                            <input type="text" class="form-control" id="otpCode" placeholder="Ingresa los 6 dígitos">
-                        </div>
-                    </div>
-
-                    <div class="col mt-3">
-                        <button type="submit" style="width: 100%" id="createUser" class="btn btn-primary"></button>
-                    </div>
-                </form>
-
-            </div>
+      {{!-- HEADER --}}
+      <div class="fa-modal__header">
+        <div class="fa-modal__icon fa-modal__icon--blue">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
         </div>
+        <div>
+          <h5 class="fa-modal__title" id="modalUserLongTitle">Usuario</h5>
+          <p class="fa-modal__sub">Completa los datos del usuario</p>
+        </div>
+        <button type="button" class="fa-modal__close" data-dismiss="modal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      {{!-- BODY --}}
+      <div class="fa-modal__body" id="modalUserBody" style="padding: 24px 24px 8px;">
+        <form role="form" id="userForm">
+
+          {{!-- SECCIÓN DATOS ── --}}
+          <div id="userDataSection">
+
+            {{!-- Grid 2 columnas: email + teléfono --}}
+            <div class="mf-grid">
+              <div class="mf-field">
+                <label class="mf-label" for="emailUser">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                  Correo electrónico
+                </label>
+                <input type="email" class="mf-input" id="emailUser"
+                  placeholder="usuario@empresa.com" required>
+              </div>
+              <div class="mf-field">
+                <label class="mf-label" for="telefonoUser">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.18 2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.6a16 16 0 0 0 6 6l.94-.94a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.72 16z"/></svg>
+                  Teléfono (WhatsApp)
+                </label>
+                <input type="tel" class="mf-input" id="telefonoUser" required>
+              </div>
+            </div>
+
+            {{!-- Grid 2 columnas: contraseñas --}}
+            <div class="mf-grid">
+              <div class="mf-field">
+                <label class="mf-label" for="passwordUser">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  Contraseña
+                </label>
+                <input type="password" class="mf-input" id="passwordUser"
+                  placeholder="Mínimo 8 caracteres" required>
+              </div>
+              <div class="mf-field">
+                <label class="mf-label" for="repeatPasswordUser">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  Repetir contraseña
+                </label>
+                <input type="password" class="mf-input" id="repeatPasswordUser"
+                  placeholder="Repite la contraseña" required>
+              </div>
+            </div>
+
+            {{!-- Rol --}}
+            <div class="mf-field" style="max-width: 200px;">
+              <label class="mf-label" for="roleUser">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                Rol del usuario
+              </label>
+              <select class="mf-input mf-select" id="roleUser">
+                <option value="produccion">Producción</option>
+                <option value="inspector">Inspector</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+
+            {{!-- Alertas --}}
+            <div class="mf-field mf-field--alertas">
+              <label class="mf-label">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                Alertas de producción
+                <span class="mf-label__hint">— Opcional, WhatsApp</span>
+              </label>
+              <div class="mf-checkboxes">
+                <label class="mf-check">
+                  <input class="alerta-checkbox" type="checkbox" id="alertaFA1" value="fa1">
+                  <span class="mf-check__box"></span>
+                  <span class="mf-check__label">FA-1</span>
+                </label>
+                <label class="mf-check">
+                  <input class="alerta-checkbox" type="checkbox" id="alertaFA9" value="fa9">
+                  <span class="mf-check__box"></span>
+                  <span class="mf-check__label">FA-9</span>
+                </label>
+                <label class="mf-check">
+                  <input class="alerta-checkbox" type="checkbox" id="alertaFA11" value="fa11">
+                  <span class="mf-check__box"></span>
+                  <span class="mf-check__label">FA-11</span>
+                </label>
+                <label class="mf-check">
+                  <input class="alerta-checkbox" type="checkbox" id="alertaFA13" value="fa13">
+                  <span class="mf-check__box"></span>
+                  <span class="mf-check__label">FA-13</span>
+                </label>
+                <label class="mf-check">
+                  <input class="alerta-checkbox" type="checkbox" id="alertaDaimler" value="daimler">
+                  <span class="mf-check__box"></span>
+                  <span class="mf-check__label">Daimler</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          {{!-- SECCIÓN OTP ── --}}
+          <div id="otpSection" style="display:none;">
+            <div class="mf-otp-notice">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.18 2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.6a16 16 0 0 0 6 6l.94-.94a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.72 16z"/>
+              </svg>
+              Se envió un código de verificación por WhatsApp al número ingresado.
+            </div>
+            <div class="mf-field">
+              <label class="mf-label" for="otpCode">Código de verificación</label>
+              <input type="text" class="mf-input mf-input--otp" id="otpCode"
+                placeholder="· · · · · ·" maxlength="6" autocomplete="one-time-code">
+            </div>
+          </div>
+
+          {{!-- SUBMIT ── --}}
+          <div style="padding: 8px 0 16px;">
+            <button type="submit" class="fa-scanner__btn" style="width:100%; height:46px; font-size:.95rem; justify-content:center;" id="createUser"></button>
+          </div>
+
+        </form>
+      </div>
+
     </div>
+  </div>
 </div>

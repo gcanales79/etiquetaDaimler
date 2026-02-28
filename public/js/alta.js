@@ -2,10 +2,10 @@ $(document).ready(function() {
   // 1. Configuramos el selector de banderas
   const phoneInputField = document.querySelector("#telefonoUser");
   const phoneInput = window.intlTelInput(phoneInputField, {
-    initialCountry: "mx", // Pone a México por default
-    preferredCountries: ["mx", "us", "ca"], // Mueve a MX, US y CA hasta arriba de la lista
+    initialCountry: "mx",
+    preferredCountries: ["mx", "us", "ca"],
     utilsScript:
-      "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/20.3.0/js/utils.min.js", // Script extra para auto-formato
+      "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/20.3.0/js/utils.min.js",
   });
   getUsers(1);
 
@@ -15,100 +15,93 @@ $(document).ready(function() {
       if (code !== "200") {
         notificationToast(code, message);
       } else {
-        //console.log(data);
         paginationUser(pageNum, data);
       }
     });
   }
 
-  //List all the users
+  // List all the users
   function paginationUser(pageNumber, dataSource) {
     $("#pagination-containerUsers").empty();
     if ($("#pagination-containerUsers").length) {
-      //console.log("Entro")
-      //Pagination
       $("#pagination-containerUsers").pagination({
         dataSource: dataSource,
         pageSize: 5,
         pageNumber: pageNumber,
         callback: function(data, pagination) {
-          //console.log(data);
           $("#usersList").empty();
           for (let i = 0; i < data.length; i++) {
             newItem = $("<tr>");
+
+            // Email
             emailUser = $("<td>").addClass("align-middle");
             emailUser.text(data[i].email);
+
+            // Teléfono
             phoneUser = $("<td>").addClass("align-middle");
             if (!data[i].telefono || data[i].telefono === "null") {
-              phoneUser.text("-");
+              phoneUser.text("—");
             } else {
-              // Usamos Regex para agrupar los números: (Código País) (Lada) (4 dígitos) (4 dígitos)
               let formattedPhone = data[i].telefono.replace(
                 /(\+\d{2})(\d{2})(\d{4})(\d{4})/,
                 "$1 $2 $3 $4",
               );
-
               phoneUser.text(formattedPhone);
             }
+
+            // Rol — pill con color según tipo
             roleUser = $("<td>").addClass("align-middle");
-            roleUser.text(data[i].role);
+            let roleText = data[i].role;
+            let roleClass = "role-pill--" + roleText;
+            let rolePill = $("<span>").addClass("role-pill " + roleClass).text(roleText);
+            roleUser.append(rolePill);
 
-            // ALERTAS
+            // Alertas — badges con nuevo estilo
             let alertasUser = $("<td>").addClass("align-middle");
-
             if (!data[i].alertas || data[i].alertas.trim() === "") {
-              // Si no tiene alertas, ponemos un guion elegante
-              alertasUser.text("-");
+              alertasUser.text("—");
             } else {
-              // Si tiene, separamos el texto por las comas
               let arregloAlertas = data[i].alertas.split(",");
-
-              // Por cada alerta, creamos una etiqueta (badge) de Bootstrap
               arregloAlertas.forEach((alerta) => {
-                // Ponemos el texto en mayúsculas (ej. "fa1" -> "FA1")
-                let textoFormateado = alerta.toUpperCase();
-                // Excepción estética: Si es Daimler, solo la primera en mayúscula
+                let textoFormateado = alerta.trim().toUpperCase();
                 if (textoFormateado === "DAIMLER") textoFormateado = "Daimler";
-
+                // ── CAMBIO: usamos la nueva clase alerta-badge ──
                 let etiqueta = $("<span>")
-                  .addClass("badge badge-info mr-1") // Clases de Bootstrap para estilo
+                  .addClass("alerta-badge")
                   .text(textoFormateado);
-
                 alertasUser.append(etiqueta);
               });
             }
 
-            actionUser = $("<td>").addClass("align-middle");
+            // Acciones — botones con nuevas clases
+            actionUser = $("<td>").addClass("align-middle text-center");
 
-            //Button Edit
+            // ── CAMBIO: btn-action en lugar de btn btn-primary ──
             buttonEdit = $("<button>");
             buttonEdit.attr("type", "button");
-            buttonEdit.attr("class", "btn btn-primary editUser");
-            buttonEdit.css("margin", "5px");
+            buttonEdit.attr("class", "btn-action btn-action--edit editUser");
             buttonEdit.attr("value", data[i].id);
             buttonEdit.attr("page", pagination.pageNumber);
-            editIcon = $("<i>");
-            editIcon.attr("class", "fas fa-edit");
+            buttonEdit.attr("title", "Editar usuario");
+            editIcon = $("<svg>").attr({ viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2", width: "15", height: "15" });
+            editIcon.html('<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>');
             buttonEdit.append(editIcon);
 
-            //Button Delete
+            // ── CAMBIO: btn-action--delete en lugar de btn btn-danger ──
             buttonDelete = $("<button>");
             buttonDelete.attr("type", "button");
-            buttonDelete.attr("class", "btn btn-danger deleteUser");
-            buttonDelete.css("margin", "5px");
+            buttonDelete.attr("class", "btn-action btn-action--delete deleteUser");
             buttonDelete.attr("value", data[i].id);
             buttonDelete.attr("page", pagination.pageNumber);
-            deleteIcon = $("<i>");
-            deleteIcon.attr("class", "fas fa-trash-alt");
+            buttonDelete.attr("title", "Eliminar usuario");
+            deleteIcon = $("<svg>").attr({ viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2", width: "15", height: "15" });
+            deleteIcon.html('<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>');
             buttonDelete.append(deleteIcon);
 
-            //Append Icons to Div
             actionUser.append(buttonEdit);
             actionUser.append(buttonDelete);
 
             newItem.append(emailUser, phoneUser, roleUser, alertasUser, actionUser);
-
-            //Append Item to List
             $("#usersList").append(newItem);
           }
         },
@@ -116,7 +109,7 @@ $(document).ready(function() {
     }
   }
 
-  //Open Modal to Edit User
+  // Open Modal to Edit User
   $(document).on("click", ".editUser", function(event) {
     event.preventDefault();
     let pageNum = $(this).attr("page");
@@ -124,17 +117,14 @@ $(document).ready(function() {
 
     $.get(`/get-user/${userId}`, () => {}).then((data) => {
       const { user, code } = data;
-      //console.log(user)
       if (code !== "200") {
         notificationToast(code, message);
       } else {
-        // Obligamos al formulario a mostrarse
         $("#userForm").show();
         $("#userDataSection").show();
         $("#otpSection").hide();
         $("#otpCode").val("");
 
-        // 2. Quitamos lo OBLIGATORIO a las contraseñas al editar
         $("#passwordUser").prop("required", false);
         $("#repeatPasswordUser").prop("required", false);
 
@@ -145,72 +135,54 @@ $(document).ready(function() {
         $("#modalUserCenter").attr("type", "Update");
         $("#emailUser").val(user.email);
         $("#roleUser").val(user.role);
-        // Usamos setNumber para que la librería ponga la bandera correcta
         phoneInput.setNumber(user.telefono || "");
-        // Guardamos el número exacto como atributo oculto para compararlo después
         $("#telefonoUser").attr("data-original", user.telefono || "");
-        
-        // --- INICIO CÓDIGO DE CHECKBOXES ---
-        // 1. Primero, desmarcamos todos los cuadritos (por si abriste a otro usuario antes)
+
         $(".alerta-checkbox").prop("checked", false);
-
-        //console.log("Datos completos del usuario que llegaron del servidor:", user);
-
-        // 2. Revisamos si el usuario tiene alertas guardadas
         if (user.alertas && user.alertas.trim() !== "") {
-            //console.log("Alertas crudas de la BD:", user.alertas); // Ver qué trajo exactamente
-            // Separamos el texto por las comas (ej. "fa1,daimler" -> ["fa1", "daimler"])
-            let arregloAlertas = user.alertas.split(","); 
-           ;
-            // Recorremos cada alerta y buscamos su cuadrito para marcarlo
-            arregloAlertas.forEach(alerta => {
-                let alertaLimpia = alerta.trim().toLowerCase(); // Limpiamos espacios invisibles por seguridad
-                //console.log("Intentando marcar el cuadrito con value:", alertaLimpia);
-                $(`.alerta-checkbox[value="${alertaLimpia}"]`).prop("checked", true);
-            });
-        }else{
-          console.log("El usuario no tiene alertas o llegaron vacías.");
+          let arregloAlertas = user.alertas.split(",");
+          arregloAlertas.forEach(alerta => {
+            let alertaLimpia = alerta.trim().toLowerCase();
+            $(`.alerta-checkbox[value="${alertaLimpia}"]`).prop("checked", true);
+          });
         }
         $("#modalUserCenter").modal("show");
       }
     });
   });
 
-  //Open Modal to Delete User
+  // Open Modal to Delete User
   $(document).on("click", ".deleteUser", function(event) {
     event.preventDefault();
     let userId = $(this).attr("value");
     let pageNum = $(this).attr("page");
     $.get(`/get-user/${userId}`, () => {}).then((data) => {
       const { code, message, user } = data;
-      //console.log(post);
       if (code !== "200") {
         notificationToast(code, message);
       } else {
         buttonBorrarUser(userId, pageNum);
         $("#adminModalCenter").modal("show");
         clearUserForm();
-        $("#adminModalLongTitle").text("Borrar Usuario");
+        $("#adminModalLongTitle").text("Eliminar Usuario");
         $("#modalBodyAlert").css("display", "inline-block");
         $("#modalBodyAlert").text(
-          `Seguro que quieres borrar el usuario: ${user.email}`,
+          `¿Seguro que quieres eliminar al usuario: ${user.email}?`,
         );
       }
     });
   });
 
-  //Crear boton Borrar User
+  // Crear botones del modal de borrar — con nuevas clases
   function buttonBorrarUser(userId, pageNum) {
     $("#modalFooter").empty();
 
-    //Boton Cerrar
     let buttonClose = $("<button>");
     buttonClose.attr("class", "btn btn-secondary");
     buttonClose.attr("data-dismiss", "modal");
-    buttonClose.text("Cerrar");
+    buttonClose.text("Cancelar");
     $("#modalFooter").append(buttonClose);
 
-    //Boton Borrar
     let buttonBorrar = $("<button>");
     buttonBorrar.attr("class", "btn btn-danger");
     buttonBorrar.attr("id", "buttonBorrarUser");
@@ -220,12 +192,11 @@ $(document).ready(function() {
     $("#modalFooter").append(buttonBorrar);
   }
 
-  //Limpiar User Form Modal Admin
   function clearUserForm() {
     $("#userForm").css("display", "none");
   }
 
-  //Confirmar Borrar User
+  // Confirmar Borrar User
   $(document).on("click", "#buttonBorrarUser", function(event) {
     event.preventDefault();
     let userId = $(this).attr("value");
@@ -235,151 +206,91 @@ $(document).ready(function() {
       type: "DELETE",
       contentType: "application/json",
       success: function(data) {
-        //console.log(data)
         const { code, message } = data;
         if (code !== "200") {
           notificationToast(code, message);
         } else {
           $("#adminModalCenter").modal("hide");
           notificationToast(code, message);
-          //console.log("Usuario borrado");
           getUsers(pageNum);
         }
       },
     });
   });
 
-  //Open Modal to Add User
+  // Open Modal to Add User
   $("#addUser").on("click", function(event) {
     event.preventDefault();
-    console.log("Añadir Usuario");
     $("#userForm")[0].reset();
 
-    // 1. Reseteamos las vistas
     $("#userForm").show();
     $("#userDataSection").show();
     $("#otpSection").hide();
     $("#otpCode").val("");
 
-    // 2. Hacemos las contraseñas OBLIGATORIAS al crear
     $("#passwordUser").prop("required", true);
     $("#repeatPasswordUser").prop("required", true);
 
-    // 3. Limpiamos cualquier rastro de teléfono anterior
     $("#telefonoUser").attr("data-original", "");
-    phoneInput.setNumber(""); // Limpia la banderita
+    phoneInput.setNumber("");
 
-    $("#userDataSection").show();
-    $("#otpSection").hide();
-    $("#otpCode").val("");
-    $("#createUser").text("Añadir Usuario");
-
-    // Obligamos al formulario a mostrarse
-    $("#userForm").show();
-
-    $("#modalUserLongTitle").text("Añadir Nuevo Usuario");
+    $("#modalUserLongTitle").text("Nuevo Usuario");
     $("#createUser").text("Añadir Usuario");
     $("#modalUserCenter").attr("type", "Create");
     $("#modalUserCenter").modal("show");
   });
 
-  //Add or Edit User
+  // Add or Edit User
   $("#userForm").submit(function(event) {
     event.preventDefault();
 
-    let email = $("#emailUser")
-      .val()
-      .trim()
-      .toLowerCase();
-    let password = $("#passwordUser")
-      .val()
-      .trim();
-    let repeatPassword = $("#repeatPasswordUser")
-      .val()
-      .trim();
+    let email = $("#emailUser").val().trim().toLowerCase();
+    let password = $("#passwordUser").val().trim();
+    let repeatPassword = $("#repeatPasswordUser").val().trim();
     let role = $("#roleUser").val();
-    // 1. Extraemos el número forzando el formato internacional (E.164)
-    // Nota: window.intlTelInputUtils es inyectado por el utilsScript que configuramos
     let telefono = phoneInput.getNumber(intlTelInputUtils.numberFormat.E164);
-    // 2. Imprimimos en consola para debuggear
-    /*console.log(
-      "Número crudo (lo que tecleó el usuario):",
-      $("#telefonoUser").val(),
-    );
-    console.log("Número procesado (lo que se enviará a BD):", telefono);*/
 
-    // ¡Recolectar las alertas marcadas
     let alertasArray = [];
     $(".alerta-checkbox:checked").each(function() {
       alertasArray.push($(this).val());
     });
-    let alertas = alertasArray.join(","); // Convierte ["fa1", "fa11"] en "fa1,fa11"
+    let alertas = alertasArray.join(",");
 
-    // Revisamos en consola las alertas para asegurarnos que se están recolectando bien
-    //console.log("Alertas detectadas en el Frontend:", alertas);
-
-    // 3. Validamos que el número sea un celular real y válido para ese país
     if (!phoneInput.isValidNumber()) {
-      notificationToast(
-        "500",
-        "El número de teléfono no es válido. Revisa el código de país y los dígitos.",
-      );
-      return false; // Detenemos el envío
+      notificationToast("500", "El número de teléfono no es válido. Revisa el código de país y los dígitos.");
+      return false;
     }
     if (password !== repeatPassword) {
       return notificationToast("500", "Las contraseñas no coinciden");
     }
+
     let buttonType = $("#modalUserCenter").attr("type");
-    let pageNum = $(this)
-      .find("#createUser")
-      .attr("page");
-    let userId = $(this)
-      .find("#createUser")
-      .attr("userId");
+    let pageNum = $(this).find("#createUser").attr("page");
+    let userId = $(this).find("#createUser").attr("userId");
+
     if (buttonType === "Create") {
-      // Al crear, TODO es obligatorio
-      if (
-        email.length === 0 ||
-        password.length === 0 ||
-        repeatPassword.length === 0 ||
-        telefono.length === 0
-      ) {
+      if (email.length === 0 || password.length === 0 || repeatPassword.length === 0 || telefono.length === 0) {
         return notificationToast("500", "Todos los datos son obligatorios");
       }
-      if (password !== repeatPassword) {
-        return notificationToast("500", "Las contraseñas no coinciden");
-      }
     } else if (buttonType === "Update") {
-      // Al editar, el Email es obligatorio, pero la contraseña es opcional
       if (email.length === 0 || telefono.length === 0) {
-        return notificationToast(
-          "500",
-          "El email y teléfono no pueden estar vacíos",
-        );
+        return notificationToast("500", "El email y teléfono no pueden estar vacíos");
       }
-      // Solo revisamos contraseñas si el usuario intentó escribir una nueva
       if (password.length > 0 || repeatPassword.length > 0) {
         if (password !== repeatPassword) {
           return notificationToast("500", "Las contraseñas no coinciden");
         }
       }
     }
-    //console.log(pageNum);
-    //console.log(postId);
+
     if (buttonType == "Create") {
       let isOtpVisible = $("#otpSection").is(":visible");
-      // console.log("Create")
       if (!isOtpVisible) {
-        // PASO 1: Aún no pedimos el código, le decimos a Node.js que mande el WhatsApp
-        // Bloqueamos el botón para evitar clics dobles
-        $("#createUser")
-          .prop("disabled", true)
-          .text("Enviando...");
+        $("#createUser").prop("disabled", true).text("Enviando...");
         $.post("/api/send-otp", { telefono: telefono }).then((data) => {
           $("#createUser").prop("disabled", false);
           if (data.code === "200") {
             notificationToast("200", data.message);
-            // Ocultamos los datos, mostramos la sección del código y cambiamos el botón
             $("#userDataSection").hide();
             $("#otpSection").show();
             $("#createUser").text("Verificar Código y Guardar");
@@ -388,30 +299,15 @@ $(document).ready(function() {
           }
         });
       } else {
-        // PASO 2: El administrador ya ingresó el código, enviamos todo al servidor
-        let otpCode = $("#otpCode")
-          .val()
-          .trim();
+        let otpCode = $("#otpCode").val().trim();
         if (otpCode.length === 0) {
-          return notificationToast(
-            "500",
-            "Debes ingresar el código de verificación",
-          );
+          return notificationToast("500", "Debes ingresar el código de verificación");
         }
-        $.post("/add-user", {
-          email: email,
-          password: password,
-          telefono: telefono,
-          role: role,
-          otpCode: otpCode,
-          alertas: alertas,
-        })
+        $.post("/add-user", { email, password, telefono, role, otpCode, alertas })
           .then((data) => {
-            //console.log(data);
             const { code, message } = data;
             if (code === "200") {
               $("#modalUserCenter").modal("hide");
-              //Limpiar la forma despues de hacer submit
               $("#userForm")[0].reset();
               notificationToast(code, message);
               getUsers();
@@ -419,41 +315,22 @@ $(document).ready(function() {
           })
           .fail((err) => {
             let errorData = err.responseJSON;
-            let mensajeError = errorData
-              ? errorData.message
-              : "Error al verificar el código OTP";
+            let mensajeError = errorData ? errorData.message : "Error al verificar el código OTP";
             notificationToast("500", mensajeError);
           });
       }
     } else if (buttonType == "Update") {
-      // console.log("Update");
-      // 1. Comparamos los teléfonos
       let originalPhone = $("#telefonoUser").attr("data-original");
       let phoneChanged = telefono !== originalPhone;
 
-      let changes = {
-        email: email,
-        password: password,
-        telefono: telefono,
-        role: role,
-        alertas: alertas,
-      };
+      let changes = { email, password, telefono, role, alertas };
+      if (password.length > 0) changes.password = password;
 
-      // Solo enviamos la contraseña si el usuario escribió algo
-      if (password.length > 0) {
-        changes.password = password;
-      }
-
-      // 3. ¿El teléfono cambió? Entonces necesitamos flujo Twilio
       if (phoneChanged) {
         let isOtpVisible = $("#otpSection").is(":visible");
-
         if (!isOtpVisible) {
-          // Pedimos el WhatsApp al nuevo número
-          $("#createUser")
-            .prop("disabled", true)
-            .text("Enviando...");
-          $.post("/api/send-otp", { telefono: telefono })
+          $("#createUser").prop("disabled", true).text("Enviando...");
+          $.post("/api/send-otp", { telefono })
             .then((data) => {
               $("#createUser").prop("disabled", false);
               if (data.code === "200") {
@@ -465,20 +342,13 @@ $(document).ready(function() {
             })
             .fail((err) => {
               $("#createUser").prop("disabled", false);
-              notificationToast(
-                "500",
-                err.responseJSON ? err.responseJSON.message : "Error",
-              );
+              notificationToast("500", err.responseJSON ? err.responseJSON.message : "Error");
             });
-          return; // Detenemos la ejecución aquí hasta que ponga el código
+          return;
         } else {
-          // Ya se ve el código, lo atrapamos
-          let otpCode = $("#otpCode")
-            .val()
-            .trim();
-          if (otpCode.length === 0)
-            return notificationToast("500", "Ingresa el código");
-          changes.otpCode = otpCode; // Lo agregamos a los datos a enviar
+          let otpCode = $("#otpCode").val().trim();
+          if (otpCode.length === 0) return notificationToast("500", "Ingresa el código");
+          changes.otpCode = otpCode;
         }
       }
 
@@ -489,28 +359,22 @@ $(document).ready(function() {
         data: JSON.stringify(changes),
         success: function(data) {
           const { code, message } = data;
-          //console.log(code)
           if (code !== "200") {
             notificationToast(code, message);
           } else {
-            $();
             $("#modalUserCenter").modal("hide");
-            //Limpiar la forma despues de hacer submit
             $("#userForm")[0].reset();
             notificationToast(code, message);
             getUsers(pageNum);
           }
         },
       }).fail((err) => {
-        notificationToast(
-          "500",
-          err.responseJSON ? err.responseJSON.message : "Error al actualizar",
-        );
+        notificationToast("500", err.responseJSON ? err.responseJSON.message : "Error al actualizar");
       });
     }
   });
 
-  //Pop up notifications
+  // Pop up notifications
   function notificationToast(code, message) {
     if (code != "200") {
       toastr.error(message);

@@ -1,0 +1,149 @@
+<div class="container">
+    <div class="row">
+        <div class="col-sm-12 col-lg">
+            <h2>Etiqueta a Revisar FA-13</h2>
+            <form>
+                <div class="input-group input-group-lg">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Serial</span>
+                    </div>
+                    <input type="text" class="form-control" autofocus="autofocus" id="serialEtiqueta"
+                        aria-label="Sizing example input" aria-describedby="inputGroup-sizing-lg">
+                </div>
+                <br>
+                <button class="btn btn-primary" type="submit" id="submit">Revisar</button>
+            </form>
+            <br>
+            <h1>Últimas 6 Etiquetas</h1>
+            <div class="table-responsive">
+                <table class="table table-striped table-sm">
+                    <thead>
+                        <tr>
+                            <th scope="col">Serial</th>
+                            <th scope="col">Repetida</th>
+                            <th scope="col">Fecha Creacion</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaDe6">
+
+                    </tbody>
+                </table>
+            </div>
+            <h1>Producción Por Hora</h1>
+            <div class="table-responsive">
+                <table class="table table-striped table-sm">
+                    <thead>
+                        <tr>
+                            <th scope="col">Hora</th>
+                            <th scope="col">Produccion</th>
+
+                        </tr>
+                    </thead>
+                    <tbody id="tablaHora">
+
+                    </tbody>
+                </table>
+            </div>
+            <br>
+
+            <div id="graficaTurno">
+                <h1>Producción Por Turno</h1>
+                <div id="loadingTurno" class="loader"></div>
+                <canvas id="myChart"></canvas>
+            </div>
+            <br>
+            <br>
+            <div id="graficaSemana">
+                <h1>Producción Por Semana</h1>
+                <div id="loadingSemana" class="loader"></div>
+                <canvas id="myChart2"></canvas>
+
+            </div>
+            <br>
+            <br>
+
+        </div>
+        <div class="col-sm-12 col-lg">
+            <div class="row justify-content-center">
+                <div class="card-deck">
+                    <div class="card text-white bg-primary">
+                        <div class="card-body">
+                            <h5 class="card-title">Producción Mejor Semana</h5>
+                            <p class="card-text" id="mejorSemana"></p>
+                            <h5 class="card-title">Producción Semana Actual</h5>
+                            <p class="card-text" id="semanaActual"></p>
+                        </div>
+                    </div>
+
+
+                    <div class="card">
+                        <div class="card-body text-white bg-primary">
+                            <h5 class="card-title">Producción Mejor Turno de la Semana</h5>
+                            <p class="card-text" id="mejorTurno"></p>
+                            <h5 class="card-title">Turno Actual</h5>
+                            <p class="card-text" id="turnoActual"></p>
+
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <h2>Resultado</h2>
+            <div class="container">
+                <div class="row" id="Resultado">
+                    <div class="col-12" id="logoResultado">
+                        <span id="spanLogoResultado"></span>
+                    </div>
+                    <div class="col-12" id="mensajeResultadoBueno">
+                       
+                    </div>
+                    <div class="col-12" id="mensajeResultadoMalo">
+                       
+                    </div>
+                     <div class="col-12" id="buttonResultado">
+                       
+                    </div> 
+
+                </div>
+            </div>
+
+
+
+        </div>
+
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Etiqueta con NP Diferente</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <h3>
+                            El Numero de Parte de la etiqueta pasada y la nueva no coinciden. Si hubo cambio de
+                            numero
+                            puedes proceder. De lo contrario avisa al Ing. de Calidad y el Ing. de Producción y pon
+                            la piezas en cuarentena.
+                        </h3>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+</div>
+<br>

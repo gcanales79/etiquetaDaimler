@@ -1,34 +1,112 @@
-<div class="container py-4">
-  <div class="row mb-4">
-    <div class="col-12 text-center">
-      <h1 class="fw-bold text-primary">REPORTE DE PRODUCCIÓN</h1>
-    </div>
+<div class="prod-home">
+
+  <div class="prod-home__header">
+    <p class="prod-home__eyebrow">Selecciona una línea</p>
+    <h1 class="prod-home__title">Reporte de Producción</h1>
+    <p class="prod-home__subtitle">Monitoreo en tiempo real por línea de manufactura</p>
   </div>
-  <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3 justify-content-center">
-    <div class="col d-flex mb-3">
-      <a class="btn btn-primary btn-lg w-100 shadow" href="/produccion/daimler" role="button">
-        Daimler
-      </a>
-    </div>
-    <div class="col d-flex mb-3">
-      <a class="btn btn-primary btn-lg w-100 shadow" href="/produccion/fa1" role="button">
-        FA-1
-      </a>
-    </div>
-    <div class="col d-flex mb-3">
-      <a class="btn btn-primary btn-lg w-100 shadow" href="/produccion/fa9" role="button">
-        FA-9
-      </a>
-    </div>
-    <div class="col d-flex mb-3">
-      <a class="btn btn-primary btn-lg w-100 shadow" href="/produccion/fa11" role="button">
-        FA-11
-      </a>
-    </div>
-    <div class="col d-flex mb-3">
-      <a class="btn btn-primary btn-lg w-100 shadow" href="/produccion/fa13" role="button">
-        FA-13
-      </a>
-    </div>
+
+  <div class="prod-home__grid">
+
+    <!-- Daimler -->
+    <a href="/produccion/daimler" class="prod-card">
+      <div class="prod-card__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </div>
+      <div class="prod-card__body">
+        <span class="prod-card__name">Daimler</span>
+        <span class="prod-card__sub">Línea Mercedes-Benz</span>
+      </div>
+      <div class="prod-card__arrow">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 10h12M11 5l5 5-5 5"/>
+        </svg>
+      </div>
+      <div class="prod-card__bar"></div>
+    </a>
+
+    <!-- FA-1 -->
+    <a href="/produccion/fa1" class="prod-card">
+      <div class="prod-card__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </div>
+      <div class="prod-card__body">
+        <span class="prod-card__name">FA-1</span>
+        <span class="prod-card__sub">Línea de ensamble 1</span>
+      </div>
+      <div class="prod-card__arrow">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 10h12M11 5l5 5-5 5"/>
+        </svg>
+      </div>
+      <div class="prod-card__bar"></div>
+    </a>
+
+    <!-- FA-9 -->
+    <a href="/produccion/fa9" class="prod-card">
+      <div class="prod-card__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </div>
+      <div class="prod-card__body">
+        <span class="prod-card__name">FA-9</span>
+        <span class="prod-card__sub">Línea de ensamble 9</span>
+      </div>
+      <div class="prod-card__arrow">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 10h12M11 5l5 5-5 5"/>
+        </svg>
+      </div>
+      <div class="prod-card__bar"></div>
+    </a>
+
+    <!-- FA-11 -->
+    <a href="/produccion/fa11" class="prod-card">
+      <div class="prod-card__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </div>
+      <div class="prod-card__body">
+        <span class="prod-card__name">FA-11</span>
+        <span class="prod-card__sub">Línea de ensamble 11</span>
+      </div>
+      <div class="prod-card__arrow">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 10h12M11 5l5 5-5 5"/>
+        </svg>
+      </div>
+      <div class="prod-card__bar"></div>
+    </a>
+
+    <!-- FA-13 -->
+    <a href="/produccion/fa13" class="prod-card">
+      <div class="prod-card__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </div>
+      <div class="prod-card__body">
+        <span class="prod-card__name">FA-13</span>
+        <span class="prod-card__sub">Línea de ensamble 13</span>
+      </div>
+      <div class="prod-card__arrow">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 10h12M11 5l5 5-5 5"/>
+        </svg>
+      </div>
+      <div class="prod-card__bar"></div>
+    </a>
+
   </div>
 </div>

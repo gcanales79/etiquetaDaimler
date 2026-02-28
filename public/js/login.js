@@ -1,152 +1,160 @@
-$(document).ready(function() {
-  // Getting references to our form and inputs
+// ── helpers ──
+function showAlert(el, msg, type) {
+  el.textContent = msg;
+  el.className = `login-alert ${type}`;
+}
+function hideAlert(el) {
+  el.className = 'login-alert';
+}
 
-  var loginForm = $("form.login");
-  var emailInput = $("input#email-input");
-  var passwordInput = $("input#password-input");
+// ── LOGIN FORM ──
+const loginForm  = document.getElementById('loginForm');
+const loginBtn   = document.getElementById('loginBtn');
+const loginAlert = document.getElementById('loginAlert');
 
-  // When the form is submitted, we validate there's an email and password entered
-  loginForm.on("submit", function(event) {
-    event.preventDefault();
-    var userData = {
-      email: emailInput.val().trim(),
-      password: passwordInput.val().trim(),
-    };
-    if (!userData.email || !userData.password) {
+if (loginForm) {
+  loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    hideAlert(loginAlert);
+
+    const email    = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+
+    if (!email || !password) {
+      showAlert(loginAlert, 'Por favor completa todos los campos.', 'error');
       return;
     }
 
-    // If we have an email and password we run the loginUser function and clear the form
-    loginUser(userData.email, userData.password);
-    emailInput.val("");
-    passwordInput.val("");
-  });
+    loginBtn.classList.add('loading');
 
-  // loginUser does a post to our "api/login" route and if successful, redirects us the the members page
-  function loginUser(email, password) {
-    $.post("/login", {
-      email: email,
-      password: password,
-    }).then(function(data) {
-      // console.log("Hello");
-      // console.log(data);
+    try {
+      const res  = await fetch('/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
 
-      if (data.alert === "success") {
-        //window.location.replace(data);
-        window.location.href = data.redirect;
-        // If there's an error, log the errorrs
+      if (data.alert === 'success') {
+        showAlert(loginAlert, 'Acceso concedido. Redirigiendo…', 'success');
+        setTimeout(() => window.location = data.redirect, 900);
       } else {
-        notificationToast(data.alert, data.message);
+        showAlert(loginAlert, data.message || 'Credenciales incorrectas.', 'error');
+        loginBtn.classList.remove('loading');
       }
-    });
-  }
-
-  // 1. Handle "Send Code" Button
-  $("#btnSendRecoveryCode").on("click", function() {
-    const email = $("#recoveryEmail")
-      .val()
-      .trim();
-    if (!email)
-      return showRecoveryMessage("Por favor ingresa tu correo.", true);
-
-    // Disable button to prevent double-clicks
-    const btn = $(this);
-    btn.prop("disabled", true).text("Sending...");
-
-    $.post("/api/forgot-password", { email: email })
-      .then(function(response) {
-        // Success: Hide Step 1, Show Step 2
-        $("#recoveryAlert").addClass("d-none"); // Hide errors
-        $("#step1-email").addClass("d-none");
-        $("#step2-reset").removeClass("d-none");
-        notificationToast(response.code, response.message);
-      })
-      .fail(function(err) {
-        // Error handling (e.g., "No phone on record")
-        let errorMsg = err.responseJSON
-          ? err.responseJSON.error
-          : "An error occurred.";
-        showRecoveryMessage(errorMsg, true);
-        //console.log(err);
-        btn.prop("disabled", false).text("Send WhatsApp Code");
-      });
-  });
-
-  // 2. Handle "Reset Password" Button
-  $("#btnResetPassword").on("click", function() {
-    const email = $("#recoveryEmail")
-      .val()
-      .trim();
-    const otpCode = $("#recoveryOtp")
-      .val()
-      .trim();
-    const newPassword = $("#newPassword")
-      .val()
-      .trim();
-
-    if (!otpCode || !newPassword)
-      return showRecoveryMessage("Por favor completa todos los campos.", true);
-
-    const btn = $(this);
-    btn.prop("disabled", true).text("Verifying...");
-
-    $.post("/api/reset-password", {
-      email: email,
-      otpCode: otpCode,
-      newPassword: newPassword,
-    })
-      .then(function(response) {
-        // Success!
-        $("#step2-reset").addClass("d-none");
-        showRecoveryMessage(response.message, false);
-      
-
-        // Optional: Automatically close modal after 3 seconds
-        setTimeout(() => {
-          $("#recoveryModal").modal("hide");
-          window.location.reload(); // Reload to let them log in
-        }, 3000);
-      })
-      .catch(function(err) {
-        let errorMsg = err.responseJSON
-          ? err.responseJSON.error
-          : "Invalid code.";
-        showRecoveryMessage(errorMsg, true);
-        btn.prop("disabled", false).text("Restablecer Contraseña");
-      });
-  });
-
-  // Reset modal when closed so it's fresh next time
-  $("#recoveryModal").on("hidden.bs.modal", function() {
-    $("#step1-email").removeClass("d-none");
-    $("#step2-reset").addClass("d-none");
-    $("#recoveryAlert").addClass("d-none");
-    $("#recoveryEmail, #recoveryOtp, #newPassword").val("");
-    $("#btnSendRecoveryCode")
-      .prop("disabled", false)
-      .text("Enviar Código por Whatsapp");
-    $("#btnResetPassword")
-      .prop("disabled", false)
-      .text("Restablecer Contraseña");
-  });
-
-  // Helper to show messages in the modal
-    function showRecoveryMessage(message, isError = false) {
-        const alertBox = $("#recoveryAlert");
-        alertBox.removeClass("d-none alert-danger alert-success");
-        alertBox.addClass(isError ? "alert-danger" : "alert-success");
-        alertBox.text(message);
+    } catch {
+      showAlert(loginAlert, 'Error de conexión. Intenta de nuevo.', 'error');
+      loginBtn.classList.remove('loading');
     }
+  });
+}
 
-  function notificationToast(result, message) {
-    console.log(result, message);
-    switch (result) {
-      case "Success":
-        toastr.success(message);
-        break;
-      case "Error":
-        toastr.error(message);
-        break;
+// ── RECOVERY MODAL ──
+const overlay = document.getElementById('recoveryOverlay');
+const step1   = document.getElementById('step1');
+const step2   = document.getElementById('step2');
+const alert1  = document.getElementById('alert1');
+const alert2  = document.getElementById('alert2');
+
+function openModal() {
+  overlay.classList.add('open');
+  step1.classList.add('active');
+  step2.classList.remove('active');
+  hideAlert(alert1);
+  hideAlert(alert2);
+}
+function closeModal() {
+  overlay.classList.remove('open');
+}
+
+const openBtn = document.getElementById('openRecovery');
+if (openBtn) openBtn.addEventListener('click', (e) => { e.preventDefault(); openModal(); });
+
+const closeBtn = document.getElementById('closeModal');
+if (closeBtn) closeBtn.addEventListener('click', closeModal);
+
+if (overlay) {
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) closeModal(); });
+}
+
+// Step 1 — Send OTP
+const btnSendCode = document.getElementById('btnSendCode');
+if (btnSendCode) {
+  btnSendCode.addEventListener('click', async () => {
+    const email = document.getElementById('recoveryEmail').value.trim();
+    if (!email) { showAlert(alert1, 'Ingresa tu correo electrónico.', 'error'); return; }
+
+    const orig = btnSendCode.textContent;
+    btnSendCode.textContent = 'Enviando…';
+    btnSendCode.disabled = true;
+
+    try {
+      const res  = await fetch('/api/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        step1.classList.remove('active');
+        step2.classList.add('active');
+      } else {
+        showAlert(alert1, data.error || 'No se pudo enviar el código.', 'error');
+      }
+    } catch {
+      showAlert(alert1, 'Error de conexión.', 'error');
+    } finally {
+      btnSendCode.textContent = orig;
+      btnSendCode.disabled = false;
     }
-  }
-});
+  });
+}
+
+// Step 2 — Reset Password
+const btnReset = document.getElementById('btnReset');
+if (btnReset) {
+  btnReset.addEventListener('click', async () => {
+    const email       = document.getElementById('recoveryEmail').value.trim();
+    const otpCode     = document.getElementById('otpCode').value.trim();
+    const newPassword = document.getElementById('newPassword').value;
+
+    if (!otpCode || !newPassword) { showAlert(alert2, 'Completa todos los campos.', 'error'); return; }
+    if (newPassword.length < 5)   { showAlert(alert2, 'La contraseña debe tener mínimo 5 caracteres.', 'error'); return; }
+
+    const orig = btnReset.textContent;
+    btnReset.textContent = 'Verificando…';
+    btnReset.disabled = true;
+
+    try {
+      const res  = await fetch('/api/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, otpCode, newPassword }),
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        showAlert(alert2, '¡Contraseña actualizada! Ya puedes iniciar sesión.', 'success');
+        setTimeout(closeModal, 2200);
+      } else {
+        showAlert(alert2, data.error || 'Código inválido o expirado.', 'error');
+      }
+    } catch {
+      showAlert(alert2, 'Error de conexión.', 'error');
+    } finally {
+      btnReset.textContent = orig;
+      btnReset.disabled = false;
+    }
+  });
+}
+
+// Back button
+const btnBack = document.getElementById('btnBack');
+if (btnBack) {
+  btnBack.addEventListener('click', () => {
+    step2.classList.remove('active');
+    step1.classList.add('active');
+    hideAlert(alert2);
+  });
+}

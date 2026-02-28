@@ -5,7 +5,7 @@ async function getIntent(incomingText) {
   const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite-001" });
 
   const systemPrompt = `
- You are a bilingual (English and Spanish) Production Intent Router for a manufacturing plant in Monterrey, Mexico.
+You are a bilingual (English and Spanish) Production Intent Router for a manufacturing plant in Monterrey, Mexico.
     
     Analyze the user request: "${incomingText}"
     
@@ -23,13 +23,16 @@ async function getIntent(incomingText) {
     - Set the "language" key to "es" if the user speaks Spanish, or "en" if English. Default to "en" if unsure.
 
     Language Mapping Rules:
-
-    Language Mapping Rules:
     - "hoy", "el día de hoy", "today" -> timeframe: "today"
     - "turno", "turno actual", "este turno", "current shift" -> timeframe: "current_shift"
+    - "semana pasada", "last week" -> timeframe: "last_week"
+    - "esta semana", "this week" -> timeframe: "this_week"
     - "gráfica", "grafica", "reporte visual", "graph", "chart" -> intent: "graph"
     - "último", "ultimo registro", "reciente", "last record" -> intent: "last_record"
     - "producción", "cuántos llevamos", "números", "como va", "production" -> intent: "production_count"
+
+    INFERENCE RULE (CRITICAL):
+    If the user mentions a timeframe and a line (e.g., "turno actual fa-11"), but does NOT explicitly state an intent, you MUST assume the intent is "production_count". Do NOT return "unknown" if a line and timeframe are present.
   `.trim();
 
   const result = await model.generateContent(systemPrompt);

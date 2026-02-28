@@ -257,6 +257,15 @@ async function processProductionRequest(from, incomingText) {
   const session = sessions[from];
 
   // ---------------------------------------------------------
+  // 🧠 1.5 MEMORY CHECK (THE FIX!)
+  // ---------------------------------------------------------
+  // Si la IA no detectó una línea, pero ya estábamos hablando de una, la recuperamos.
+  if (!line && session.line) {
+      line = session.line; 
+      console.log(`🧠 Recovered line from memory: ${line}`);
+  }
+
+  // ---------------------------------------------------------
   // 🛡️ 2. VALIDATION GATE (Fixed to remember the intent)
   // ---------------------------------------------------------
 
