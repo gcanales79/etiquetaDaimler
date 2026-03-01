@@ -161,6 +161,69 @@ function isApiAuthenticated(req, res, next) {
     });
   });
 
+  // ══════════════════════════════════════════════════════════════
+// NUEVO ENDPOINT DAIMLER — reemplaza la lógica GET+POST del JS
+// Poner ANTES del route genérico: app.get("/api/:serial", ...)
+// ══════════════════════════════════════════════════════════════
+
+app.post("/api/daimler/serial", async (req, res) => {
+  const { serial } = req.body;
+
+  // 1. Validación básica
+  if (!serial || serial.trim() === "") {
+    return res.status(200).send({ code: "400", message: "Serial vacío" });
+  }
+
+  const nuevoSerial = serial.trim();
+
+  try {
+    // 2. Buscar si ya existe (ignora registros con repetida=true para no
+    //    contar los registros de "contención" que ya se crearon a propósito)
+    const existente = await db.Daimler.findOne({
+      where: { serial: nuevoSerial, repetida: false }
+    });
+
+    if (existente) {
+      // ── Serial REPETIDO ──
+      // Marcar el registro original como repetido
+      await db.Daimler.update(
+        { repetida: true },
+        { where: { serial: nuevoSerial } }
+      );
+
+      // Crear registro de contención
+      await db.Daimler.create({ serial: nuevoSerial, repetida: true });
+
+      // Notificar por WhatsApp (igual que antes)
+      const telefonos = [process.env.TAMARA_PHONE];
+      for (const tel of telefonos) {
+        client.messages.create({
+          from: "whatsapp:" + process.env.TWILIO_PHONE,
+          body: "Salio una pieza con serial repetido. El serial es " + nuevoSerial + ".",
+          to: "whatsapp:" + tel,
+        }).catch(err => console.log("Twilio error:", err));
+      }
+
+      return res.status(200).send({
+        code: "400",
+        message: "La etiqueta ya existe, por favor segregar la pieza para inspección de calidad"
+      });
+    }
+
+    // ── Serial NUEVO ──
+    await db.Daimler.create({ serial: nuevoSerial });
+
+    return res.status(200).send({
+      code: "200",
+      message: "Etiqueta Correcta"
+    });
+
+  } catch (err) {
+    console.error("Error en /api/daimler/serial:", err);
+    return res.status(200).send({ code: "500", message: "Error de servidor" });
+  }
+});
+
   // Get all examples
   app.get("/api/:serial", function(req, res) {
     db.Daimler.findOne({
