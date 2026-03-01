@@ -162,6 +162,47 @@ $(document).ready(function() {
       return moment().day();
     }
   
+    // ── Colores dinámicos según el tema activo ──
+    // Chart.js v2 no tiene soporte nativo de dark mode, así que leemos
+    // el atributo data-theme del <html> cada vez que se construye la gráfica.
+    function chartColors() {
+      const dark = document.documentElement.getAttribute("data-theme") === "dark";
+      return {
+        gridColor:  dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
+        tickColor:  dark ? "#94a3b8" : "#64748b",
+        legendColor: dark ? "#cbd5e1" : "#475569",
+        // Paleta de colores consistente con el design system
+        t1bg: dark ? "rgba(56,189,248,0.25)"  : "rgba(14,165,233,0.15)",
+        t1border: dark ? "rgba(56,189,248,1)"  : "rgba(14,165,233,1)",
+        t2bg: dark ? "rgba(99,102,241,0.25)"  : "rgba(99,102,241,0.15)",
+        t2border: dark ? "rgba(99,102,241,1)"  : "rgba(99,102,241,1)",
+        t3bg: dark ? "rgba(251,113,133,0.25)" : "rgba(244,63,94,0.15)",
+        t3border: dark ? "rgba(251,113,133,1)" : "rgba(244,63,94,1)",
+      };
+    }
+
+    function chartOptions(onProgress) {
+      const c = chartColors();
+      const fs = window.innerWidth < 480 ? 9 : 11;
+      return {
+        responsive: true,
+        maintainAspectRatio: true,
+        scales: {
+          yAxes: [{
+            ticks: { beginAtZero: true, fontColor: c.tickColor, fontSize: fs, maxTicksLimit: 6, padding: 4 },
+            gridLines: { color: c.gridColor, zeroLineColor: c.gridColor, drawBorder: false },
+          }],
+          xAxes: [{
+            ticks: { fontColor: c.tickColor, fontSize: fs, maxRotation: 35, minRotation: 0, padding: 4 },
+            gridLines: { display: false },
+          }],
+        },
+        legend: { labels: { fontColor: c.legendColor, fontSize: fs, boxWidth: 14, padding: 12 } },
+        layout: { padding: { left: 4, right: 8, top: 4, bottom: 0 } },
+        animation: { duration: 2000, onProgress: onProgress },
+      };
+    }
+
     var myChart;
   
     function graficaProduccion(datosTurno1, datosTurno2, datosTurno3) {
@@ -175,22 +216,20 @@ $(document).ready(function() {
         if (turno === "Dia")   $("#turnoActual").text(datosTurno1[dia !== 0 ? dia - 1 : dia + 6]);
         if (turno === "Tarde") $("#turnoActual").text(datosTurno2[dia !== 0 ? dia - 1 : dia + 6]);
         if (turno === "Noche") $("#turnoActual").text(datosTurno3[dia !== 0 ? dia - 1 : dia + 6]);
-  
+
+        const c = chartColors();
         var ctx = $("#myChart");
         myChart = new Chart(ctx, {
           type: "bar",
           data: {
-            labels: ["Lunes","Martes","Miercoles","Jueves","Viernes","Sabado","Domingo"],
+            labels: ["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"],
             datasets: [
-              { label: "Turno 1", data: datosTurno1, backgroundColor: "rgba(75,192,192,0.2)", borderColor: "rgba(75,192,192,1)", borderWidth: 1 },
-              { label: "Turno 2", data: datosTurno2, backgroundColor: "rgba(54,162,235,0.2)", borderColor: "rgba(54,162,235,1)", borderWidth: 1 },
-              { label: "Turno 3", data: datosTurno3, backgroundColor: "rgba(255,99,132,0.2)",  borderColor: "rgba(255,99,132,1)",  borderWidth: 1 },
+              { label: "Turno 1", data: datosTurno1, backgroundColor: c.t1bg, borderColor: c.t1border, borderWidth: 1.5 },
+              { label: "Turno 2", data: datosTurno2, backgroundColor: c.t2bg, borderColor: c.t2border, borderWidth: 1.5 },
+              { label: "Turno 3", data: datosTurno3, backgroundColor: c.t3bg, borderColor: c.t3border, borderWidth: 1.5 },
             ],
           },
-          options: {
-            scales: { yAxes: [{ ticks: { beginAtZero: true } }] },
-            animation: { duration: 2000, onProgress: function() { $("#loadingTurno").hide(); } },
-          },
+          options: chartOptions(function() { $("#loadingTurno").hide(); }),
         });
       }
     }
@@ -250,23 +289,21 @@ $(document).ready(function() {
     function graficaProduccionsemana(datosSemana, numSemana) {
       if (myChart2) myChart2.destroy();
       if (datosSemana.length === 10) {
+        const c = chartColors();
         var ctx2 = $("#myChart2");
         myChart2 = new Chart(ctx2, {
           type: "bar",
           data: {
             labels: numSemana,
             datasets: [{
-              label: "Production per Week",
+              label: "Producción por Semana",
               data: datosSemana,
-              backgroundColor: "rgba(75,192,192,0.2)",
-              borderColor: "rgba(75,192,192,1)",
-              borderWidth: 1,
+              backgroundColor: c.t1bg,
+              borderColor: c.t1border,
+              borderWidth: 1.5,
             }],
           },
-          options: {
-            scales: { yAxes: [{ ticks: { beginAtZero: true } }] },
-            animation: { duration: 2000, onProgress: function() { $("#loadingSemana").hide(); } },
-          },
+          options: chartOptions(function() { $("#loadingSemana").hide(); }),
         });
       }
     }

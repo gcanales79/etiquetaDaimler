@@ -1,41 +1,108 @@
-<div class="container my-4">
-  <div class="card shadow">
-    <div class="card-header bg-primary text-white">
-      <h4 class="mb-0">Buscar en Base de Datos</h4>
+{{!-- ══ BUSCAR SERIAL ══ --}}
+<div class="fa-page">
+
+  {{!-- ── PAGE HEADER ── --}}
+  <div class="fa-header">
+    <div class="fa-header__left">
+      <div class="fa-header__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+          <circle cx="11" cy="11" r="7"/>
+          <path d="M16.5 16.5l4 4"/>
+        </svg>
+      </div>
+      <div>
+        <h1 class="fa-header__title">Buscar Serial</h1>
+        <p class="fa-header__sub">Consulta registros en la base de datos</p>
+      </div>
     </div>
-    <div class="card-body">
-      <form class="row g-3" onsubmit="event.preventDefault(); searchSerial();">
-        <div class="col-md-4">
-          <label for="dbSelect" class="form-label">Base de Datos</label>
-          <select id="dbSelect" class="form-select">
-            <option value="Fa9">FA9</option>
-            <option value="Fa11">FA11</option>
-            <option value="Fa13">FA13</option>
-          </select>
-        </div>
-        <div class="col-md-6">
-          <label for="serialInput" class="form-label">Serial</label>
-          <input type="text" id="serialInput" class="form-control" placeholder="Ingrese parte del serial">
-        </div>
-        <div class="col-md-2 d-flex align-items-end">
-          <button type="submit" id="searchButton" class="btn btn-primary w-100">Buscar</button>
+  </div>
+
+  {{!-- ── SEARCH CARD ── --}}
+  <div class="fa-card" style="margin-bottom: 16px;">
+    <div class="fa-card__head">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15">
+        <circle cx="11" cy="11" r="7"/><path d="M16.5 16.5l4 4"/>
+      </svg>
+      Parámetros de búsqueda
+    </div>
+    <div class="fa-card__body">
+      <form class="bs-search-form" onsubmit="event.preventDefault();">
+        <div class="bs-search-row">
+
+          <div class="mf-field" style="min-width:160px; max-width:200px;">
+            <label class="mf-label" for="dbSelect">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13">
+                <ellipse cx="12" cy="5" rx="9" ry="3"/>
+                <path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/>
+                <path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3"/>
+              </svg>
+              Base de Datos
+            </label>
+            <select id="dbSelect" class="mf-input mf-select">
+              <option value="Fa9">FA9</option>
+              <option value="Fa11">FA11</option>
+              <option value="Fa13">FA13</option>
+            </select>
+          </div>
+
+          <div class="mf-field" style="flex:1;">
+            <label class="mf-label" for="serialInput">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13">
+                <rect x="2" y="4" width="3" height="16" rx="1"/>
+                <rect x="7" y="4" width="2" height="16" rx="1"/>
+                <rect x="11" y="4" width="4" height="16" rx="1"/>
+                <rect x="17" y="4" width="2" height="16" rx="1"/>
+                <rect x="21" y="4" width="1" height="16" rx="1"/>
+              </svg>
+              Serial
+            </label>
+            <input type="text" id="serialInput" class="mf-input"
+              placeholder="Ingrese parte del serial…">
+          </div>
+
+          <div style="display:flex; align-items:flex-end; padding-bottom:1px;">
+            <button type="submit" id="searchButton" class="fa-scanner__btn" style="height:44px; white-space:nowrap;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15">
+                <circle cx="11" cy="11" r="7"/><path d="M16.5 16.5l4 4"/>
+              </svg>
+              Buscar
+            </button>
+          </div>
+
         </div>
       </form>
-      <div class="d-flex justify-content-end mt-3">
-        <button id="copyTableBtn" class="btn btn-outline-secondary btn-sm">
-          Copiar resultados
-        </button>
-      </div>
-      <div class="table-responsive mt-2">
-        <table id="resultsTable" class="table table-striped table-bordered align-middle">
-          <thead class="table-light">
+    </div>
+  </div>
+
+  {{!-- ── RESULTS CARD ── --}}
+  <div class="fa-card">
+    <div class="fa-card__head" style="justify-content:space-between;">
+      <span style="display:flex;align-items:center;gap:8px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <path d="M3 9h18M3 15h18M9 3v18"/>
+        </svg>
+        Resultados
+      </span>
+      <button id="copyTableBtn" class="bs-copy-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13">
+          <rect x="9" y="9" width="13" height="13" rx="2"/>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+        </svg>
+        Copiar resultados
+      </button>
+    </div>
+    <div class="fa-card__body fa-card__body--flush">
+      <div class="table-responsive">
+        <table id="resultsTable" class="fa-table fa-table--serial">
+          <thead>
             <tr>
               <th>Serial</th>
-              <th>Numero Parte</th>
-              <th>Numero Serie</th>
-              <th>Repetida</th>
-              <th class="text-nowrap">Fecha de Creación</th>
-              <th class="text-nowrap">Fecha de Modificación</th>
+              <th>Núm. Parte</th>
+              <th>Núm. Serie</th>
+              <th style="text-align:center">Repetida</th>
+              <th class="text-nowrap">Fecha Creación</th>
+              <th class="text-nowrap">Fecha Modificación</th>
             </tr>
           </thead>
           <tbody></tbody>
@@ -43,4 +110,59 @@
       </div>
     </div>
   </div>
+
 </div>
+
+<style>
+  .bs-search-form { width: 100%; }
+
+  .bs-search-row {
+    display: flex;
+    gap: 16px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+  }
+
+  .bs-copy-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 8px;
+    border: 1.5px solid var(--slate-200);
+    background: transparent;
+    color: var(--slate-500);
+    font-family: 'DM Sans', sans-serif;
+    font-size: .78rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all .18s;
+  }
+  .bs-copy-btn:hover {
+    border-color: var(--blue);
+    color: var(--blue);
+    background: var(--blue-light);
+  }
+  .bs-copy-btn--copied {
+    border-color: #22c55e !important;
+    color: #16a34a !important;
+    background: #dcfce7 !important;
+  }
+
+  /* Badge repetida */
+  .bs-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px 10px;
+    border-radius: 99px;
+    font-size: .72rem;
+    font-weight: 700;
+  }
+  .bs-badge--si  { background: #fee2e2; color: #dc2626; }
+  .bs-badge--no  { background: #dcfce7; color: #16a34a; }
+
+  [data-theme="dark"] .bs-copy-btn { border-color: var(--slate-700); color: var(--slate-400); }
+  [data-theme="dark"] .bs-badge--si { background: rgba(220,38,38,.15); color: #f87171; }
+  [data-theme="dark"] .bs-badge--no { background: rgba(34,197,94,.15); color: #4ade80; }
+</style>

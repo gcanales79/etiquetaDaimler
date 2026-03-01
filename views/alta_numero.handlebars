@@ -1,45 +1,50 @@
-<div id="content">
+{{!-- ══ ALTA DE NÚMEROS DE PARTE ══ --}}
+<div class="fa-page">
 
-    <nav class="navbar navbar-expand-lg navbar-light">
-        <div class="container-fluid justify-content-end">
-            <button type="button" id="addPartNumber" class="btn btn-info">
-                <i class="fas fa-plus-square"></i>
-                <span>Agregar Numero de Parte</span>
-            </button>
-        </div>
-    </nav>
-    <div class="container-fluid mt-4">
-        <div class="row justify-content-center">
-            <div class="col-12 col-lg-10">
-                <div class="table-responsive shadow-sm bg-white rounded">
-                    <table class="table table-striped table-hover text-center mb-0">
-                        <thead class="thead-dark">
-                            <th scope="col" style="width:40%">Numero de Parte</th>
-                            <th scope="col" style="width:40%">Línea</th>
-                            <!--th scope="col">Caracteres Totales de Etiqueta</th-->
-                            <!--th scope="col">Caracteres Totales Numero de Parte</th-->
-                            <!--th scope="col">Caracateres de Izquierda a Derecha Para Encontrar NP</th-->
-                            <!--th scope="col">Caracateres de Derecha a Izquierda Para Encontrar Numero de Serie</th!-->
-                            <th scope="col" style="width:20%">Acciones</th>
-                        </thead>
-
-                        <tbody id="partNumberList">
-
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <div class="data-container"></div>
-        <div class="row justify-content-center mt-4">
-            <div class="paginationjs" id="pagination-containerPartNumber">
-
-            </div>
-        </div>
-
-
+  {{!-- ── PAGE HEADER ── --}}
+  <div class="fa-header">
+    <div class="fa-header__left">
+      <div class="fa-header__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <path d="M9 9h6M9 12h6M9 15h4"/>
+        </svg>
+      </div>
+      <div>
+        <h1 class="fa-header__title">Números de Parte</h1>
+        <p class="fa-header__sub">Gestión de números de parte por línea</p>
+      </div>
     </div>
+    <button type="button" id="addPartNumber" class="fa-scanner__btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      Agregar Número de Parte
+    </button>
+  </div>
+
+  {{!-- ── TABLE CARD ── --}}
+  <div class="fa-card">
+    <div class="fa-card__body fa-card__body--flush">
+      <table class="fa-table fa-table--serial">
+        <thead>
+          <tr>
+            <th style="width:40%">Número de Parte</th>
+            <th style="width:40%">Línea</th>
+            <th style="width:20%; text-align:center">Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="partNumberList"></tbody>
+      </table>
+    </div>
+  </div>
+
+  {{!-- ── PAGINATION ── --}}
+  <div class="alta-pagination">
+    <div class="paginationjs" id="pagination-containerPartNumber"></div>
+  </div>
+
 </div>
+
 {{>modalAdmin}}
 {{>modalPartNumber}}

@@ -1283,3 +1283,90 @@ tbody > input[type="checkbox"] {
   display: none !important;
   content: none !important;
 }
+
+/* ── Select dentro de modales ── */
+.mf-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px !important;
+  cursor: pointer;
+}
+[data-theme="dark"] .mf-select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+}
+
+/* ── Spinner animation para botones de carga ── */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ══════════════════════════════════════════════════
+   PAGINATIONJS — DARK MODE
+══════════════════════════════════════════════════ */
+[data-theme="dark"] .paginationjs .paginationjs-pages ul li a {
+  background: var(--slate-800) !important;
+  border-color: var(--slate-700) !important;
+  color: var(--slate-300) !important;
+  border-radius: 8px !important;
+}
+[data-theme="dark"] .paginationjs .paginationjs-pages ul li a:hover {
+  background: var(--slate-700) !important;
+  color: #fff !important;
+  border-color: var(--slate-600) !important;
+}
+[data-theme="dark"] .paginationjs .paginationjs-pages ul li.active a {
+  background: var(--blue) !important;
+  border-color: var(--blue) !important;
+  color: #fff !important;
+}
+[data-theme="dark"] .paginationjs .paginationjs-pages ul li.disabled a {
+  background: var(--slate-900) !important;
+  border-color: var(--slate-800) !important;
+  color: var(--slate-600) !important;
+}
+
+/* ── Paginationjs dark mode — fix botones prev/next con fondo blanco ── */
+[data-theme="dark"] .paginationjs-prev a,
+[data-theme="dark"] .paginationjs-next a,
+[data-theme="dark"] .paginationjs-page a,
+[data-theme="dark"] .paginationjs .paginationjs-pages li a,
+[data-theme="dark"] .paginationjs .paginationjs-pages li > a,
+[data-theme="dark"] .paginationjs-pages * {
+  background: var(--slate-800) !important;
+  background-color: var(--slate-800) !important;
+  border-color: var(--slate-700) !important;
+  color: var(--slate-300) !important;
+}
+[data-theme="dark"] .paginationjs-pages li.active > a,
+[data-theme="dark"] .paginationjs-pages li.active a {
+  background: var(--blue) !important;
+  background-color: var(--blue) !important;
+  border-color: var(--blue) !important;
+  color: #fff !important;
+}
+[data-theme="dark"] .paginationjs-pages li:hover > a {
+  background: var(--slate-700) !important;
+  background-color: var(--slate-700) !important;
+  color: #fff !important;
+}
+[data-theme="dark"] .paginationjs-pages li.disabled > a,
+[data-theme="dark"] .paginationjs-pages li.paginationjs-prev.disabled a,
+[data-theme="dark"] .paginationjs-pages li.paginationjs-next.disabled a {
+  background: var(--slate-900) !important;
+  background-color: var(--slate-900) !important;
+  border-color: var(--slate-800) !important;
+  color: var(--slate-600) !important;
+  cursor: default !important;
+}
+
+/* ── Chart.js canvas dark mode ── */
+[data-theme="dark"] canvas {
+  filter: none;
+}
+/* El fondo del canvas lo maneja el fa-card, pero por si acaso */
+[data-theme="dark"] .fa-chart-wrap {
+  background: transparent;
+}
