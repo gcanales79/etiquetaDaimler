@@ -1,8 +1,175 @@
-<div class="container">
-  <div class="jumbotron mt-4">
-    <h1 class="display-4 text-center">404 Not Found
-      <span role="img" aria-label="Face with rolling eyes">🙄</span>
-    </h1>
-    <a href="/">← Back To Home</a>
+<div class="katcon-404">
+
+  <div class="katcon-404__graphic">
+    <div class="katcon-404__circle katcon-404__circle--1"></div>
+    <div class="katcon-404__circle katcon-404__circle--2"></div>
+    <div class="katcon-404__number">404</div>
   </div>
+
+  <div class="katcon-404__content">
+    <div class="katcon-404__badge">Página no encontrada</div>
+    <h1 class="katcon-404__title">Oops, esta página no existe</h1>
+    <p class="katcon-404__sub">
+      La ruta que estás buscando no existe, fue movida o no tienes permiso para verla.
+    </p>
+    <div class="katcon-404__actions">
+      <a href="/" class="katcon-404__btn katcon-404__btn--primary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+        Ir al Inicio
+      </a>
+      <a href="javascript:history.back()" class="katcon-404__btn katcon-404__btn--ghost">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+        Regresar
+      </a>
+    </div>
+  </div>
+
 </div>
+
+<style>
+.katcon-404 {
+  min-height: calc(100vh - 130px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+  gap: 40px;
+}
+
+/* ── Graphic ── */
+.katcon-404__graphic {
+  position: relative;
+  width: 220px;
+  height: 220px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.katcon-404__circle {
+  position: absolute;
+  border-radius: 50%;
+  animation: pulse404 3s ease-in-out infinite;
+}
+.katcon-404__circle--1 {
+  width: 220px; height: 220px;
+  background: var(--blue-light);
+  opacity: .5;
+  animation-delay: 0s;
+}
+.katcon-404__circle--2 {
+  width: 160px; height: 160px;
+  background: var(--blue-light);
+  opacity: .8;
+  animation-delay: .4s;
+}
+@keyframes pulse404 {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.06); }
+}
+.katcon-404__number {
+  position: relative;
+  font-family: 'Sora', sans-serif;
+  font-size: 80px;
+  font-weight: 800;
+  letter-spacing: -.04em;
+  line-height: 1;
+  background: linear-gradient(135deg, var(--blue), var(--cyan));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  z-index: 1;
+}
+
+/* ── Content ── */
+.katcon-404__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  max-width: 420px;
+}
+.katcon-404__badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 14px;
+  background: var(--blue-light);
+  color: var(--blue-deep);
+  border: 1px solid rgba(14,165,233,.2);
+  border-radius: 99px;
+  font-size: .75rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.katcon-404__title {
+  font-family: 'Sora', sans-serif;
+  font-size: clamp(1.4rem, 3vw, 1.9rem);
+  font-weight: 700;
+  color: var(--slate-900);
+  margin: 0;
+  letter-spacing: -.02em;
+  line-height: 1.2;
+}
+.katcon-404__sub {
+  font-size: .95rem;
+  color: var(--slate-500);
+  line-height: 1.65;
+  margin: 0;
+}
+
+/* ── Buttons ── */
+.katcon-404__actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 8px;
+}
+.katcon-404__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 22px;
+  border-radius: 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: .9rem;
+  font-weight: 600;
+  text-decoration: none !important;
+  transition: all .18s;
+  cursor: pointer;
+  border: none;
+}
+.katcon-404__btn--primary {
+  background: linear-gradient(135deg, var(--blue), var(--cyan));
+  color: #fff !important;
+  box-shadow: 0 4px 14px rgba(14,165,233,.3);
+}
+.katcon-404__btn--primary:hover {
+  opacity: .88;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(14,165,233,.35);
+}
+.katcon-404__btn--ghost {
+  background: var(--white);
+  color: var(--slate-600) !important;
+  border: 1.5px solid var(--slate-200);
+}
+.katcon-404__btn--ghost:hover {
+  border-color: var(--slate-400);
+  color: var(--slate-800) !important;
+  transform: translateY(-1px);
+}
+
+/* ── Dark mode ── */
+[data-theme="dark"] .katcon-404__btn--ghost {
+  background: var(--white);
+  border-color: var(--slate-300);
+}
+</style>
