@@ -1,27 +1,56 @@
 <div class="container py-4">
 
-    {{!-- Tarjeta de búsqueda --}}
-    <div class="card shadow-sm mb-4">
-        <div class="card-body">
-            <h5 class="card-title mb-3">Consulta de Etiqueta por Número de Serie</h5>
-            <div class="form-group">
-                <label for="numeroDeserie" class="font-weight-bold">Número de Serie</label>
-                <input
-                    type="text"
-                    autofocus
-                    class="form-control form-control-lg"
-                    id="numeroDeserie"
-                    placeholder="Ej. 247490980368260603943"
-                    value="{{serialBuscado}}"
-                >
-                <small class="form-text text-muted">No. de Serie de la Etiqueta</small>
+    {{!-- Search Panel --}}
+    <div class="katcon-search-panel mb-4">
+        <div class="katcon-search-panel__header">
+            <div class="katcon-search-panel__icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+                </svg>
             </div>
-            <div class="d-flex align-items-center">
-                <button class="btn btn-primary px-4 mr-2" id="buscarSerial">
+            <div>
+                <div class="katcon-search-panel__title">Buscar Serial</div>
+                <div class="katcon-search-panel__sub">Consulta registros en la base de datos</div>
+            </div>
+        </div>
+
+        <div class="katcon-search-panel__body">
+            <div class="katcon-search-panel__section-label">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+                </svg>
+                PARÁMETROS DE BÚSQUEDA
+            </div>
+            <div class="katcon-search-panel__row">
+                <div class="katcon-search-panel__field">
+                    <div class="katcon-search-panel__field-label">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <rect x="2" y="3" width="20" height="14" rx="2"/>
+                        </svg>
+                        SERIAL
+                    </div>
+                    <input
+                        type="text"
+                        autofocus
+                        class="katcon-search-panel__input"
+                        id="numeroDeserie"
+                        placeholder="Ingrese parte del serial..."
+                        value="{{serialBuscado}}"
+                    >
+                </div>
+                <button class="katcon-search-panel__btn" id="buscarSerial">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+                    </svg>
                     Buscar
                 </button>
                 {{#if serialBuscado}}
-                <a href="/consulta" class="btn btn-outline-secondary">Limpiar</a>
+                <a href="/consulta" class="katcon-search-panel__clear">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                    Limpiar
+                </a>
                 {{/if}}
             </div>
         </div>
@@ -30,62 +59,63 @@
     {{!-- Resultados --}}
     {{#if serialBuscado}}
         {{#if etiqueta.length}}
-            <p class="text-muted small mb-2">
+            <p class="katcon-results-count">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color:var(--blue)">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                    <polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
                 {{etiqueta.length}} resultado(s) para: <strong>{{serialBuscado}}</strong>
             </p>
         {{/if}}
     {{/if}}
 
-    <div class="card shadow-sm">
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table id="tablaConsulta" class="table table-hover table-bordered mb-0">
-                    <thead class="thead-light">
-                        <tr>
-                            <th>Id</th>
-                            <th>Serial</th>
-                            <th>Repetida</th>
-                            <th>Reemplazo a</th>
-                            <th>Uso</th>
-                            <th>Fecha Creación</th>
-                            <th>Escaneo GP-12</th>
-                            <th>Escaneo Polonia</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {{#each etiqueta}}
-                        <tr>
-                            <td>{{this.id}}</td>
-                            <td><strong>{{this.serial}}</strong></td>
-                            <td>
-                                {{#if this.repetida}}
-                                    <span class="badge badge-danger">Sí</span>
-                                {{else}}
-                                    <span class="badge badge-success">No</span>
-                                {{/if}}
-                            </td>
-                            <td>{{#if this.etiqueta_remplazada}}{{this.etiqueta_remplazada}}{{else}}—{{/if}}</td>
-                            <td>{{#if this.uso_etiqueta}}{{this.uso_etiqueta}}{{else}}—{{/if}}</td>
-                            <td>{{formatDate this.createdAt}}</td>
-                            <td>{{formatDate this.fecha_gp12}}</td>
-                            <td>{{formatDate this.fechapolonia}}</td>
-                        </tr>
-                        {{/each}}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+    {{!-- Tabla --}}
+    <div class="katcon-table-wrap">
+        <table id="tablaConsulta" class="table table-hover table-bordered mb-0">
+            <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>Serial</th>
+                    <th>Repetida</th>
+                    <th>Reemplazo a</th>
+                    <th>Uso</th>
+                    <th>Fecha Creación</th>
+                    <th>Escaneo GP-12</th>
+                    <th>Escaneo Polonia</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each etiqueta}}
+                <tr>
+                    <td class="text-muted">{{this.id}}</td>
+                    <td><strong>{{this.serial}}</strong></td>
+                    <td>
+                        {{#if this.repetida}}
+                            <span class="bs-badge bs-badge--si">Sí</span>
+                        {{else}}
+                            <span class="bs-badge bs-badge--no">No</span>
+                        {{/if}}
+                    </td>
+                    <td>{{#if this.etiqueta_remplazada}}{{this.etiqueta_remplazada}}{{else}}<span class="text-muted">—</span>{{/if}}</td>
+                    <td>{{#if this.uso_etiqueta}}{{this.uso_etiqueta}}{{else}}<span class="text-muted">—</span>{{/if}}</td>
+                    <td><small>{{formatDate this.createdAt}}</small></td>
+                    <td><small>{{formatDate this.fecha_gp12}}</small></td>
+                    <td><small>{{formatDate this.fechapolonia}}</small></td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
 
-    {{!-- Mensaje sin resultados --}}
-    {{#if serialBuscado}}
-        {{#unless etiqueta.length}}
-        <div class="text-center py-5 text-muted">
-            <i class="fa fa-inbox fa-3x mb-3"></i>
-            <h5>Sin Resultados</h5>
-            <p>No se encontró ninguna etiqueta con el serial <strong>{{serialBuscado}}</strong>.</p>
-        </div>
-        {{/unless}}
-    {{/if}}
+        {{#if serialBuscado}}
+            {{#unless etiqueta.length}}
+            <div class="katcon-empty">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+                </svg>
+                <p>No se encontró ninguna etiqueta con el serial <strong>{{serialBuscado}}</strong></p>
+            </div>
+            {{/unless}}
+        {{/if}}
+    </div>
 
 </div>

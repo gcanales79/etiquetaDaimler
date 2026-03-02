@@ -1388,3 +1388,326 @@ tbody > input[type="checkbox"] {
 
 [data-theme="dark"] .bs-badge--no { background: rgba(34,197,94,.15);  color: #4ade80; }
 [data-theme="dark"] .bs-badge--si { background: rgba(220,38,38,.15);  color: #f87171; }
+
+/* ══════════════════════════════════════════════════
+   KATCON SEARCH PANEL  (consulta · tabla)
+══════════════════════════════════════════════════ */
+
+.katcon-search-panel {
+  background: var(--white);
+  border: 1px solid var(--slate-200);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(15,23,42,.06);
+}
+
+/* Header con icono y título */
+.katcon-search-panel__header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--slate-100);
+}
+.katcon-search-panel__icon {
+  width: 44px; height: 44px;
+  background: linear-gradient(135deg, var(--blue), var(--cyan));
+  border-radius: 12px;
+  display: grid; place-items: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(14,165,233,.25);
+  color: #fff;
+}
+.katcon-search-panel__title {
+  font-family: 'Sora', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--slate-900);
+  line-height: 1.2;
+}
+.katcon-search-panel__sub {
+  font-size: .78rem;
+  color: var(--slate-500);
+  margin-top: 1px;
+}
+
+/* Body del panel */
+.katcon-search-panel__body {
+  padding: 18px 24px 20px;
+  background: var(--slate-50);
+}
+
+/* Label de sección estilo "PARÁMETROS DE BÚSQUEDA" */
+.katcon-search-panel__section-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: .7rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--blue);
+  margin-bottom: 14px;
+}
+
+/* Fila de inputs + botón */
+.katcon-search-panel__row {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Campo individual */
+.katcon-search-panel__field {
+  flex: 1;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.katcon-search-panel__field-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--slate-500);
+}
+.katcon-search-panel__input {
+  height: 44px;
+  padding: 0 14px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: .95rem;
+  color: var(--slate-800);
+  background: var(--white);
+  border: 1.5px solid var(--slate-200);
+  border-radius: 10px;
+  outline: none;
+  transition: border-color .18s, box-shadow .18s;
+  width: 100%;
+}
+.katcon-search-panel__input:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(14,165,233,.12);
+}
+.katcon-search-panel__input::placeholder { color: var(--slate-400); }
+
+/* Botón buscar */
+.katcon-search-panel__btn {
+  height: 44px;
+  padding: 0 22px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, var(--blue), var(--cyan));
+  color: #fff;
+  font-family: 'DM Sans', sans-serif;
+  font-size: .875rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity .18s, transform .12s;
+  box-shadow: 0 2px 8px rgba(14,165,233,.3);
+  flex-shrink: 0;
+}
+.katcon-search-panel__btn:hover { opacity: .88; transform: translateY(-1px); }
+.katcon-search-panel__btn:active { transform: translateY(0); }
+
+/* Botón limpiar */
+.katcon-search-panel__clear {
+  height: 44px;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  color: var(--slate-500);
+  font-size: .85rem;
+  font-weight: 500;
+  border: 1.5px solid var(--slate-200);
+  border-radius: 10px;
+  text-decoration: none !important;
+  transition: all .18s;
+  flex-shrink: 0;
+}
+.katcon-search-panel__clear:hover {
+  border-color: var(--slate-400);
+  color: var(--slate-700);
+  text-decoration: none !important;
+}
+
+/* ── Tabla wrapper ── */
+.katcon-table-wrap {
+  background: var(--white);
+  border: 1px solid var(--slate-200);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(15,23,42,.05);
+}
+.katcon-table-wrap .table {
+  margin: 0;
+}
+.katcon-table-wrap .table thead th {
+  background: var(--slate-50);
+  color: var(--slate-600);
+  font-size: .75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  border-bottom: 2px solid var(--slate-200);
+  padding: 12px 16px;
+}
+.katcon-table-wrap .table td {
+  padding: 11px 16px;
+  vertical-align: middle;
+  font-size: .875rem;
+  color: var(--slate-700);
+  border-color: var(--slate-100);
+}
+.katcon-table-wrap .table tbody tr:hover {
+  background: var(--slate-50);
+}
+
+/* Contador de resultados */
+.katcon-results-count {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: .82rem;
+  color: var(--slate-500);
+  margin-bottom: 10px;
+}
+
+/* Estado vacío */
+.katcon-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--slate-400);
+  gap: 12px;
+}
+.katcon-empty p {
+  margin: 0;
+  font-size: .9rem;
+  color: var(--slate-500);
+}
+
+/* ── DARK MODE ── */
+[data-theme="dark"] .katcon-search-panel {
+  background: var(--white);
+  border-color: var(--slate-200);
+}
+[data-theme="dark"] .katcon-search-panel__header {
+  border-bottom-color: var(--slate-200);
+}
+[data-theme="dark"] .katcon-search-panel__body {
+  background: var(--slate-100);
+}
+[data-theme="dark"] .katcon-search-panel__input {
+  background: var(--slate-50);
+  border-color: var(--slate-300);
+  color: var(--slate-800);
+}
+[data-theme="dark"] .katcon-search-panel__input:focus {
+  background: var(--white);
+  border-color: var(--blue);
+}
+[data-theme="dark"] .katcon-search-panel__clear {
+  border-color: var(--slate-300);
+  color: var(--slate-500);
+}
+[data-theme="dark"] .katcon-search-panel__clear:hover {
+  border-color: var(--slate-400);
+  color: var(--slate-700);
+}
+[data-theme="dark"] .katcon-table-wrap {
+  background: var(--white);
+  border-color: var(--slate-200);
+}
+[data-theme="dark"] .katcon-table-wrap .table thead th {
+  background: var(--slate-100);
+  border-bottom-color: var(--slate-200);
+  color: var(--slate-500);
+}
+[data-theme="dark"] .katcon-table-wrap .table td {
+  border-color: var(--slate-200);
+  color: var(--slate-700);
+}
+[data-theme="dark"] .katcon-table-wrap .table tbody tr:hover {
+  background: var(--slate-100);
+}
+
+/* ── DataTables dark mode ── */
+[data-theme="dark"] .dataTables_wrapper .dataTables_length,
+[data-theme="dark"] .dataTables_wrapper .dataTables_filter,
+[data-theme="dark"] .dataTables_wrapper .dataTables_info,
+[data-theme="dark"] .dataTables_wrapper .dataTables_paginate {
+  color: var(--slate-600) !important;
+}
+[data-theme="dark"] .dataTables_wrapper .dataTables_filter input,
+[data-theme="dark"] .dataTables_wrapper .dataTables_length select {
+  background: var(--slate-50) !important;
+  border-color: var(--slate-300) !important;
+  color: var(--slate-700) !important;
+  border-radius: 8px;
+  padding: 4px 10px;
+}
+[data-theme="dark"] .dataTables_wrapper .dataTables_paginate .paginate_button {
+  background: var(--slate-800) !important;
+  border-color: var(--slate-700) !important;
+  color: var(--slate-300) !important;
+  border-radius: 6px;
+}
+[data-theme="dark"] .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+  background: var(--slate-700) !important;
+  color: #fff !important;
+  border-color: var(--slate-600) !important;
+}
+[data-theme="dark"] .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+  background: var(--blue) !important;
+  border-color: var(--blue) !important;
+  color: #fff !important;
+}
+[data-theme="dark"] .dataTables_wrapper .dataTables_paginate .paginate_button.disabled {
+  color: var(--slate-600) !important;
+  background: var(--slate-900) !important;
+}
+
+/* ── DataTables tabla dark mode ── */
+[data-theme="dark"] table.dataTable tbody tr {
+  background: var(--white) !important;
+}
+[data-theme="dark"] table.dataTable tbody tr:hover {
+  background: var(--slate-100) !important;
+}
+[data-theme="dark"] table.dataTable tbody td {
+  border-top-color: var(--slate-200) !important;
+  color: var(--slate-700) !important;
+}
+[data-theme="dark"] table.dataTable thead th {
+  background: var(--slate-100) !important;
+  border-bottom-color: var(--slate-200) !important;
+  color: var(--slate-600) !important;
+}
+[data-theme="dark"] table.dataTable.no-footer {
+  border-bottom-color: var(--slate-200) !important;
+}
+/* El wrapper exterior que DataTables genera */
+[data-theme="dark"] .dataTables_scrollBody,
+[data-theme="dark"] .dataTables_scrollHead {
+  background: var(--white) !important;
+}
+/* Bordes de la tabla */
+[data-theme="dark"] table.dataTable,
+[data-theme="dark"] table.dataTable td,
+[data-theme="dark"] table.dataTable th {
+  border-color: var(--slate-200) !important;
+}
