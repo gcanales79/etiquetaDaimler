@@ -264,12 +264,15 @@ module.exports = function(app) {
     if (req.user.role === "admin") {
       res.status(200);
       let jsfile = [{ jsfile: "/js/consulta.js" }];
+      let jsarchivo = [{ jsarchivo: "https://cdn.datatables.net/1.10.20/js/jquery.dataTables.js" }];
       res.render("consulta", {
         title: "consulta",
         active_consulta: {
           Register: true,
         },
         jsfile: jsfile,
+        jsarchivo: jsarchivo,
+        serialBuscado:req .params.serie,
       });
     } else {
       res.render("404");
@@ -303,12 +306,14 @@ module.exports = function(app) {
         },
       }).then(function(dbDaimler) {
         let jsfile = [{ jsfile: "/js/consulta.js" }];
+        let jsarchivo = [{ jsarchivo: "https://cdn.datatables.net/1.10.20/js/jquery.dataTables.js" }];
         res.render("consulta", {
           title: "consulta",
           active_consulta: {
             Register: true,
           },
           jsfile: jsfile,
+          jsarchivo: jsarchivo,
           etiqueta: dbDaimler.map((dbDaimler) => dbDaimler.toJSON()),
         });
         //console.log(dbDaimler);
@@ -328,7 +333,7 @@ module.exports = function(app) {
         let jsfile = [{ jsfile: "/js/tabla.js" }];
         let jsarchivo = [
           {
-            jarchivo:
+            jsarchivo:
               "https://cdn.datatables.net/1.10.20/js/jquery.dataTables.js",
           },
         ];
@@ -340,6 +345,7 @@ module.exports = function(app) {
           jsfile: jsfile,
           jsarchivo: jsarchivo,
           etiqueta: dbDaimler.map((dbDaimler) => dbDaimler.toJSON()),
+          cantidadBuscada: req.params.registros
         });
         //console.log(dbDaimler)
       });

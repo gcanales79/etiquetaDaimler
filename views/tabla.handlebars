@@ -1,44 +1,64 @@
+<div class="container py-4">
 
-<div class="container">
-    <form>
-        <div class="form-group">
-            <label for="cantidadAbuscar">Últmos Registros a Buscar</label>
-            <input type="number" autofocus="autofocus" class="form-control" id="cantidadAbuscar">
-            <small id="emailHelp" class="form-text text-muted">ültimos Registros a Buscar</small>
+    {{!-- Tarjeta de búsqueda --}}
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="card-title mb-3">Ver Registros</h5>
+            <div class="form-group">
+                <label for="cantidadAbuscar" class="font-weight-bold">Últimos Registros a Buscar</label>
+                <input
+                    type="number"
+                    autofocus
+                    class="form-control form-control-lg"
+                    id="cantidadAbuscar"
+                    placeholder="Ej. 100"
+                    min="1"
+                    value="{{cantidadBuscada}}"
+                >
+                <small class="form-text text-muted">Ingresa cuántos registros deseas ver</small>
+            </div>
+            <button class="btn btn-primary px-4" id="buscarRegistros">Buscar</button>
         </div>
-        <button type="submit" class="btn btn-primary" id="buscarRegistros">Buscar</button>
-        
-    </form>
-    <br>
-
-
-    <div class="table-responsive">
-        <table class="table display " style="width:100%" id="tablaConsulta" >
-            <thead>
-                <tr>
-                    <th scope="col">Serial</th>
-                    <th scope="col">Repetida</th>
-                    <th scope="col">Uso</th>
-                    <th scope="col">Fecha Creacion</th>
-                    <th scope="col">Escaneo GP-12</th>
-                    <th scope="col">Escaneo Polonia</th>
-                </tr>
-            </thead>
-            <tbdody>
-                {{#each etiqueta}}
-                <tr>
-                    <th scope="row">{{this.serial}}</th>
-                    <td>{{#if this.repetida}}Si{{else}}No{{/if}}</td>
-                    <td>{{this.uso_etiqueta}}</td>
-                    <td>{{formatDate this.createdAt}}</td>
-                    <td>{{formatDate this.fecha_gp12}}</td>
-                    <td>{{formatDate this.fechapolonia}}</td>
-                </tr>
-                {{/each}}
-            </tbdody>
-        </table>
     </div>
+
+    {{!-- Tabla --}}
+    {{#if cantidadBuscada}}
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table id="tablaConsulta" class="table table-hover table-bordered mb-0">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Serial</th>
+                            <th>Repetida</th>
+                            <th>Uso</th>
+                            <th>Fecha Creación</th>
+                            <th>Escaneo GP-12</th>
+                            <th>Escaneo Polonia</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#each etiqueta}}
+                        <tr>
+                            <td><strong>{{this.serial}}</strong></td>
+                            <td>
+                                {{#if this.repetida}}
+                                    <span class="badge badge-danger">Sí</span>
+                                {{else}}
+                                    <span class="badge badge-success">No</span>
+                                {{/if}}
+                            </td>
+                            <td>{{#if this.uso_etiqueta}}{{this.uso_etiqueta}}{{else}}—{{/if}}</td>
+                            <td>{{formatDate this.createdAt}}</td>
+                            <td>{{formatDate this.fecha_gp12}}</td>
+                            <td>{{formatDate this.fechapolonia}}</td>
+                        </tr>
+                        {{/each}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {{/if}}
+
 </div>
-</br>
-</br>
-</br>

@@ -7,18 +7,17 @@ var twilio = require("twilio");
 //var helpers = require('handlebars-helpers')();
 const moment = require("moment-timezone");
 var session = require("express-session");
-var MySQLStore=require("express-mysql-session")(session)
-const cors=require("cors")
+var MySQLStore = require("express-mysql-session")(session);
+const cors = require("cors");
 // Requiring passport as we've configured it
 var passport = require("./config/passport");
 var db = require("./models");
 var axios = require("axios");
 var flash = require("connect-flash");
 var MemoryStore = require("memorystore")(session);
-const morgan=require("morgan");
+const morgan = require("morgan");
 const path = require("path");
 const os = require("os");
-
 
 var app = express();
 //var sessionStore = new session.MemoryStore;
@@ -26,18 +25,19 @@ var PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use(morgan("dev"))
+app.use(morgan("dev"));
 
 app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname, "public"),{
-  setHeaders: (res, filePath) => {
-    if (filePath.endsWith(".png")) {
-      res.setHeader("Content-Type", "image/png"); 
-    }
-  }
-})
+app.use(
+  express.static(path.join(__dirname, "public"), {
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith(".png")) {
+        res.setHeader("Content-Type", "image/png");
+      }
+    },
+  }),
 );
-app.use('/charts', express.static(path.join(__dirname, 'public/charts')));
+app.use("/charts", express.static(path.join(__dirname, "public/charts")));
 // app.use(cookieParser('secret'));
 
 //Serve charts from temp directory
@@ -46,29 +46,27 @@ app.use('/charts', express.static(path.join(__dirname, 'public/charts')));
   etag:false,
 })); */
 
-
 app.set("trust proxy", 1);
 
-var options={
-  host:process.env.localName,
-  port:3306,
-  user:process.env.userDatabase,
-  password:process.env.passwordDatabase,
-  database:process.env.Database
-}
+var options = {
+  host: process.env.localName,
+  port: 3306,
+  user: process.env.userDatabase,
+  password: process.env.passwordDatabase,
+  database: process.env.Database,
+};
 
+var sessionStore = new MySQLStore(options);
 
-
-var sessionStore=new MySQLStore(options)
-
-app.use(session({
-  key:"session_cookie_name",
-  secret:process.env.SESSION_SECRET,
-  store:sessionStore,
-  resave:false,
-  saveUninitialized:false,
-
-}))
+app.use(
+  session({
+    key: "session_cookie_name",
+    secret: process.env.SESSION_SECRET,
+    store: sessionStore,
+    resave: false,
+    saveUninitialized: false,
+  }),
+);
 
 // app.use(
 //   session({
@@ -91,20 +89,22 @@ app.use(flash());
 app.use(passport.initialize());
 app.use(passport.session());
 
-
-
-
 //Create a Handlebar function
 var hbs = exphbs.create({
   defaultLayout: "main",
   helpers: {
     formatDate: function(property) {
+      // ── AGREGA ESTAS DOS LÍNEAS ──
+      if (!property) return "—"; // null o undefined
+      if (isNaN(new Date(property).getTime())) return "—"; // fecha inválida
+      // ────────────────────────────
       moment.tz.add(
-        "America/Monterrey|LMT CST CDT|6F.g 60 50|0121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-1UQG0 2FjC0 1nX0 i6p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 1fB0 WL0 1fB0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0|41e5"
+        "America/Monterrey|LMT CST CDT|6F.g 60 50|0121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-1UQG0 2FjC0 1nX0 i6p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 1fB0 WL0 1fB0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0|41e5",
       );
       var fechaCreacion = moment(property)
         .tz("America/Monterrey")
         .format("DD/MM/YYYY hh:mm:ss a");
+
       return fechaCreacion;
     },
     ifCond: function(v1, operator, v2, options) {
@@ -167,7 +167,6 @@ app.use(function(req, res, next) {
 require("./routes/apiRoutes")(app);
 require("./routes/htmlRoutes")(app);
 
-
 var syncOptions = { force: false };
 
 // CORS
@@ -175,7 +174,7 @@ app.use(function(req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
   res.header(
     "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept, x-token,"
+    "Origin, X-Requested-With, Content-Type, Accept, x-token,",
   );
   res.header("Access-Control-Allow-Methods", "PUT, POST, GET, DELETE, OPTIONS");
   next();
@@ -194,7 +193,7 @@ db.sequelize.sync(syncOptions).then(function() {
     console.log(
       "==> 🌎  Listening on port %s. Visit http://localhost:%s/ in your browser.",
       PORT,
-      PORT
+      PORT,
     );
   });
 });
