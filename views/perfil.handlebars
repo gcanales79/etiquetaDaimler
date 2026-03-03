@@ -1,109 +1,296 @@
-<div class="container mt-4">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <h2 class="mb-4">Mi Perfil</h2>
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-dark text-white">
-                    <h5 class="mb-0">Mis Datos Personales</h5>
-                </div>
-                <div class="card-body">
-                    <div class="form-group">
-                        <label>Correo Electrónico</label>
-                        <input type="email" class="form-control" value="{{user.email}}" disabled>
-                        <small class="text-muted">El correo no puede ser modificado por seguridad.</small>
-                    </div>
+<div class="fa-page" style="max-width: 720px;">
 
-                    <hr>
-
-                    <div class="form-group">
-                        <label>Número de WhatsApp</label>
-                        <div class="input-group">
-                            <input type="text" class="form-control" id="perfilTelefono" value="{{user.telefono}}"
-                                placeholder="+52...">
-                            <div class="input-group-append">
-                                <button class="btn btn-outline-primary" type="button" id="btnSolicitarCambioTel">Cambiar
-                                    Número</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div id="seccionVerificarTel" class="d-none mt-3 p-3 border rounded bg-light">
-                        <label class="text-primary font-weight-bold">Ingresa el código de 6 dígitos enviado a tu nuevo
-                            WhatsApp:</label>
-                        <div class="input-group">
-                            <input type="text" class="form-control" id="perfilOtpTelefono" placeholder="123456"
-                                maxlength="6">
-                            <div class="input-group-append">
-                                <button class="btn btn-success" type="button" id="btnVerificarTel">Verificar y
-                                    Guardar</button>
-                            </div>
-                        </div>
-                        <button class="btn btn-sm btn-link text-danger mt-1" id="btnCancelarCambioTel">Cancelar</button>
-                    </div>
-
-                    <div id="mensajeTelefono" class="mt-2"></div>
-                </div>
-            </div>
-
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-dark text-white">
-                    <h5 class="mb-0">Mis Alertas de WhatsApp</h5>
-                </div>
-                <div class="card-body">
-                    <p>Selecciona de qué líneas de producción deseas recibir notificaciones:</p>
-
-                    <input type="hidden" id="misAlertasGuardadas" value="{{user.alertas}}">
-
-                    <div class="form-group" id="alertasUserForm">
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input alerta-checkbox" type="checkbox" id="perfilFA1" value="fa1">
-                            <label class="form-check-label" for="perfilFA1">FA1</label>
-                        </div>
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input alerta-checkbox" type="checkbox" id="perfilFA9" value="fa9">
-                            <label class="form-check-label" for="perfilFA9">FA9</label>
-                        </div>
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input alerta-checkbox" type="checkbox" id="perfilFA11"
-                                value="fa11">
-                            <label class="form-check-label" for="perfilFA11">FA11</label>
-                        </div>
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input alerta-checkbox" type="checkbox" id="perfilFA13"
-                                value="fa13">
-                            <label class="form-check-label" for="perfilFA13">FA13</label>
-                        </div>
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input alerta-checkbox" type="checkbox" id="perfilDaimler"
-                                value="daimler">
-                            <label class="form-check-label" for="perfilDaimler">Daimler</label>
-                        </div>
-                    </div>
-                    <button class="btn btn-primary mt-2" id="btnGuardarAlertas">Guardar Preferencias</button>
-                    <div id="mensajeAlertas" class="mt-2"></div>
-                </div>
-            </div>
-
-            <div class="card shadow-sm">
-                <div class="card-header bg-dark text-white">
-                    <h5 class="mb-0">Cambiar Contraseña</h5>
-                </div>
-                <div class="card-body">
-                    <div class="form-group">
-                        <label>Nueva Contraseña</label>
-                        <input type="password" class="form-control" id="perfilNuevaPass"
-                            placeholder="Ingresa tu nueva contraseña">
-                    </div>
-                    <div class="form-group">
-                        <label>Confirmar Nueva Contraseña</label>
-                        <input type="password" class="form-control" id="perfilConfirmarPass"
-                            placeholder="Repite la contraseña">
-                    </div>
-                    <button class="btn btn-warning mt-2" id="btnCambiarPass">Actualizar Contraseña</button>
-                    <div id="mensajePass" class="mt-2"></div>
-                </div>
-            </div>
-
-        </div>
+  {{!-- HEADER --}}
+  <div class="fa-header mb-4">
+    <div class="fa-header__left">
+      <div class="fa-header__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+      </div>
+      <div>
+        <h1 class="fa-header__title">Mi Perfil</h1>
+        <p class="fa-header__sub">Gestiona tu cuenta y preferencias</p>
+      </div>
     </div>
+  </div>
+
+  {{!-- SECCIÓN 1: DATOS PERSONALES --}}
+  <div class="fa-card mb-4">
+    <div class="fa-card__head">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15">
+        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+        <polyline points="22,6 12,13 2,6"/>
+      </svg>
+      Datos Personales
+    </div>
+    <div class="fa-card__body">
+
+      {{!-- Correo --}}
+      <div class="mf-field">
+        <label class="mf-label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+            <polyline points="22,6 12,13 2,6"/>
+          </svg>
+          Correo Electrónico
+        </label>
+        <input type="email" class="mf-input" value="{{user.email}}" disabled
+          style="opacity:.6; cursor:not-allowed;">
+        <span style="font-size:.78rem; color:var(--slate-400); margin-top:4px; display:block;">
+          El correo no puede ser modificado por seguridad.
+        </span>
+      </div>
+
+      <div style="height:1px; background:var(--slate-100); margin: 16px 0;"></div>
+
+      {{!-- Teléfono --}}
+      <div class="mf-field">
+        <label class="mf-label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13">
+            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.18 2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.6a16 16 0 0 0 6 6l.94-.94a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.72 16z"/>
+          </svg>
+          Número de WhatsApp
+        </label>
+        <div style="display:flex; gap:10px; align-items:center;">
+          <input type="text" class="mf-input" id="perfilTelefono"
+            value="{{user.telefono}}" placeholder="+52..." style="flex:1;">
+          <button class="katcon-btn katcon-btn--ghost" type="button" id="btnSolicitarCambioTel">
+            Cambiar Número
+          </button>
+        </div>
+      </div>
+
+      {{!-- Sección OTP teléfono --}}
+      <div id="seccionVerificarTel" class="d-none perfil-otp-box">
+        <div class="mf-otp-notice">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.18 2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.6a16 16 0 0 0 6 6l.94-.94a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.72 16z"/>
+          </svg>
+          Ingresa el código de 6 dígitos enviado a tu nuevo WhatsApp.
+        </div>
+        <div class="mf-field">
+          <label class="mf-label">Código de verificación</label>
+          <div style="display:flex; gap:10px; align-items:center;">
+            <input type="text" class="mf-input mf-input--otp" id="perfilOtpTelefono"
+              placeholder="· · · · · ·" maxlength="6" style="flex:1; max-width:220px;">
+            <button class="katcon-btn katcon-btn--primary" type="button" id="btnVerificarTel">
+              Verificar y Guardar
+            </button>
+            <button class="katcon-btn katcon-btn--danger-ghost" type="button" id="btnCancelarCambioTel">
+              Cancelar
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="mensajeTelefono" class="perfil-msg mt-2"></div>
+    </div>
+  </div>
+
+  {{!-- SECCIÓN 2: ALERTAS --}}
+  <div class="fa-card mb-4">
+    <div class="fa-card__head">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/>
+      </svg>
+      Mis Alertas de WhatsApp
+    </div>
+    <div class="fa-card__body">
+      <p style="font-size:.875rem; color:var(--slate-500); margin-bottom:16px;">
+        Selecciona de qué líneas de producción deseas recibir notificaciones:
+      </p>
+
+      <input type="hidden" id="misAlertasGuardadas" value="{{user.alertas}}">
+
+      <div class="mf-checkboxes mb-4">
+        <label class="mf-check">
+          <input class="alerta-checkbox" type="checkbox" id="perfilFA1" value="fa1">
+          <span class="mf-check__box"></span>
+          <span class="mf-check__label">FA-1</span>
+        </label>
+        <label class="mf-check">
+          <input class="alerta-checkbox" type="checkbox" id="perfilFA9" value="fa9">
+          <span class="mf-check__box"></span>
+          <span class="mf-check__label">FA-9</span>
+        </label>
+        <label class="mf-check">
+          <input class="alerta-checkbox" type="checkbox" id="perfilFA11" value="fa11">
+          <span class="mf-check__box"></span>
+          <span class="mf-check__label">FA-11</span>
+        </label>
+        <label class="mf-check">
+          <input class="alerta-checkbox" type="checkbox" id="perfilFA13" value="fa13">
+          <span class="mf-check__box"></span>
+          <span class="mf-check__label">FA-13</span>
+        </label>
+        <label class="mf-check">
+          <input class="alerta-checkbox" type="checkbox" id="perfilDaimler" value="daimler">
+          <span class="mf-check__box"></span>
+          <span class="mf-check__label">Daimler</span>
+        </label>
+      </div>
+
+      <button class="katcon-btn katcon-btn--primary" id="btnGuardarAlertas">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="15" height="15">
+          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+          <polyline points="17 21 17 13 7 13 7 21"/>
+          <polyline points="7 3 7 8 15 8"/>
+        </svg>
+        Guardar Preferencias
+      </button>
+      <div id="mensajeAlertas" class="perfil-msg mt-2"></div>
+    </div>
+  </div>
+
+  {{!-- SECCIÓN 3: CONTRASEÑA --}}
+  <div class="fa-card">
+    <div class="fa-card__head">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+      </svg>
+      Cambiar Contraseña
+    </div>
+    <div class="fa-card__body">
+      <div class="mf-grid">
+        <div class="mf-field">
+          <label class="mf-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            Nueva Contraseña
+          </label>
+          <input type="password" class="mf-input" id="perfilNuevaPass"
+            placeholder="Mínimo 8 caracteres">
+        </div>
+        <div class="mf-field">
+          <label class="mf-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            Confirmar Contraseña
+          </label>
+          <input type="password" class="mf-input" id="perfilConfirmarPass"
+            placeholder="Repite la contraseña">
+        </div>
+      </div>
+      <button class="katcon-btn katcon-btn--primary" id="btnCambiarPass">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="15" height="15">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        Actualizar Contraseña
+      </button>
+      <div id="mensajePass" class="perfil-msg mt-2"></div>
+    </div>
+  </div>
+
 </div>
+
+<style>
+/* ── Botones de perfil ── */
+.katcon-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 18px;
+  border-radius: 9px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: .875rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all .18s;
+  white-space: nowrap;
+  text-decoration: none !important;
+}
+.katcon-btn--primary {
+  background: linear-gradient(135deg, var(--blue), var(--cyan));
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(14,165,233,.25);
+}
+.katcon-btn--primary:hover { opacity:.88; transform:translateY(-1px); }
+
+.katcon-btn--ghost {
+  background: var(--white);
+  color: var(--slate-600);
+  border: 1.5px solid var(--slate-200);
+}
+.katcon-btn--ghost:hover {
+  border-color: var(--blue);
+  color: var(--blue);
+}
+.katcon-btn--danger-ghost {
+  background: transparent;
+  color: #dc2626;
+  border: 1.5px solid #fca5a5;
+  font-size: .82rem;
+  padding: 7px 14px;
+}
+.katcon-btn--danger-ghost:hover {
+  background: #fee2e2;
+}
+[data-theme="dark"] .katcon-btn--ghost {
+  background: var(--slate-50);
+  border-color: var(--slate-300);
+  color: var(--slate-600);
+}
+[data-theme="dark"] .katcon-btn--ghost:hover {
+  border-color: var(--blue);
+  color: var(--blue);
+}
+[data-theme="dark"] .katcon-btn--danger-ghost {
+  border-color: rgba(220,38,38,.4);
+  color: #f87171;
+}
+[data-theme="dark"] .katcon-btn--danger-ghost:hover {
+  background: rgba(220,38,38,.1);
+}
+
+/* ── OTP box ── */
+.perfil-otp-box {
+  background: var(--slate-50);
+  border: 1px solid var(--slate-200);
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 12px;
+}
+[data-theme="dark"] .perfil-otp-box {
+  background: var(--slate-100);
+  border-color: var(--slate-200);
+}
+
+/* ── Mensajes de estado ── */
+.perfil-msg {
+  font-size: .85rem;
+  min-height: 24px;
+}
+
+/* ── fa-card dark mode (por si no estaba) ── */
+[data-theme="dark"] .fa-card {
+  background: var(--white);
+  border-color: var(--slate-200);
+}
+[data-theme="dark"] .fa-card__head {
+  background: var(--slate-50);
+  border-bottom-color: var(--slate-200);
+  color: var(--slate-500);
+}
+[data-theme="dark"] .mf-input {
+  background: var(--slate-50);
+  border-color: var(--slate-300);
+  color: var(--slate-800);
+}
+[data-theme="dark"] .mf-input:focus {
+  background: var(--white);
+  border-color: var(--blue);
+}
+[data-theme="dark"] .mf-input:disabled {
+  background: var(--slate-100) !important;
+  color: var(--slate-500) !important;
+}
+[data-theme="dark"] .mf-label { color: var(--slate-500); }
+</style>

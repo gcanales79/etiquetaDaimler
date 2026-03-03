@@ -10,8 +10,11 @@ $(document).ready(function() {
 
   // ── Eliminar checkboxes que paginationjs inyecta en el DOM ──
   function removeStrayCheckboxes() {
-    document.querySelectorAll("input[type='checkbox']").forEach(el => {
-      if (!el.closest("#modalUserCenter") && !el.classList.contains("alerta-checkbox")) {
+    document.querySelectorAll("input[type='checkbox']").forEach((el) => {
+      if (
+        !el.closest("#modalUserCenter") &&
+        !el.classList.contains("alerta-checkbox")
+      ) {
         el.remove();
       }
     });
@@ -46,16 +49,19 @@ $(document).ready(function() {
         callback: function(data, pagination) {
           $("#usersList").empty();
           // Eliminar checkboxes que paginationjs inyecta en el DOM
-          setTimeout(() => $("input[type='checkbox']:not(.alerta-checkbox)").remove(), 0);
+          setTimeout(
+            () => $("input[type='checkbox']:not(.alerta-checkbox)").remove(),
+            0,
+          );
           for (let i = 0; i < data.length; i++) {
-            newItem = $("<tr>");
+            let newItem = $("<tr>");
 
             // Email
-            emailUser = $("<td>").addClass("align-middle");
+            let emailUser = $("<td>").addClass("align-middle");
             emailUser.text(data[i].email);
 
             // Teléfono
-            phoneUser = $("<td>").addClass("align-middle");
+            let phoneUser = $("<td>").addClass("align-middle");
             if (!data[i].telefono || data[i].telefono === "null") {
               phoneUser.text("—");
             } else {
@@ -67,10 +73,12 @@ $(document).ready(function() {
             }
 
             // Rol — pill con color según tipo
-            roleUser = $("<td>").addClass("align-middle");
+            let roleUser = $("<td>").addClass("align-middle");
             let roleText = data[i].role;
             let roleClass = "role-pill--" + roleText;
-            let rolePill = $("<span>").addClass("role-pill " + roleClass).text(roleText);
+            let rolePill = $("<span>")
+              .addClass("role-pill " + roleClass)
+              .text(roleText);
             roleUser.append(rolePill);
 
             // Alertas — badges con nuevo estilo
@@ -96,31 +104,41 @@ $(document).ready(function() {
             // Botón Editar — HTML string para que el SVG renderice correctamente
             buttonEdit = $(
               `<button type="button" class="btn-action btn-action--edit editUser"
-                value="${data[i].id}" page="${pagination.pageNumber}" title="Editar usuario">
+                value="${data[i].id}" page="${
+                pagination.pageNumber
+              }" title="Editar usuario">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15">
                   <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                   <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                 </svg>
-              </button>`
+              </button>`,
             );
 
             // Botón Eliminar
             buttonDelete = $(
               `<button type="button" class="btn-action btn-action--delete deleteUser"
-                value="${data[i].id}" page="${pagination.pageNumber}" title="Eliminar usuario">
+                value="${data[i].id}" page="${
+                pagination.pageNumber
+              }" title="Eliminar usuario">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15">
                   <polyline points="3 6 5 6 21 6"/>
                   <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
                   <path d="M10 11v6M14 11v6"/>
                   <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
                 </svg>
-              </button>`
+              </button>`,
             );
 
             actionUser.append(buttonEdit);
             actionUser.append(buttonDelete);
 
-            newItem.append(emailUser, phoneUser, roleUser, alertasUser, actionUser);
+            newItem.append(
+              emailUser,
+              phoneUser,
+              roleUser,
+              alertasUser,
+              actionUser,
+            );
             $("#usersList").append(newItem);
           }
         },
@@ -160,9 +178,12 @@ $(document).ready(function() {
         $(".alerta-checkbox").prop("checked", false);
         if (user.alertas && user.alertas.trim() !== "") {
           let arregloAlertas = user.alertas.split(",");
-          arregloAlertas.forEach(alerta => {
+          arregloAlertas.forEach((alerta) => {
             let alertaLimpia = alerta.trim().toLowerCase();
-            $(`.alerta-checkbox[value="${alertaLimpia}"]`).prop("checked", true);
+            $(`.alerta-checkbox[value="${alertaLimpia}"]`).prop(
+              "checked",
+              true,
+            );
           });
         }
         $("#modalUserCenter").modal("show");
@@ -263,9 +284,16 @@ $(document).ready(function() {
   $("#userForm").submit(function(event) {
     event.preventDefault();
 
-    let email = $("#emailUser").val().trim().toLowerCase();
-    let password = $("#passwordUser").val().trim();
-    let repeatPassword = $("#repeatPasswordUser").val().trim();
+    let email = $("#emailUser")
+      .val()
+      .trim()
+      .toLowerCase();
+    let password = $("#passwordUser")
+      .val()
+      .trim();
+    let repeatPassword = $("#repeatPasswordUser")
+      .val()
+      .trim();
     let role = $("#roleUser").val();
     let telefono = phoneInput.getNumber(intlTelInputUtils.numberFormat.E164);
 
@@ -275,25 +303,50 @@ $(document).ready(function() {
     });
     let alertas = alertasArray.join(",");
 
-    if (!phoneInput.isValidNumber()) {
-      notificationToast("500", "El número de teléfono no es válido. Revisa el código de país y los dígitos.");
-      return false;
-    }
-    if (password !== repeatPassword) {
-      return notificationToast("500", "Las contraseñas no coinciden");
+    /*console.log("Datos del formulario:", {
+      email,
+      password,
+      repeatPassword,
+      role,
+      telefono,
+      alertas,
+    });*/
+
+    if (telefono && telefono.length > 0) {
+      if (!phoneInput.isValidNumber()) {
+        notificationToast(
+          "500",
+          "El número de teléfono no es válido. Revisa el código de país y los dígitos.",
+        );
+        return false;
+      }
+      if (password !== repeatPassword) {
+        return notificationToast("500", "Las contraseñas no coinciden");
+      }
     }
 
     let buttonType = $("#modalUserCenter").attr("type");
-    let pageNum = $(this).find("#createUser").attr("page");
-    let userId = $(this).find("#createUser").attr("userId");
+    let pageNum = $(this)
+      .find("#createUser")
+      .attr("page");
+    let userId = $(this)
+      .find("#createUser")
+      .attr("userId");
 
     if (buttonType === "Create") {
-      if (email.length === 0 || password.length === 0 || repeatPassword.length === 0 || telefono.length === 0) {
-        return notificationToast("500", "Todos los datos son obligatorios");
+      if (
+        email.length === 0 ||
+        password.length === 0 ||
+        repeatPassword.length === 0
+      ) {
+        return notificationToast(
+          "500",
+          "Solo el teléfono es opcional. Completa todos los campos para crear un usuario.",
+        );
       }
     } else if (buttonType === "Update") {
-      if (email.length === 0 || telefono.length === 0) {
-        return notificationToast("500", "El email y teléfono no pueden estar vacíos");
+      if (email.length === 0) {
+        return notificationToast("500", "El email no puede estar vacío");
       }
       if (password.length > 0 || repeatPassword.length > 0) {
         if (password !== repeatPassword) {
@@ -302,10 +355,18 @@ $(document).ready(function() {
       }
     }
 
-    if (buttonType == "Create") {
+    // --- CREATE LOGIC ---
+    if (buttonType === "Create") {
       let isOtpVisible = $("#otpSection").is(":visible");
-      if (!isOtpVisible) {
-        $("#createUser").prop("disabled", true).text("Enviando...");
+      let otpCode = $("#otpCode")
+        .val()
+        .trim();
+
+      // If there is a phone number and OTP is NOT visible, trigger OTP flow
+      if (telefono && telefono.length > 0 && !isOtpVisible) {
+        $("#createUser")
+          .prop("disabled", true)
+          .text("Enviando...");
         $.post("/api/send-otp", { telefono: telefono }).then((data) => {
           $("#createUser").prop("disabled", false);
           if (data.code === "200") {
@@ -317,38 +378,50 @@ $(document).ready(function() {
             notificationToast("500", data.message);
           }
         });
-      } else {
-        let otpCode = $("#otpCode").val().trim();
-        if (otpCode.length === 0) {
-          return notificationToast("500", "Debes ingresar el código de verificación");
-        }
-        $.post("/add-user", { email, password, telefono, role, otpCode, alertas })
-          .then((data) => {
-            const { code, message } = data;
-            if (code === "200") {
-              $("#modalUserCenter").modal("hide");
-              $("#userForm")[0].reset();
-              notificationToast(code, message);
-              getUsers();
-            }
-          })
-          .fail((err) => {
-            let errorData = err.responseJSON;
-            let mensajeError = errorData ? errorData.message : "Error al verificar el código OTP";
-            notificationToast("500", mensajeError);
-          });
+        return; // Stop execution here until OTP is entered
       }
-    } else if (buttonType == "Update") {
+
+      // If OTP is visible but empty
+      if (isOtpVisible && otpCode.length === 0) {
+        return notificationToast(
+          "500",
+          "Debes ingresar el código de verificación",
+        );
+      }
+
+      // Add User (Handles both: Phone with OTP, or No Phone)
+      $.post("/add-user", { email, password, telefono, role, otpCode, alertas })
+        .then((data) => {
+          if (data.code === "200") {
+            $("#modalUserCenter").modal("hide");
+            $("#userForm")[0].reset();
+            notificationToast(data.code, data.message);
+            getUsers(1);
+          }
+        })
+        .fail((err) => {
+          notificationToast(
+            "500",
+            err.responseJSON ? err.responseJSON.message : "Error del servidor",
+          );
+        });
+
+      // --- UPDATE LOGIC ---
+    } else if (buttonType === "Update") {
       let originalPhone = $("#telefonoUser").attr("data-original");
       let phoneChanged = telefono !== originalPhone;
-
       let changes = { email, password, telefono, role, alertas };
+
       if (password.length > 0) changes.password = password;
 
-      if (phoneChanged) {
+      // Only ask for OTP if the phone changed AND the new phone is not empty
+      if (phoneChanged && telefono && telefono.length > 0) {
         let isOtpVisible = $("#otpSection").is(":visible");
+
         if (!isOtpVisible) {
-          $("#createUser").prop("disabled", true).text("Enviando...");
+          $("#createUser")
+            .prop("disabled", true)
+            .text("Enviando...");
           $.post("/api/send-otp", { telefono })
             .then((data) => {
               $("#createUser").prop("disabled", false);
@@ -361,34 +434,43 @@ $(document).ready(function() {
             })
             .fail((err) => {
               $("#createUser").prop("disabled", false);
-              notificationToast("500", err.responseJSON ? err.responseJSON.message : "Error");
+              notificationToast(
+                "500",
+                err.responseJSON ? err.responseJSON.message : "Error",
+              );
             });
-          return;
+          return; // Stop execution here until OTP is entered
         } else {
-          let otpCode = $("#otpCode").val().trim();
-          if (otpCode.length === 0) return notificationToast("500", "Ingresa el código");
+          let otpCode = $("#otpCode")
+            .val()
+            .trim();
+          if (otpCode.length === 0)
+            return notificationToast("500", "Ingresa el código");
           changes.otpCode = otpCode;
         }
       }
 
+      // Perform Update
       $.ajax({
         url: `/update-user/${userId}`,
         type: "PUT",
         contentType: "application/json",
         data: JSON.stringify(changes),
         success: function(data) {
-          const { code, message } = data;
-          if (code !== "200") {
-            notificationToast(code, message);
+          if (data.code !== "200") {
+            notificationToast(data.code, data.message);
           } else {
             $("#modalUserCenter").modal("hide");
             $("#userForm")[0].reset();
-            notificationToast(code, message);
+            notificationToast(data.code, data.message);
             getUsers(pageNum);
           }
         },
       }).fail((err) => {
-        notificationToast("500", err.responseJSON ? err.responseJSON.message : "Error al actualizar");
+        notificationToast(
+          "500",
+          err.responseJSON ? err.responseJSON.message : "Error al actualizar",
+        );
       });
     }
   });

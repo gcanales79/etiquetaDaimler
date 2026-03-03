@@ -1711,3 +1711,112 @@ tbody > input[type="checkbox"] {
 [data-theme="dark"] table.dataTable th {
   border-color: var(--slate-200) !important;
 }
+
+/* ══════════════════════════════════════════════════
+   MODALES — DARK MODE
+   Cubre fa-modal, modal-content y todos los
+   componentes internos (inputs, selects, checkboxes)
+══════════════════════════════════════════════════ */
+
+/* Contenedor principal del modal */
+[data-theme="dark"] .modal-content,
+[data-theme="dark"] .fa-modal {
+  background: var(--white) !important;
+  border-color: var(--slate-200) !important;
+}
+
+/* Header */
+[data-theme="dark"] .fa-modal__header {
+  background: var(--slate-50) !important;
+  border-bottom-color: var(--slate-200) !important;
+}
+[data-theme="dark"] .fa-modal__title {
+  color: var(--slate-900) !important;
+}
+[data-theme="dark"] .fa-modal__sub {
+  color: var(--slate-500) !important;
+}
+[data-theme="dark"] .fa-modal__close {
+  color: var(--slate-400) !important;
+}
+[data-theme="dark"] .fa-modal__close:hover {
+  background: var(--slate-100) !important;
+  color: var(--slate-700) !important;
+}
+
+/* Body y footer */
+[data-theme="dark"] .fa-modal__body {
+  background: var(--white) !important;
+  color: var(--slate-600) !important;
+}
+[data-theme="dark"] .fa-modal__footer {
+  background: var(--slate-50) !important;
+  border-top-color: var(--slate-200) !important;
+}
+
+/* Iconos de header del modal */
+[data-theme="dark"] .fa-modal__icon--blue {
+  background: rgba(56,189,248,.15) !important;
+}
+[data-theme="dark"] .fa-modal__icon--danger {
+  background: rgba(220,38,38,.15) !important;
+}
+
+/* Labels */
+[data-theme="dark"] .fa-modal__body .mf-label {
+  color: var(--slate-500) !important;
+}
+
+/* Inputs y selects */
+[data-theme="dark"] .fa-modal__body .mf-input,
+[data-theme="dark"] .fa-modal__body .mf-select,
+[data-theme="dark"] .fa-modal__body input,
+[data-theme="dark"] .fa-modal__body select {
+  background: var(--slate-50) !important;
+  border-color: var(--slate-300) !important;
+  color: var(--slate-800) !important;
+}
+[data-theme="dark"] .fa-modal__body .mf-input:focus,
+[data-theme="dark"] .fa-modal__body input:focus {
+  background: var(--slate-100) !important;
+  border-color: var(--blue) !important;
+  box-shadow: 0 0 0 3px rgba(56,189,248,.15) !important;
+}
+[data-theme="dark"] .fa-modal__body input::placeholder {
+  color: var(--slate-500) !important;
+}
+
+/* Checkboxes custom (mf-check) */
+[data-theme="dark"] .mf-check {
+  background: var(--slate-50) !important;
+  border-color: var(--slate-300) !important;
+}
+[data-theme="dark"] .mf-check:hover {
+  border-color: var(--blue) !important;
+  background: var(--blue-light) !important;
+}
+[data-theme="dark"] .mf-check__box {
+  background: var(--slate-100) !important;
+  border-color: var(--slate-400) !important;
+}
+[data-theme="dark"] .mf-check__label {
+  color: var(--slate-600) !important;
+}
+[data-theme="dark"] .mf-check:has(input:checked) {
+  border-color: rgba(56,189,248,.4) !important;
+  background: var(--blue-light) !important;
+}
+
+/* OTP notice banner */
+[data-theme="dark"] .mf-otp-notice {
+  background: rgba(56,189,248,.1) !important;
+  border-color: rgba(56,189,248,.2) !important;
+  color: var(--blue) !important;
+}
+
+/* Select arrow en dark */
+[data-theme="dark"] .fa-modal__body .mf-select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 12px center !important;
+}

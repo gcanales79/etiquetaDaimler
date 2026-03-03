@@ -20,7 +20,7 @@ const Fa13Controller = require("../controllers/fa13");
 const PerfilController = require("../controllers/perfil");
 const { fa9, fa11, fa13 } = require("../models"); // Adjust if your models are imported differently
 const models = { fa9: fa9, fa11: fa11, fa13: fa13 };
-const {handleTwilioMessage}=require("../controllers/twilioController")
+const { handleTwilioMessage } = require("../controllers/twilioController");
 
 module.exports = function(app) {
   // Using the passport.authenticate middleware with our local strategy.
@@ -43,24 +43,24 @@ module.exports = function(app) {
   //  })
 
   // NUEVO MIDDLEWARE HÍBRIDO PARA LA API
-function isApiAuthenticated(req, res, next) {
-  // 1. ¿Es un usuario humano desde el navegador web (con sesión)?
-  if (req.isAuthenticated && req.isAuthenticated()) {
-    return next();
-  }
-  
-  // 2. ¿Es nuestro Cron Job "robot" usando la Llave Maestra secreta?
-  const apiKey = req.headers['x-api-key'];
+  function isApiAuthenticated(req, res, next) {
+    // 1. ¿Es un usuario humano desde el navegador web (con sesión)?
+    if (req.isAuthenticated && req.isAuthenticated()) {
+      return next();
+    }
 
-  const secretKey =process.env.SECRET_KEY;
-  
-  if (apiKey === secretKey) {
-    return next();
-  }
+    // 2. ¿Es nuestro Cron Job "robot" usando la Llave Maestra secreta?
+    const apiKey = req.headers["x-api-key"];
 
-  // 3. Si no es un humano logueado ni el Cron Job autorizado, ¡bloqueamos!
-  return res.status(401).json({ error: "Acceso no autorizado" });
-}
+    const secretKey = process.env.SECRET_KEY;
+
+    if (apiKey === secretKey) {
+      return next();
+    }
+
+    // 3. Si no es un humano logueado ni el Cron Job autorizado, ¡bloqueamos!
+    return res.status(401).json({ error: "Acceso no autorizado" });
+  }
 
   app.post("/login", function(req, res, next) {
     passport.authenticate("local", function(err, user, info) {
@@ -148,7 +148,7 @@ function isApiAuthenticated(req, res, next) {
             // res.status(422).json(err.errors[0].message);
           });
       }
-    }
+    },
   );
 
   // Route for logging user out
@@ -162,67 +162,74 @@ function isApiAuthenticated(req, res, next) {
   });
 
   // ══════════════════════════════════════════════════════════════
-// NUEVO ENDPOINT DAIMLER — reemplaza la lógica GET+POST del JS
-// Poner ANTES del route genérico: app.get("/api/:serial", ...)
-// ══════════════════════════════════════════════════════════════
+  // NUEVO ENDPOINT DAIMLER — reemplaza la lógica GET+POST del JS
+  // Poner ANTES del route genérico: app.get("/api/:serial", ...)
+  // ══════════════════════════════════════════════════════════════
 
-app.post("/api/daimler/serial", async (req, res) => {
-  const { serial } = req.body;
+  app.post("/api/daimler/serial", async (req, res) => {
+    const { serial } = req.body;
 
-  // 1. Validación básica
-  if (!serial || serial.trim() === "") {
-    return res.status(200).send({ code: "400", message: "Serial vacío" });
-  }
-
-  const nuevoSerial = serial.trim();
-
-  try {
-    // 2. Buscar si ya existe (ignora registros con repetida=true para no
-    //    contar los registros de "contención" que ya se crearon a propósito)
-    const existente = await db.Daimler.findOne({
-      where: { serial: nuevoSerial, repetida: false }
-    });
-
-    if (existente) {
-      // ── Serial REPETIDO ──
-      // Marcar el registro original como repetido
-      await db.Daimler.update(
-        { repetida: true },
-        { where: { serial: nuevoSerial } }
-      );
-
-      // Crear registro de contención
-      await db.Daimler.create({ serial: nuevoSerial, repetida: true });
-
-      // Notificar por WhatsApp (igual que antes)
-      const telefonos = [process.env.TAMARA_PHONE];
-      for (const tel of telefonos) {
-        client.messages.create({
-          from: "whatsapp:" + process.env.TWILIO_PHONE,
-          body: "Salio una pieza con serial repetido. El serial es " + nuevoSerial + ".",
-          to: "whatsapp:" + tel,
-        }).catch(err => console.log("Twilio error:", err));
-      }
-
-      return res.status(200).send({
-        code: "400",
-        message: "La etiqueta ya existe, por favor segregar la pieza para inspección de calidad"
-      });
+    // 1. Validación básica
+    if (!serial || serial.trim() === "") {
+      return res.status(200).send({ code: "400", message: "Serial vacío" });
     }
 
-    // ── Serial NUEVO ──
-    await db.Daimler.create({ serial: nuevoSerial });
+    const nuevoSerial = serial.trim();
 
-    return res.status(200).send({
-      code: "200",
-      message: "Etiqueta Correcta"
-    });
+    try {
+      // 2. Buscar si ya existe (ignora registros con repetida=true para no
+      //    contar los registros de "contención" que ya se crearon a propósito)
+      const existente = await db.Daimler.findOne({
+        where: { serial: nuevoSerial, repetida: false },
+      });
 
-  } catch (err) {
-    console.error("Error en /api/daimler/serial:", err);
-    return res.status(200).send({ code: "500", message: "Error de servidor" });
-  }
-});
+      if (existente) {
+        // ── Serial REPETIDO ──
+        // Marcar el registro original como repetido
+        await db.Daimler.update(
+          { repetida: true },
+          { where: { serial: nuevoSerial } },
+        );
+
+        // Crear registro de contención
+        await db.Daimler.create({ serial: nuevoSerial, repetida: true });
+
+        // Notificar por WhatsApp (igual que antes)
+        const telefonos = [process.env.TAMARA_PHONE];
+        for (const tel of telefonos) {
+          client.messages
+            .create({
+              from: "whatsapp:" + process.env.TWILIO_PHONE,
+              body:
+                "Salio una pieza con serial repetido. El serial es " +
+                nuevoSerial +
+                ".",
+              to: "whatsapp:" + tel,
+            })
+            .catch((err) => console.log("Twilio error:", err));
+        }
+
+        return res.status(200).send({
+          code: "400",
+          message:
+            "La etiqueta ya existe, por favor segregar la pieza para inspección de calidad",
+        });
+      }
+
+      // ── Serial NUEVO ──
+      await db.Daimler.create({ serial: nuevoSerial });
+
+      return res.status(200).send({
+        code: "200",
+        message: "Etiqueta Correcta",
+      });
+    } catch (err) {
+      console.error("Error en /api/daimler/serial:", err);
+      return res
+        .status(200)
+        .send({ code: "500", message: "Error de servidor" });
+    }
+  });
 
   // Get all examples
   app.get("/api/:serial", function(req, res) {
@@ -268,7 +275,7 @@ app.post("/api/daimler/serial", async (req, res) => {
         where: {
           serial: req.body.serial,
         },
-      }
+      },
     ).then(function(dbDaimler) {
       res.json(dbDaimler);
     });
@@ -469,7 +476,7 @@ app.post("/api/daimler/serial", async (req, res) => {
         where: {
           serial: req.params.serial,
         },
-      }
+      },
     )
       .then((data) => {
         res.json(data);
@@ -489,7 +496,7 @@ app.post("/api/daimler/serial", async (req, res) => {
         where: {
           serial: req.params.serial,
         },
-      }
+      },
     )
       .then((data) => {
         res.json(data);
@@ -574,8 +581,11 @@ app.post("/api/daimler/serial", async (req, res) => {
       });
   });
 
-    //Get data between hour
-  app.get("/daimler/produccionhora/:fechainicial/:fechafinal", function(req, res) {
+  //Get data between hour
+  app.get("/daimler/produccionhora/:fechainicial/:fechafinal", function(
+    req,
+    res,
+  ) {
     let fechainicial = moment
       .unix(req.params.fechainicial)
       .format("YYYY-MM-DD HH:mm:ss");
@@ -686,7 +696,7 @@ app.post("/api/daimler/serial", async (req, res) => {
             console.log(
               `El mensaje a ${message.to} con sid: ${
                 message.sid
-              } tiene el status de: ${message.status}`
+              } tiene el status de: ${message.status}`,
             );
             responseMessage.push(message);
             //console.log(responseMessage);
@@ -734,7 +744,7 @@ app.post("/api/daimler/serial", async (req, res) => {
                 where: {
                   email: req.body.email,
                 },
-              }
+              },
             ).then(function(user, err) {
               //console.log(user)
               //console.log(err)
@@ -771,71 +781,81 @@ app.post("/api/daimler/serial", async (req, res) => {
         //console.log("Hubo error")
         if (err) return next(err);
         res.redirect("/");
-      }
+      },
     );
   });
 
   // Request Password Reset
-app.post("/api/forgot-password", async (req, res) => {
+  app.post("/api/forgot-password", async (req, res) => {
     try {
-        const { email } = req.body;
-        
-        // 1. Find the user
-        const user = await db.User.findOne({ where: { email: email } });
-        
-        if (!user) {
-            return res.status(404).json({ error: "Usuario no encontrado." });
-        }
+      const { email } = req.body;
 
-        // 2. Check if they have a phone number on record
-        if (!user.telefono || user.telefono.trim() === "") {
-            return res.status(400).json({ 
-                error: "No tienes un número de teléfono registrado. Contacta al administrador para restablecer tu contraseña." 
-            });
-        }
+      // 1. Find the user
+      const user = await db.User.findOne({ where: { email: email } });
 
-        // 3. Send Twilio Verify OTP via WhatsApp
-        await client.verify.v2.services(process.env.TWILIO_VERIFY_SID)
-            .verifications
-            .create({ to: user.telefono, channel: 'whatsapp' }); // Use 'sms' if you prefer text messages
+      if (!user) {
+        return res.status(404).json({ error: "Usuario no encontrado." });
+      }
 
-        res.json({message: "Código de verificación enviado exitosamente." });
+      // 2. Check if they have a phone number on record
+      if (!user.telefono || user.telefono.trim() === "") {
+        return res.status(400).json({
+          error:
+            "No tienes un número de teléfono registrado. Contacta al administrador para restablecer tu contraseña.",
+        });
+      }
 
+      // 3. Send Twilio Verify OTP via WhatsApp
+      await client.verify.v2
+        .services(process.env.TWILIO_VERIFY_SID)
+        .verifications.create({ to: user.telefono, channel: "whatsapp" }); // Use 'sms' if you prefer text messages
+
+      res.json({ message: "Código de verificación enviado exitosamente." });
     } catch (error) {
-        console.error("Error in forgot-password:", error);
-        res.status(500).json({ error: "Error de servidor. Inténtalo de nuevo más tarde." });
+      console.error("Error in forgot-password:", error);
+      res
+        .status(500)
+        .json({ error: "Error de servidor. Inténtalo de nuevo más tarde." });
     }
-});
+  });
 
-// Route 2: Verify OTP and Reset Password
-app.post("/api/reset-password", async (req, res) => {
+  // Route 2: Verify OTP and Reset Password
+  app.post("/api/reset-password", async (req, res) => {
     try {
-        const { email, otpCode, newPassword } = req.body;
+      const { email, otpCode, newPassword } = req.body;
 
-        const user = await db.User.findOne({ where: { email: email } });
-        if (!user || !user.telefono) return res.status(400).json({ error: "No se encontró un usuario válido con ese correo o no tiene un número de teléfono registrado." });
+      const user = await db.User.findOne({ where: { email: email } });
+      if (!user || !user.telefono)
+        return res.status(400).json({
+          error:
+            "No se encontró un usuario válido con ese correo o no tiene un número de teléfono registrado.",
+        });
 
-        // 1. Verify the OTP with Twilio
-        const verificationCheck = await client.verify.v2.services(process.env.TWILIO_VERIFY_SID)
-            .verificationChecks
-            .create({ to: user.telefono, code: otpCode });
+      // 1. Verify the OTP with Twilio
+      const verificationCheck = await client.verify.v2
+        .services(process.env.TWILIO_VERIFY_SID)
+        .verificationChecks.create({ to: user.telefono, code: otpCode });
 
-        if (verificationCheck.status !== "approved") {
-            return res.status(400).json({ error: "Código inválido o expirado." });
-        }
+      if (verificationCheck.status !== "approved") {
+        return res.status(400).json({ error: "Código inválido o expirado." });
+      }
 
-        // 2. Update the password in the database
-        // (Assuming your Sequelize User model has a beforeUpdate/beforeSave hook to hash the password)
-        user.password = newPassword;
-        await user.save();
+      // 2. Update the password in the database
+      // (Assuming your Sequelize User model has a beforeUpdate/beforeSave hook to hash the password)
+      user.password = newPassword;
+      await user.save();
 
-        res.json({ message: "Contraseña actualizada exitosamente! Ahora puedes iniciar sesión." });
-
+      res.json({
+        message:
+          "Contraseña actualizada exitosamente! Ahora puedes iniciar sesión.",
+      });
     } catch (error) {
-        console.error("Error in reset-password:", error);
-        res.status(500).json({ error: "Error de servidor al restablecer la contraseña." });
+      console.error("Error in reset-password:", error);
+      res
+        .status(500)
+        .json({ error: "Error de servidor al restablecer la contraseña." });
     }
-});
+  });
 
   //Route to establish new password
 
@@ -849,7 +869,7 @@ app.post("/api/reset-password", async (req, res) => {
             if (!user) {
               req.flash(
                 "error",
-                "El token para restablecer la contraseña ha expirado o es inválido"
+                "El token para restablecer la contraseña ha expirado o es inválido",
               );
               return res.redirect("/");
             }
@@ -866,7 +886,7 @@ app.post("/api/reset-password", async (req, res) => {
                       resetPasswordToken: req.params.token,
                     },
                     individualHooks: true,
-                  }
+                  },
                 ).then(function(data, err) {
                   done(err, user);
                 });
@@ -877,7 +897,7 @@ app.post("/api/reset-password", async (req, res) => {
             } else {
               req.flash(
                 "error",
-                "La contraseña debe tener minimo 5 caracteres"
+                "La contraseña debe tener minimo 5 caracteres",
               );
               return res.redirect("back");
             }
@@ -913,172 +933,248 @@ app.post("/api/reset-password", async (req, res) => {
       ],
       function(err) {
         res.redirect("/");
-      }
+      },
     );
   });
 
   //Get all user
-  app.get("/get-all-users", isAuthenticated, (req, res) => {
-    db.User.findAll({
-      attributes: ["id", "email", "role","telefono","alertas"],
-    })
-      .then((usersList) => {
-        if (!usersList) {
-          res.send({ message: "No se encontraron usuarios", code: "404" });
-        } else {
-          res.send({ data: usersList, code: "200" });
-        }
-      })
-      .catch((err) => {
-        res.send({ message: "Error de servidor", code: "500", err: err });
+  app.get("/get-all-users", isAuthenticated, async (req, res) => {
+    try {
+      const usersList = await db.User.findAll({
+        attributes: ["id", "email", "role", "telefono", "alertas"],
+        // Optional: Order by creation date so the newest users appear first
+        order: [["createdAt", "DESC"]],
       });
+
+      // Check array length instead of just checking if it exists
+      if (usersList.length === 0) {
+        return res
+          .status(404)
+          .send({ code: "404", message: "No se encontraron usuarios" });
+      }
+
+      res.status(200).send({ code: "200", data: usersList });
+    } catch (err) {
+      // Log the error to your server console, but keep it hidden from the frontend
+      console.error("Error fetching all users:", err);
+      res.status(500).send({ code: "500", message: "Error de servidor" });
+    }
   });
 
   //Add User
   app.post("/add-user", isAuthenticated, async (req, res) => {
-    const { email, password, role, telefono,otpCode,alertas } = req.body;
+    const { email, password, role, telefono, otpCode, alertas } = req.body;
     const serviceSid = process.env.TWILIO_VERIFY_SID;
+    console.log(
+      "Datos recibidos en el servidor para agregar usuario:",
+      req.body,
+    );
 
-  try {
-      // 1. Preguntamos a Twilio si el código es válido
-      const verificationCheck = await client.verify.v2.services(serviceSid)
-        .verificationChecks
-        .create({ to: telefono, code: otpCode });
+    if (telefono.length > 0) {
+      try {
+        // 1. Preguntamos a Twilio si el código es válido
+        const verificationCheck = await client.verify.v2
+          .services(serviceSid)
+          .verificationChecks.create({ to: telefono, code: otpCode });
 
-        
+        // 2. Si Twilio dice que está aprobado, guardamos en la BD
+        if (verificationCheck.status === "approved") {
+          const userCreated = await db.User.create({
+            email: email,
+            password: password,
+            role: role,
+            telefono: telefono,
+            alertas: alertas,
+          });
 
-      // 2. Si Twilio dice que está aprobado, guardamos en la BD
-      if (verificationCheck.status === 'approved') {
-        
+          res
+            .status(200)
+            .send({ code: "200", message: "Usuario agregado exitosamente" });
+        } else {
+          // El código era incorrecto o ya expiró
+          res.status(400).send({
+            code: "400",
+            message: "Código de verificación incorrecto",
+          });
+        }
+      } catch (err) {
+        console.log("Error creando usuario:", err);
+        res
+          .status(500)
+          .send({ code: "500", message: "Error del servidor", err: err });
+      }
+    } else {
+      try {
         const userCreated = await db.User.create({
           email: email,
           password: password,
           role: role,
           telefono: telefono,
-          alertas:alertas,
+          alertas: alertas,
         });
 
-        res.status(200).send({ code: "200", message: "Usuario agregado exitosamente" });
-        
-      } else {
-        // El código era incorrecto o ya expiró
-        res.status(400).send({ code: "400", message: "Código de verificación incorrecto" });
+        res
+          .status(200)
+          .send({ code: "200", message: "Usuario agregado exitosamente" });
+      } catch (err) {
+        console.log("Error creando usuario:", err);
+        res
+          .status(500)
+          .send({ code: "500", message: "Error del servidor", err: err });
       }
-
-    } catch (err) {
-      console.log("Error creando usuario:", err);
-      res.status(500).send({ code: "500", message: "Error del servidor", err: err });
     }
-    
   });
 
   //Send OTP thru Whatsapp
   app.post("/api/send-otp", isAuthenticated, async (req, res) => {
     const { telefono } = req.body;
-    
+
     // Lo ideal es process.env.TWILIO_VERIFY_SID, pero usamos tu código:
-    const serviceSid = process.env.TWILIO_VERIFY_SID; 
+    const serviceSid = process.env.TWILIO_VERIFY_SID;
 
     try {
       // Le pedimos a Twilio que envíe el código usando el canal 'whatsapp'
-      const verification = await client.verify.v2.services(serviceSid)
-        .verifications
-        .create({ to: telefono, channel: 'whatsapp' });
-        
-      res.status(200).send({ code: "200", message: "Código enviado por WhatsApp" });
+      const verification = await client.verify.v2
+        .services(serviceSid)
+        .verifications.create({ to: telefono, channel: "whatsapp" });
+
+      res
+        .status(200)
+        .send({ code: "200", message: "Código enviado por WhatsApp" });
     } catch (error) {
       console.log("Error Twilio:", error);
-      res.status(500).send({ code: "500", message: "Error al enviar el código de WhatsApp" });
+      res.status(500).send({
+        code: "500",
+        message: "Error al enviar el código de WhatsApp",
+      });
     }
   });
 
   //Get user by id
-  app.get("/get-user/:id", isAuthenticated, (req, res) => {
+  app.get("/get-user/:id", isAuthenticated, async (req, res) => {
     const { id } = req.params;
-    db.User.findOne({
-      where: {
-        id: {
-          [Op.eq]: id,
-        },
-      },
-      attributes: ["id", "email", "role","telefono","alertas"],
-    })
-      .then((userStored) => {
-        if (!userStored) {
-          res
-            .status(400)
-            .send({ code: "400", message: "No se encontro ningún usuario" });
-        } else {
-          res.status(200).send({ code: "200", user: userStored });
-        }
-      })
-      .catch((err) => {
-        console.log(err);
-        res.status(500).send({ code: "500", message: "Error de servidor" });
+
+    try {
+      // findByPk (Find By Primary Key) is much cleaner than findOne with Op.eq
+      const userStored = await db.User.findByPk(id, {
+        attributes: ["id", "email", "role", "telefono", "alertas"],
       });
+
+      if (!userStored) {
+        // Changed to 404 (Not Found) which is semantically more accurate than 400
+        return res
+          .status(404)
+          .send({ code: "404", message: "No se encontró ningún usuario" });
+      }
+
+      res.status(200).send({ code: "200", user: userStored });
+    } catch (err) {
+      console.error("Error fetching user:", err);
+      res.status(500).send({ code: "500", message: "Error de servidor" });
+    }
   });
 
   //Delete user by id
-  app.delete("/delete-user/:id", isAuthenticated, (req, res) => {
+  app.delete("/delete-user/:id", isAuthenticated, async (req, res) => {
     const { id } = req.params;
-    db.User.destroy({
-      where: {
-        id: {
-          [Op.eq]: id,
-        },
-      },
-    })
-      .then((userDeleted) => {
-        if (!userDeleted) {
-          res.status(404).send({ code: "404", message: "Usuario no borrado" });
-        } else {
-          res
-            .status(200)
-            .send({ code: "200", message: "Usuario borrado exitosamente" });
-        }
-      })
-      .catch((err) => {
-        console.log(err);
-        res.status(500).send({ code: "200", message: "Error de servidor" });
+
+    try {
+      // Optional Security Guard: Prevent the logged-in admin from deleting themselves
+      // if (req.user && req.user.id == id) {
+      //   return res.status(400).send({ code: "400", message: "No puedes eliminar tu propia cuenta" });
+      // }
+
+      const userDeleted = await db.User.destroy({
+        where: { id: id },
       });
+
+      // Sequelize's destroy() returns the number of rows deleted. 0 means it wasn't found.
+      if (!userDeleted) {
+        return res.status(404).send({
+          code: "404",
+          message: "Usuario no encontrado o ya fue borrado",
+        });
+      }
+
+      res
+        .status(200)
+        .send({ code: "200", message: "Usuario borrado exitosamente" });
+    } catch (err) {
+      console.error("Error deleting user:", err);
+      // FIXED: Changed code to "500" so the frontend handles it as an error
+      res.status(500).send({ code: "500", message: "Error de servidor" });
+    }
   });
 
   //Edit User by id
-  app.put("/update-user/:id", isAuthenticated, async(req, res) => {
+  app.put("/update-user/:id", isAuthenticated, async (req, res) => {
     const { id } = req.params;
-    const { email, password, role,telefono,otpCode,alertas } = req.body;
+    const { email, password, role, telefono, otpCode, alertas } = req.body;
     const serviceSid = process.env.TWILIO_VERIFY_SID;
-   try {
-      // 1. Si viene un otpCode, significa que cambió el número y debemos verificarlo
-      if (otpCode) {
-        const check = await client.verify.v2.services(serviceSid)
-          .verificationChecks
-          .create({ to: telefono, code: otpCode });
 
-        if (check.status !== 'approved') {
-          return res.status(400).send({ code: "400", message: "Código de verificación incorrecto" });
+    try {
+      // 1. Buscar al usuario actual en la BD ANTES de actualizar
+      const currentUser = await db.User.findByPk(id); // O .findOne({ where: { id: id } })
+      if (!currentUser) {
+        return res
+          .status(404)
+          .send({ code: "404", message: "Usuario no encontrado" });
+      }
+
+      // 2. Verificar de forma segura si el teléfono cambió y no está vacío
+      const phoneChanged = currentUser.telefono !== telefono;
+      const isNewPhoneValid = telefono && telefono.trim().length > 0;
+
+      if (phoneChanged && isNewPhoneValid) {
+        // Obligar a que venga el otpCode si el teléfono cambió
+        if (!otpCode) {
+          return res.status(400).send({
+            code: "400",
+            message:
+              "Se requiere un código de verificación para actualizar a un nuevo número.",
+          });
+        }
+
+        // Validar con Twilio
+        const check = await client.verify.v2
+          .services(serviceSid)
+          .verificationChecks.create({ to: telefono, code: otpCode });
+
+        if (check.status !== "approved") {
+          return res.status(400).send({
+            code: "400",
+            message: "Código de verificación incorrecto",
+          });
         }
       }
 
-      // 2. Construimos el objeto de actualización de forma dinámica
-      let updateData = { email: email, role: role, telefono: telefono,alertas: alertas };
-      
+      // 3. Construimos el objeto de actualización de forma dinámica
+      let updateData = {
+        email: email,
+        role: role,
+        telefono: telefono,
+        alertas: alertas,
+      };
+
       // Solo agregamos la contraseña al objeto si el usuario escribió una nueva
       if (password && password.trim() !== "") {
         updateData.password = password;
       }
 
-      // 3. Actualizamos en la Base de Datos
+      // 4. Actualizamos en la Base de Datos
       await db.User.update(updateData, {
         where: { id: id },
-        individualHooks: true // Súper importante para que encripte la nueva contraseña si la hay
+        individualHooks: true, // Súper importante para que encripte la nueva contraseña
       });
 
-      res.status(200).send({ code: "200", message: "Usuario actualizado exitosamente" });
-
+      res
+        .status(200)
+        .send({ code: "200", message: "Usuario actualizado exitosamente" });
     } catch (err) {
       console.log("Error en Update:", err);
-      res.status(500).send({ code: "500", message: "Error al actualizar el usuario" });
+      res
+        .status(500)
+        .send({ code: "500", message: "Error al actualizar el usuario" });
     }
   });
 
@@ -1151,7 +1247,7 @@ app.post("/api/reset-password", async (req, res) => {
               send({ code: "500", message: "Error del servidor", err: err });
           });
       }
-    }
+    },
   );
 
   //Get Part Number by id
@@ -1246,7 +1342,7 @@ app.post("/api/reset-password", async (req, res) => {
         where: {
           id: id,
         },
-      }
+      },
     )
       .then((partNumberStore) => {
         // console.log(userStore);
@@ -1291,7 +1387,7 @@ app.post("/api/reset-password", async (req, res) => {
 
   app.get(
     "/fa1/produccionhora/:fechainicial/:fechafinal",
-    Fa1Controller.productionPerHour
+    Fa1Controller.productionPerHour,
   );
 
   app.post("/fa1/reporte", Fa1Controller.productionReport);
@@ -1304,7 +1400,7 @@ app.post("/api/reset-password", async (req, res) => {
 
   app.get(
     "/fa9/produccionhora/:fechainicial/:fechafinal",
-    Fa9Controller.productionPerHour
+    Fa9Controller.productionPerHour,
   );
 
   app.post("/fa9/reporte", Fa9Controller.productionReport);
@@ -1317,7 +1413,7 @@ app.post("/api/reset-password", async (req, res) => {
 
   app.get(
     "/fa11/produccionhora/:fechainicial/:fechafinal",
-    Fa11Controller.productionPerHour
+    Fa11Controller.productionPerHour,
   );
 
   app.post("/fa11/reporte", Fa11Controller.productionReport);
@@ -1330,20 +1426,21 @@ app.post("/api/reset-password", async (req, res) => {
 
   app.get(
     "/fa13/produccionhora/:fechainicial/:fechafinal",
-    Fa13Controller.productionPerHour
+    Fa13Controller.productionPerHour,
   );
 
   app.post("/fa13/reporte", Fa13Controller.productionReport);
 
-
   //Search for a serial
   app.get("/search-serial/:linea/:serial", async (req, res) => {
     const { linea, serial } = req.params;
- db[linea].findAll({
+    db[linea]
+      .findAll({
         where: {
           serial: { [Op.like]: `%${serial}%` },
         },
-      }).then((serialStored) => {
+      })
+      .then((serialStored) => {
         if (!serialStored) {
           res.status(400).send({
             code: "400",
@@ -1360,20 +1457,33 @@ app.post("/api/reset-password", async (req, res) => {
   });
 
   //Twilio Webhook
-  app.post("/sms",handleTwilioMessage)
+  app.post("/sms", handleTwilioMessage);
 
   //Actualizar alertas de usuario
-  app.put("/api/perfil/alertas", isAuthenticated, PerfilController.updateAlertas)
+  app.put(
+    "/api/perfil/alertas",
+    isAuthenticated,
+    PerfilController.updateAlertas,
+  );
 
   //Update Password by user
-  app.put("/api/perfil/password", isAuthenticated, PerfilController.updatePassword)
+  app.put(
+    "/api/perfil/password",
+    isAuthenticated,
+    PerfilController.updatePassword,
+  );
 
   //Solicitar Codigo para cambiar telefono
-  app.post("/api/perfil/solicitar-telefono", isAuthenticated, PerfilController.solicitarTelefono)
+  app.post(
+    "/api/perfil/solicitar-telefono",
+    isAuthenticated,
+    PerfilController.solicitarTelefono,
+  );
 
   //Verificar codigo para cambiar telefono y actualizarlo
-  app.post("/api/perfil/verificar-telefono", isAuthenticated, PerfilController.verificarTelefono)
-
+  app.post(
+    "/api/perfil/verificar-telefono",
+    isAuthenticated,
+    PerfilController.verificarTelefono,
+  );
 };
-
-
