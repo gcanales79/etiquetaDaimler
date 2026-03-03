@@ -455,7 +455,7 @@ async function handleProductionCount(from, line, timeframe, language) {
       .utc()
       .format("YYYY-MM-DD HH:mm:ss");
 
-    l; // Bilingual Label
+    // Bilingual Label
     label = language === "es" ? "Total de Hoy" : "Today's Total";
   } else {
     const window = getCurrentShiftUtcWindow();
