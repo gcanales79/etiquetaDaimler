@@ -5,6 +5,9 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 async function getIntent(incomingText) {
+  
+  const maxRetries = 3; // Número máximo de intentos para manejar el error 429
+  
   const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite-001" });
 
   const systemPrompt = `
