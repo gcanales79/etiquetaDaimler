@@ -245,9 +245,22 @@ async function generateAndSendGraph(from, line, isLastWeek, language) {
 async function processProductionRequest(from, incomingText) {
   if (!incomingText) return;
 
+  // Limpiamos espacios extra
+  const textoLimpio = incomingText.trim();
+
+  // Si el mensaje tiene menos de 2 caracteres (ej. solo mandó "a" o un emoji "?")
+  // No gastamos saldo de Gemini. Lo mandamos directo a "unknown".
+  if (textoLimpio.length < 2) {
+      console.log("🛑 Mensaje demasiado corto o vacío, ignorando Gemini.");
+      // Forzamos el fallback menu directo
+      const fallbackMsg = "¿En qué te puedo ayudar? Intenta preguntar: 'Turno actual FA-11'";
+      await sendTextMessage(from, fallbackMsg);
+      return; 
+  }
+
   // 1. ASK THE AI ROUTER
   // It returns { intent, line, timeframe }
-  const aiResult = await getIntent(incomingText);
+  const aiResult = await getIntent(textoLimpio);
   console.log("🤖 AI Decision:", aiResult);
 
   let { intent, timeframe, language, line } = aiResult;
