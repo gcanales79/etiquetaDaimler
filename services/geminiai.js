@@ -7,8 +7,10 @@ const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 async function getIntent(incomingText) {
   
   const maxRetries = 3; // Número máximo de intentos para manejar el error 429
+
+  // Intentaremos con el modelo Lite primero, y si falla, usaremos el 1.5 Flash estable
+  const modelsToTry = ["gemini-2.0-flash-lite-001", "gemini-1.5-flash"];
   
-  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite-001" });
 
   const systemPrompt = `
 You are a bilingual (English and Spanish) Production Intent Router for a manufacturing plant in Monterrey, Mexico.
@@ -41,31 +43,29 @@ You are a bilingual (English and Spanish) Production Intent Router for a manufac
     If the user mentions a timeframe and a line (e.g., "turno actual fa-11"), but does NOT explicitly state an intent, you MUST assume the intent is "production_count". Do NOT return "unknown" if a line and timeframe are present.
   `.trim();
 
-  // 🛡️ EL AMORTIGUADOR (Bucle de Reintentos)
-  for (let intento = 1; intento <= maxRetries; intento++) {
-    try {
-      const result = await model.generateContent(systemPrompt);
-      const response = await result.response;
-
-      const cleanJson = response.text().replace(/```json|```/g, "").trim();
-      return JSON.parse(cleanJson);
-
-    } catch (error) {
-      // Si el error es 429 (Too Many Requests) y aún nos quedan intentos...
-      if (error.status === 429 && intento < maxRetries) {
-        const tiempoEspera = intento * 2000; // Intento 1: 2s, Intento 2: 4s
-        console.warn(`[Gemini API] Límite de peticiones alcanzado. Reintentando en ${tiempoEspera / 1000}s... (Intento ${intento}/${maxRetries})`);
-
-        await delay(tiempoEspera); // Pausamos la ejecución
-      }
-      // Si es otro error grave, o ya nos gastamos los 3 intentos:
-      else {
-        console.error(`[Gemini API] Fallo definitivo en intento ${intento}:`, error.message);
-        // Devolvemos un fallback seguro para que no se caiga la app
-        return { intent: "unknown", line: null, timeframe: null, language: "es" };
+for (const modelName of modelsToTry) {
+    let attempts = 0;
+    while (attempts < 2) { // 2 intentos por cada modelo
+      try {
+        const model = genAI.getGenerativeModel({ model: modelName });
+        const result = await model.generateContent(systemPrompt);
+        const response = await result.response;
+        const cleanJson = response.text().replace(/```json|```/g, "").trim();
+        return JSON.parse(cleanJson);
+      } catch (error) {
+        attempts++;
+        if (error.status === 429) {
+          console.warn(`[Gemini] 429 en ${modelName}. Reintentando en 2s...`);
+          await delay(2000); // Esperamos 2 segundos completos
+        } else {
+          break; // Si es otro error, saltamos al siguiente modelo
+        }
       }
     }
   }
+
+  // Si todo falla, devolvemos el fallback
+  return { intent: "unknown", line: null, timeframe: null };
 }
 
 module.exports = { getIntent };
