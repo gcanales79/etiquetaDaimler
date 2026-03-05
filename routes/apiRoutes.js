@@ -1382,6 +1382,9 @@ module.exports = function(app) {
   //Add Serial FA-1
   app.post("/api/fa1/serial", Fa1Controller.addSerial);
 
+  // ⭐ NUEVA RUTA MAESTRA PARA DASHBOARD:
+  app.get("/api/fa11/dashboard-master", isAuthenticated,Fa11Controller.getDashboardMaster);
+
   //Find the last six pieces builts
   app.get("/api/fa1/all/tabla/seisetiquetas", Fa1Controller.getLastSixLabels);
 
@@ -1394,6 +1397,10 @@ module.exports = function(app) {
 
   //Add Serial FA-9
   app.post("/api/fa9/serial", Fa9Controller.addSerial);
+
+  // ⭐ NUEVA RUTA MAESTRA PARA DASHBOARD:
+
+  app.get("/api/fa9/dashboard-master", isAuthenticated, Fa9Controller.getDashboardMaster);
 
   //Find the last six pieces builts
   app.get("/api/fa9/all/tabla/seisetiquetas", Fa9Controller.getLastSixLabels);
@@ -1420,6 +1427,9 @@ module.exports = function(app) {
 
   //Add Serial FA-13
   app.post("/api/fa13/serial", Fa13Controller.addSerial);
+
+  // ⭐ NUEVA RUTA MAESTRA PARA DASHBOARD FA-13:
+  app.get("/api/fa13/dashboard-master", isAuthenticated, Fa13Controller.getDashboardMaster);
 
   //Find the last six pieces builts
   app.get("/api/fa13/all/tabla/seisetiquetas", Fa13Controller.getLastSixLabels);

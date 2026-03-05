@@ -284,11 +284,112 @@ function checkAfterColon(str) {
   return afterColon.length === 55 && regex.test(afterColon);
 }
 
+async function getDashboardMaster(req, res) {
+  try {
+    // 1. Promesa: Últimas 6 etiquetas
+    const pLast6 = db.Fa11.findAll({
+      limit: 6,
+      order: [["createdAt", "DESC"]],
+    });
+
+    // 2. Promesas: Producción por hora (9 horas)
+    let pHoras = [];
+    for (let i = 0; i < 9; i++) {
+      let inicioX = moment().startOf("hour").subtract(i, "hour");
+      let fechainicial = inicioX.format("YYYY-MM-DD HH:mm:ss");
+      let fechafinal = moment().startOf("hour").subtract(i - 1, "hour").format("YYYY-MM-DD HH:mm:ss");
+      
+      let prom = db.Fa11.count({
+        where: { createdAt: { [Op.gte]: fechainicial, [Op.lte]: fechafinal } },
+        distinct: true, col: "serial"
+      }).then(count => ({
+        fecha: inicioX.format("X"), // Formato Unix que usa tu Front-End
+        producidas: count
+      }));
+      pHoras.push(prom);
+    }
+
+    // 3. Promesas: Producción por turnos (7 días)
+    let pTurnos = [];
+    let hFd = moment().startOf("isoweek").format("YYYY-MM-DD") + " 15:00:00";
+    let hId = moment(hFd).format("YYYY-MM-DD") + " 07:00:00";
+    let hFt = moment().startOf("isoweek").format("YYYY-MM-DD") + " 23:00:00";
+    let hIt = moment(hFt).format("YYYY-MM-DD") + " 15:00:00";
+    let hFn = moment().startOf("isoweek").format("YYYY-MM-DD") + " 07:00:00";
+    let hIn = moment(hFn).subtract(1, "day").format("YYYY-MM-DD") + " 23:00:00";
+
+    for (let i = 0; i < 7; i++) {
+      let x1i = moment(moment(hId).add(i, "day").format("YYYY-MM-DD") + " 07:00:00").format("YYYY-MM-DD HH:mm:ss");
+      let x1f = moment(moment(hFd).add(i, "day").format("YYYY-MM-DD") + " 15:00:00").format("YYYY-MM-DD HH:mm:ss");
+      let x2i = moment(moment(hIt).add(i, "day").format("YYYY-MM-DD") + " 15:00:00").format("YYYY-MM-DD HH:mm:ss");
+      let x2f = moment(moment(hFt).add(i, "day").format("YYYY-MM-DD") + " 23:00:00").format("YYYY-MM-DD HH:mm:ss");
+      let x3i = moment(moment(hIn).add(i, "day").format("YYYY-MM-DD") + " 23:00:00").format("YYYY-MM-DD HH:mm:ss");
+      let x3f = moment(moment(hFn).add(i, "day").format("YYYY-MM-DD") + " 07:00:00").format("YYYY-MM-DD HH:mm:ss");
+
+      pTurnos.push(db.Fa11.count({ where: { createdAt: { [Op.gte]: x1i, [Op.lte]: x1f } }, distinct: true, col: "serial" }).then(c => ({ turno: 1, dia: i, count: c })));
+      pTurnos.push(db.Fa11.count({ where: { createdAt: { [Op.gte]: x2i, [Op.lte]: x2f } }, distinct: true, col: "serial" }).then(c => ({ turno: 2, dia: i, count: c })));
+      pTurnos.push(db.Fa11.count({ where: { createdAt: { [Op.gte]: x3i, [Op.lte]: x3f } }, distinct: true, col: "serial" }).then(c => ({ turno: 3, dia: i, count: c })));
+    }
+
+    // 4. Promesas: Producción por semana (10 semanas)
+    let pSemanas = [];
+    for (let i = 9; i >= 0; i--) {
+      let fechaObj = moment().startOf("week").subtract(i, "weeks");
+      let fechainicial = fechaObj.format("YYYY-MM-DD HH:mm:ss");
+      let fechafinal = moment().endOf("week").subtract(i, "weeks").format("YYYY-MM-DD HH:mm:ss");
+
+      let prom = db.Fa11.count({
+        where: { createdAt: { [Op.gte]: fechainicial, [Op.lte]: fechafinal } },
+        distinct: true, col: "serial"
+      }).then(count => ({
+        semana: fechaObj.week(),
+        valor: count
+      }));
+      pSemanas.push(prom);
+    }
+
+    // 🚀 MAGIA SENIOR: Ejecutamos las 41 consultas simultáneamente en MySQL
+    const [ultimas6, produccionHora, turnosRaw, semanasRaw] = await Promise.all([
+      pLast6,
+      Promise.all(pHoras),
+      Promise.all(pTurnos),
+      Promise.all(pSemanas)
+    ]);
+
+    // Ordenamos la data para entregársela "masticada" al Front-End
+    let d1 = new Array(7).fill(0), d2 = new Array(7).fill(0), d3 = new Array(7).fill(0);
+    turnosRaw.forEach(res => {
+      if (res.turno === 1) d1[res.dia] = res.count;
+      if (res.turno === 2) d2[res.dia] = res.count;
+      if (res.turno === 3) d3[res.dia] = res.count;
+    });
+
+    let numSemana = semanasRaw.map(s => s.semana);
+    let datosSemana = semanasRaw.map(s => s.valor);
+
+    // Entregamos el "Carrito de Supermercado" lleno
+    res.status(200).json({
+      code: "200",
+      data: {
+        ultimas6,
+        produccionHora,
+        turnos: { d1, d2, d3 },
+        semanas: { numSemana, datosSemana }
+      }
+    });
+
+  } catch (error) {
+    console.error("Error en getDashboardMaster (FA11):", error);
+    res.status(500).json({ code: "500", message: "Error interno cargando dashboards" });
+  }
+}
+
 module.exports={
    addSerial,
    getLastSixLabels,
    productionPerHour,
    productionReport,
+   getDashboardMaster,
    
 
   }
