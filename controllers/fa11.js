@@ -282,9 +282,10 @@ function checkAfterColon(str) {
   return afterColon.length === 55 && regex.test(afterColon);
 }
 
-async function getDashboardMaster(req, res) {
+/*async function getDashboardMaster(req, res) {
   try {
     // 1. Promesa: Últimas 6 etiquetas
+    const TZ="America/Monterrey"; // Ajusta esto a tu zona horaria
     const pLast6 = db.Fa11.findAll({
       limit: 6,
       order: [["createdAt", "DESC"]],
@@ -366,6 +367,115 @@ async function getDashboardMaster(req, res) {
     let datosSemana = semanasRaw.map(s => s.valor);
 
     // Entregamos el "Carrito de Supermercado" lleno
+    res.status(200).json({
+      code: "200",
+      data: {
+        ultimas6,
+        produccionHora,
+        turnos: { d1, d2, d3 },
+        semanas: { numSemana, datosSemana }
+      }
+    });
+
+  } catch (error) {
+    console.error("Error en getDashboardMaster (FA11):", error);
+    res.status(500).json({ code: "500", message: "Error interno cargando dashboards" });
+  }
+}*/
+
+async function getDashboardMaster(req, res) {
+  try {
+    // Definimos la constante de la zona horaria como nuestra fuente de verdad
+    const TZ = "America/Monterrey";
+
+    // 1. Promesa: Últimas 6 etiquetas
+    const pLast6 = db.Fa11.findAll({
+      limit: 6,
+      order: [["createdAt", "DESC"]],
+    });
+
+    // 2. Promesas: Producción por hora (9 horas)
+    let pHoras = [];
+    for (let i = 0; i < 9; i++) {
+      // Calculamos TODO basado explícitamente en la hora de Monterrey
+      let inicioMty = moment().tz(TZ).startOf("hour").subtract(i, "hour");
+      let finMty = moment().tz(TZ).startOf("hour").subtract(i - 1, "hour");
+      
+      // Al usar .toDate(), Sequelize traduce la zona horaria por nosotros sin fallar
+      let prom = db.Fa11.count({
+        where: { createdAt: { [Op.gte]: inicioMty.toDate(), [Op.lt]: finMty.toDate() } },
+        distinct: true, col: "serial"
+      }).then(count => ({
+        fecha: inicioMty.format("X"), // Sigue siendo un timestamp Unix para el FrontEnd
+        producidas: count
+      }));
+      pHoras.push(prom);
+    }
+
+    // 3. Promesas: Producción por turnos (7 días)
+    let pTurnos = [];
+    // Inicio de la semana (Lunes) en Monterrey
+    let inicioSemanaMty = moment().tz(TZ).startOf("isoweek");
+
+    for (let i = 0; i < 7; i++) {
+      let diaActualStr = inicioSemanaMty.clone().add(i, "days").format("YYYY-MM-DD");
+      let diaAnteriorStr = inicioSemanaMty.clone().add(i - 1, "days").format("YYYY-MM-DD");
+
+      // Armamos la hora exacta en MTY y luego la convertimos a Date universal
+      // Nota: Usamos "YYYY-MM-DD HH:mm:ss" para decirle a moment exactamente qué leer
+      let t1Inicio = moment.tz(`${diaActualStr} 07:00:00`, "YYYY-MM-DD HH:mm:ss", TZ).toDate();
+      let t1Fin    = moment.tz(`${diaActualStr} 15:00:00`, "YYYY-MM-DD HH:mm:ss", TZ).toDate();
+
+      let t2Inicio = moment.tz(`${diaActualStr} 15:00:00`, "YYYY-MM-DD HH:mm:ss", TZ).toDate();
+      let t2Fin    = moment.tz(`${diaActualStr} 23:00:00`, "YYYY-MM-DD HH:mm:ss", TZ).toDate();
+
+      // El turno 3 empieza el día anterior a las 23:00
+      let t3Inicio = moment.tz(`${diaAnteriorStr} 23:00:00`, "YYYY-MM-DD HH:mm:ss", TZ).toDate();
+      let t3Fin    = moment.tz(`${diaActualStr} 07:00:00`, "YYYY-MM-DD HH:mm:ss", TZ).toDate();
+
+      // TIP: Usamos [Op.lt] (menor que) en lugar de [Op.lte] (menor o igual) para el fin del turno.
+      // Así evitamos que si una pieza se escanea exactamente a las 15:00:00, se cuente en ambos turnos.
+      pTurnos.push(db.Fa11.count({ where: { createdAt: { [Op.gte]: t1Inicio, [Op.lt]: t1Fin } }, distinct: true, col: "serial" }).then(c => ({ turno: 1, dia: i, count: c })));
+      pTurnos.push(db.Fa11.count({ where: { createdAt: { [Op.gte]: t2Inicio, [Op.lt]: t2Fin } }, distinct: true, col: "serial" }).then(c => ({ turno: 2, dia: i, count: c })));
+      pTurnos.push(db.Fa11.count({ where: { createdAt: { [Op.gte]: t3Inicio, [Op.lt]: t3Fin } }, distinct: true, col: "serial" }).then(c => ({ turno: 3, dia: i, count: c })));
+    }
+
+    // 4. Promesas: Producción por semana (10 semanas)
+    let pSemanas = [];
+    for (let i = 9; i >= 0; i--) {
+      let inicioSemana = moment().tz(TZ).startOf("week").subtract(i, "weeks");
+      let finSemana = moment().tz(TZ).endOf("week").subtract(i, "weeks");
+
+      let prom = db.Fa11.count({
+        where: { createdAt: { [Op.gte]: inicioSemana.toDate(), [Op.lt]: finSemana.toDate() } },
+        distinct: true, col: "serial"
+      }).then(count => ({
+        semana: inicioSemana.week(),
+        valor: count
+      }));
+      pSemanas.push(prom);
+    }
+
+    // Ejecutamos todo de golpe
+    const [ultimas6, produccionHora, turnosRaw, semanasRaw] = await Promise.all([
+      pLast6,
+      Promise.all(pHoras),
+      Promise.all(pTurnos),
+      Promise.all(pSemanas)
+    ]);
+
+    // Acomodamos arreglos para el FrontEnd
+    let d1 = new Array(7).fill(0), d2 = new Array(7).fill(0), d3 = new Array(7).fill(0);
+    turnosRaw.forEach(res => {
+      if (res.turno === 1) d1[res.dia] = res.count;
+      if (res.turno === 2) d2[res.dia] = res.count;
+      if (res.turno === 3) d3[res.dia] = res.count;
+    });
+
+    let numSemana = semanasRaw.map(s => s.semana);
+    let datosSemana = semanasRaw.map(s => s.valor);
+
+    // Respuesta
     res.status(200).json({
       code: "200",
       data: {
