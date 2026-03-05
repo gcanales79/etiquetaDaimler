@@ -11,7 +11,7 @@ async function getIntent(incomingText) {
   // Intentaremos con el modelo Lite primero, y si falla, usaremos el 1.5 Flash estable
   const modelsToTry = ["gemini-2.0-flash-lite-001", "gemini-1.5-flash"];
   
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
   const systemPrompt = `
 You are a bilingual (English and Spanish) Production Intent Router for a manufacturing plant in Monterrey, Mexico.
