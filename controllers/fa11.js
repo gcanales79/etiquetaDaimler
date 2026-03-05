@@ -458,7 +458,7 @@ async function getDashboardMaster(req, res) {
       // Obtenemos el número de semana (usamos el lunes para que cuadre con el calendario oficial)
       let numeroDeSemana = inicioSemana.clone().add(1, "days").week();
 
-      let prom = db.Fa11count({
+      let prom = db.Fa11.count({
         where: { createdAt: { [Op.gte]: inicioSemana.toDate(), [Op.lt]: finSemana.toDate() } },
         distinct: true, col: "serial"
       }).then(count => ({
