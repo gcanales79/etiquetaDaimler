@@ -443,19 +443,30 @@ async function getDashboardMaster(req, res) {
     // 4. Promesas: Producción por semana (10 semanas)
     let pSemanas = [];
     for (let i = 9; i >= 0; i--) {
-      let inicioSemana = moment().tz(TZ).startOf("week").subtract(i, "weeks");
-      let finSemana = moment().tz(TZ).endOf("week").subtract(i, "weeks");
+      // 1. Nos paramos en el Lunes de la semana que queremos calcular
+      // 2. Retrocedemos 1 día para caer en Domingo
+      // 3. Fijamos la hora exactamente a las 23:00:00
+      let inicioSemana = moment().tz(TZ)
+        .startOf("isoweek")
+        .subtract(i, "weeks")
+        .subtract(1, "days")
+        .hour(23).minute(0).second(0).millisecond(0);
 
-      let prom = db.Fa11.count({
+      // El fin de semana de producción es exactamente 7 días después (Siguiente domingo a las 23:00)
+      let finSemana = inicioSemana.clone().add(7, "days");
+
+      // Obtenemos el número de semana (usamos el lunes para que cuadre con el calendario oficial)
+      let numeroDeSemana = inicioSemana.clone().add(1, "days").week();
+
+      let prom = db.Fa13.count({
         where: { createdAt: { [Op.gte]: inicioSemana.toDate(), [Op.lt]: finSemana.toDate() } },
         distinct: true, col: "serial"
       }).then(count => ({
-        semana: inicioSemana.week(),
+        semana: numeroDeSemana,
         valor: count
       }));
       pSemanas.push(prom);
     }
-
     // Ejecutamos todo de golpe
     const [ultimas6, produccionHora, turnosRaw, semanasRaw] = await Promise.all([
       pLast6,
