@@ -150,54 +150,52 @@ function getLastSixLabels(req,res){
 }
 
 //Get production per hour
-function productionPerHour (req, res) {
-    let fechainicial = moment
+async function productionPerHour(req, res) {
+  try {
+    const fechainicial = moment
       .unix(req.params.fechainicial)
       .format("YYYY-MM-DD HH:mm:ss");
-    let fechafinal = moment
+    const fechafinal = moment
       .unix(req.params.fechafinal)
       .format("YYYY-MM-DD HH:mm:ss");
-    //console.log(fechainicial)
-    //console.log(fechafinal)
-    //console.log(req.params.fechafinal)
-    db.Fa11.count()
-      .then((count) => {
-        // console.log(count)
-        db.Fa11.findAndCountAll({
-          where: {
-           /* id: {
-              [Op.gte]: count * 0,
-            },*/
-            createdAt: {
-              [Op.gte]: fechainicial,
-              [Op.lte]: fechafinal,
-            },
-            //Le agregue esto para que no cuente las cambiadas
-          },
-          distinct: true,
-          col: "serial",
-        })
-          .then((data) => {
-            //console.log(data)
-            if (!data) {
-             return res
-                .status(404)
-                .send({ message: "Datos no encontrados", alert: "Error" });
-            } else {
-              return res.status(200).send({ data: data, alert: "Success" });
-            }
-          })
-          .catch(function(err) {
-           return res
-              .status(500)
-              .send({ message: "Error de servidor", err: err, alert: "Error" });
-          });
-      })
-      .catch((err) => {
-        console.log(err);
-        return
+
+    // Usamos await para esperar los resultados de la DB de forma limpia
+    // Nota: Si no usas 'count' para nada más, podrías omitir la primera llamada
+    await db.Fa11.count(); 
+
+    const data = await db.Fa11.findAndCountAll({
+      where: {
+        createdAt: {
+          [Op.gte]: fechainicial,
+          [Op.lte]: fechafinal,
+        },
+      },
+      distinct: true,
+      col: "serial",
+    });
+
+    if (!data) {
+      return res.status(404).send({ 
+        message: "Datos no encontrados", 
+        alert: "Error" 
       });
-  };
+    }
+
+    return res.status(200).send({ 
+      data: data, 
+      alert: "Success" 
+    });
+
+  } catch (err) {
+    // IMPORTANTE: Siempre enviar una respuesta en caso de error
+    console.error("Error en productionPerHour:", err);
+    return res.status(500).send({ 
+      message: "Error de servidor", 
+      err: err.message, 
+      alert: "Error" 
+    });
+  }
+}
 
 
 //* SMS Produccion del turno
