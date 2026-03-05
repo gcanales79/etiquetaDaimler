@@ -14,6 +14,7 @@ const sgMail = require("@sendgrid/mail");
 var isAuthenticated = require("../config/middleware/isAuthenticated");
 const LineController = require("../controllers/linea");
 const Fa1Controller = require("../controllers/fa1");
+const Fa1Controller = require("../controllers/daimler");
 const Fa9Controller = require("../controllers/fa9");
 const Fa11Controller = require("../controllers/fa11");
 const Fa13Controller = require("../controllers/fa13");
@@ -230,6 +231,8 @@ module.exports = function(app) {
         .send({ code: "500", message: "Error de servidor" });
     }
   });
+
+  app.get("/api/daimler/dashboardmaster", isAuthenticated, getDaimlerDashboardMaster);
 
   // Get all examples
   app.get("/api/:serial", function(req, res) {

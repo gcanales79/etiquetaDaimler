@@ -1,8 +1,21 @@
-$(document).ready(function() {
-  getLast6();
-  produccionPorhora();
-  produccionTurnos();
-  produccionPorsemana();
+$(document).ready(function () {
+  // Caché de selectores
+  const $spanLogo = $("#spanLogoResultado");
+  const $msgBueno = $("#mensajeResultadoBueno");
+  const $msgMalo = $("#mensajeResultadoMalo");
+  const $serialInput = $("#serialEtiqueta");
+  const $btnSubmit = $("#submit");
+  const $btnContainer = $("#buttonResultado");
+  const $resultadoContenedor = $("#Resultado");
+  const $tablaDe6 = $("#tablaDe6");
+  const $tablaHora = $("#tablaHora");
+
+  // Configuración de Moment Timezone
+  const TZ_DATA = "America/Monterrey|LMT CST CDT|6F.g 60 50|0121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-1UQG0 2FjC0 1nX0 i6p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 1fB0 WL0 1fB0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0|41e5";
+  moment.tz.add(TZ_DATA);
+
+  // Inicialización
+  actualizarDashboards();
 
   $("#exampleModal").modal({
     show: false,
@@ -10,30 +23,84 @@ $(document).ready(function() {
     keyboard: false,
   });
 
+  // ── FUNCIONES DE AYUDA ──
+  function limpiarMensajes() {
+    $spanLogo.removeClass("fa fa-ban ban fa-check-circle check");
+    $msgBueno.empty();
+    $msgMalo.empty();
+    $resultadoContenedor.find(".comentario").remove();
+  }
+
+  function revisarNumerodeParte(nuevoSerial) {
+    let ultimaEtiqueta = localStorage.getItem("ultimaEtiqueta");
+    var numeroDepartePasado = ultimaEtiqueta ? ultimaEtiqueta.slice(0, 10) : null;
+    let numeroDeparteNuevo = nuevoSerial.slice(0, 10);
+    if (numeroDepartePasado && numeroDepartePasado !== numeroDeparteNuevo) {
+      $("#exampleModal").modal("show");
+    }
+  }
+
+  // ── FUNCIÓN MAESTRA DEL DASHBOARD ──
+  function actualizarDashboards() {
+    $.get("/api/daimler/dashboard-master") // <-- Asegúrate de que esta ruta coincida con tu backend
+      .then((respuesta) => {
+        const { data } = respuesta;
+
+        // 1. Renderizar Últimas 6 (OJO: Daimler usa item.serial)
+        $tablaDe6.empty();
+        data.ultimas6.forEach(item => {
+          const resultadoIcono = item.repetida ? "fa fa-ban ban" : "fa fa-check-circle check";
+          const fechaCreacion = moment(item.createdAt).tz("America/Monterrey").format("DD/MM/YYYY hh:mm:ss a");
+          $tablaDe6.prepend(`
+            <tr>
+              <th scope='row'>${item.serial}</th>
+              <td><span class="${resultadoIcono}"></span></td>
+              <td>${fechaCreacion}</td>
+            </tr>
+          `);
+        });
+
+        // 2. Renderizar Producción por hora
+        const produccion = data.produccionHora.sort((a, b) => b.fecha > a.fecha ? -1 : a.fecha > b.fecha ? 1 : 0);
+        $tablaHora.empty();
+        produccion.forEach(prod => {
+          let hora = moment.unix(prod.fecha).format("h:mm a");
+          let horafinal = moment.unix(prod.fecha).add(1, "hour").format("h:mm a");
+          $tablaHora.prepend(`<tr><th scope='row'>${hora} a ${horafinal}</th><td>${prod.producidas}</td></tr>`);
+        });
+
+        // 3. Renderizar Gráfica de Turnos
+        graficaProduccion(data.turnos.d1, data.turnos.d2, data.turnos.d3);
+
+        // 4. Renderizar Gráfica de Semanas
+        let mejorSemana = Math.max(...data.semanas.datosSemana);
+        $("#mejorSemana").text(mejorSemana);
+        $("#semanaActual").text(data.semanas.datosSemana[data.semanas.datosSemana.length - 1]);
+        graficaProduccionsemana(data.semanas.datosSemana, data.semanas.numSemana);
+      })
+      .fail((error) => {
+        console.error("Error al cargar el Dashboard Maestro de Daimler", error);
+      });
+  }
+
   // ── Submit serial ──
   // Usamos el nuevo endpoint /api/daimler/serial que hace TODO en el servidor:
   // busca si existe, marca repetida, crea registro y notifica por WhatsApp.
   // Así evitamos la race condition del GET+POST anterior que causaba duplicados.
-  $("#submit").on("click", function(event) {
+  $("#submit").on("click", function (event) {
     event.preventDefault();
 
-   
 
     // Deshabilitar botón inmediatamente para evitar doble click / scanner rápido
-    $("#submit").prop("disabled", true);
-
-    $("#spanLogoResultado").removeClass(
-      "fa fa-ban ban fa fa-check-circle check",
-    );
-    $("#mensajeResultadoBueno").empty();
-    $("#mensajeResultadoMalo").empty();
+    $btnSubmit.prop("disabled", true);
+    limpiarMensajes();
 
     var nuevoSerial = $("#serialEtiqueta")
       .val()
       .trim();
     var primNumeros = nuevoSerial.substring(0, 6);
 
-     // ← TEMPORAL: quita esto después de confirmar
+    // ← TEMPORAL: quita esto después de confirmar
     //console.log("Serial recibido:", JSON.stringify(nuevoSerial));
     //console.log("Longitud:", nuevoSerial.length);
     //console.log("Primeros 6:", nuevoSerial.substring(0, 6));
@@ -53,8 +120,8 @@ $(document).ready(function() {
       $("<div>")
         .text("La etiqueta debe ser de 22 dígitos o tiene el inicio incorrecto")
         .attr("class", "comentario")
-        .appendTo("#Resultado");
-      $("#submit").prop("disabled", false);
+        .appendTo($resultadoContenedor);
+      $btnSubmit.prop("disabled", false);
       return;
     }
 
@@ -63,81 +130,59 @@ $(document).ready(function() {
       .then((data) => {
         switch (data.code) {
           case "200":
-            // ── Etiqueta correcta ──
-            $("#spanLogoResultado").addClass("fa fa-check-circle check");
-            $("#mensajeResultadoBueno").text(data.message);
-            setTimeout(function() {
-              $("#serialEtiqueta").val("");
-              $("#spanLogoResultado").removeClass(
-                "fa fa-ban ban fa fa-check-circle check",
-              );
-              $("#mensajeResultadoBueno").empty();
-              $("#mensajeResultadoMalo").empty();
-              $("#submit").prop("disabled", false); // Re-habilitar para siguiente scan
+            $spanLogo.addClass("fa fa-check-circle check");
+            $msgBueno.text(data.message);
+            setTimeout(() => {
+              $serialInput.val("");
+              limpiarMensajes();
+              $btnSubmit.prop("disabled", false);
             }, 2000);
-            getLast6();
-            produccionPorhora();
-            produccionTurnos();
-            produccionPorsemana();
             break;
 
           case "400":
-            // ── Serial repetido ──
-            $("#spanLogoResultado").addClass("fa fa-ban ban");
-            $("#mensajeResultadoMalo").text(data.message);
-            var newButton = $("<button>")
-              .attr("class", "btn btn-primary")
-              .attr("type", "submit")
-              .attr("id", "cambioDeetiqueta")
-              .text("Pieza Segregada");
-            $("#buttonResultado").append(newButton);
-            // El botón submit queda deshabilitado hasta que confirmen la segregación
-            getLast6();
-            produccionPorhora();
-            produccionTurnos();
-            produccionPorsemana();
+            $spanLogo.addClass("fa fa-ban ban");
+            $msgMalo.text(data.message);
+            var $newButton = $("<button>", {
+              class: "btn btn-primary",
+              type: "submit",
+              id: "cambioDeetiqueta",
+              text: "Pieza Segregada"
+            });
+            $btnContainer.append($newButton);
+            // Submit sigue deshabilitado
             break;
 
           case "500":
-            // ── Error de servidor ──
-            $("#mensajeResultadoMalo").text(data.message);
-            $("#spanLogoResultado").addClass("fa fa-ban ban");
-            setTimeout(function() {
-              $("#serialEtiqueta").val("");
-              $("#spanLogoResultado").removeClass(
-                "fa fa-ban ban fa fa-check-circle check",
-              );
-              $("#mensajeResultadoBueno").empty();
-              $("#mensajeResultadoMalo").empty();
-              $("#submit").prop("disabled", false);
+            $msgMalo.text(data.message);
+            $spanLogo.addClass("fa fa-ban ban");
+            setTimeout(() => {
+              $serialInput.val("");
+              limpiarMensajes();
+              $btnSubmit.prop("disabled", false);
             }, 3000);
-            getLast6();
-            produccionPorhora();
-            produccionTurnos();
-            produccionPorsemana();
             break;
         }
+        // Actualizar dashboard solo si hay conexión exitosa
+        actualizarDashboards();
       })
-      .fail(function() {
-        // Si el servidor no responde (red caída, etc.)
-        $("#mensajeResultadoMalo").text("Error de conexión. Intenta de nuevo.");
-        $("#spanLogoResultado").addClass("fa fa-ban ban");
-        $("#submit").prop("disabled", false);
+      .fail(() => {
+        $msgMalo.text("Error de conexión. Intenta de nuevo.");
+        $spanLogo.addClass("fa fa-ban ban");
+        $btnSubmit.prop("disabled", false);
       });
   });
 
   // Al confirmar segregación de pieza repetida
-  $(document).on("click", "#cambioDeetiqueta", function(event) {
+  $(document).on("click", "#cambioDeetiqueta", function (event) {
     event.preventDefault();
-    $("#serialEtiqueta").val("");
-    $("#spanLogoResultado").removeClass(
-      "fa fa-ban ban fa fa-check-circle check",
-    );
-    $("#mensajeResultadoBueno").empty();
-    $("#mensajeResultadoMalo").empty();
-    $("#buttonResultado").empty();
-    $("#submit").prop("disabled", false);
-    getLast6();
+    $serialInput.val("");
+    limpiarMensajes();
+    $btnContainer.empty();
+    $btnSubmit.prop("disabled", false);
+
+    // Aquí es suficiente con llamar a actualizarDashboards(), 
+    // pero si solo quieres las últimas 6, puedes dejar que esta acción repinte todo por seguridad.
+    actualizarDashboards();
   });
 
   // ── Compara número de parte (primeros 10 chars) con última etiqueta ──
@@ -152,58 +197,10 @@ $(document).ready(function() {
     }
   }
 
-  // ── Últimas 6 etiquetas ──
-  const TZ_DATA =
-    "America/Monterrey|LMT CST CDT|6F.g 60 50|0121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-1UQG0 2FjC0 1nX0 i6p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 1fB0 WL0 1fB0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0|41e5";
 
-  function getLast6() {
-    $("#tablaDe6").empty();
-    $.get("/api/all/tabla/seisetiquetas", function(datos) {
-      const { data } = datos;
-      moment.tz.add(TZ_DATA);
-      for (var i = 0; i < data.length; i++) {
-        var icon = data[i].repetida
-          ? "'fa fa-ban ban'"
-          : "'fa fa-check-circle check'";
-        var fecha = moment(data[i].createdAt)
-          .tz("America/Monterrey")
-          .format("DD/MM/YYYY hh:mm:ss a");
-        $("#tablaDe6").prepend(
-          "<tr><th scope='row'>" +
-            data[i].serial +
-            "</th><td><span class=" +
-            icon +
-            "></span></td><td>" +
-            fecha +
-            "</td></tr>",
-        );
-      }
-      $("input[type='checkbox']")
-        .not(".modal input, form input")
-        .remove();
-    });
-  }
+ 
 
-  // ── Producción por hora ──
-  function produccionPorhora() {
-    let produccion = [];
-    for (let i = 0; i < 9; i++) {
-      let fechainicial = moment()
-        .startOf("hour")
-        .subtract(i, "hour")
-        .format("X");
-      let fechafinal = moment()
-        .startOf("hour")
-        .subtract(i - 1, "hour")
-        .format("X");
-      $.get("/produccionhora/" + fechainicial + "/" + fechafinal, function(
-        datos,
-      ) {
-        produccion.push({ fecha: fechainicial, producidas: datos.data.count });
-        tablaProduccion(produccion);
-      });
-    }
-  }
+ 
 
   function tablaProduccion(produccion) {
     produccion.sort((a, b) =>
@@ -218,12 +215,12 @@ $(document).ready(function() {
         .format("h:mm a");
       $("#tablaHora").prepend(
         "<tr><th scope='row'>" +
-          hora +
-          " a " +
-          horafinal +
-          "</th><td>" +
-          produccion[i].producidas +
-          "</td></tr>",
+        hora +
+        " a " +
+        horafinal +
+        "</th><td>" +
+        produccion[i].producidas +
+        "</td></tr>",
       );
     }
   }
@@ -361,117 +358,18 @@ $(document).ready(function() {
             },
           ],
         },
-        options: chartOptions(function() {
+        options: chartOptions(function () {
           $("#loadingTurno").hide();
         }),
       });
     }
   }
 
-  function produccionTurnos() {
-    let d1 = [],
-      d2 = [],
-      d3 = [];
-    let hFd =
-      moment()
-        .startOf("isoweek")
-        .format("YYYY-MM-DD") + " 15:00:00";
-    let hId = moment(hFd).format("YYYY-MM-DD") + " 07:00:00";
-    let hFt =
-      moment()
-        .startOf("isoweek")
-        .format("YYYY-MM-DD") + " 23:00:00";
-    let hIt = moment(hFt).format("YYYY-MM-DD") + " 15:00:00";
-    let hFn =
-      moment()
-        .startOf("isoweek")
-        .format("YYYY-MM-DD") + " 07:00:00";
-    let hIn =
-      moment(hFn)
-        .subtract(1, "day")
-        .format("YYYY-MM-DD") + " 23:00:00";
-    for (let i = 0; i < 7; i++) {
-      let x1i = moment(
-        moment(hId)
-          .add(i, "day")
-          .format("YYYY-MM-DD") + " 07:00:00",
-      ).format("X");
-      let x1f = moment(
-        moment(hFd)
-          .add(i, "day")
-          .format("YYYY-MM-DD") + " 15:00:00",
-      ).format("X");
-      let x2i = moment(
-        moment(hIt)
-          .add(i, "day")
-          .format("YYYY-MM-DD") + " 15:00:00",
-      ).format("X");
-      let x2f = moment(
-        moment(hFt)
-          .add(i, "day")
-          .format("YYYY-MM-DD") + " 23:00:00",
-      ).format("X");
-      let x3i = moment(
-        moment(hIn)
-          .add(i, "day")
-          .format("YYYY-MM-DD") + " 23:00:00",
-      ).format("X");
-      let x3f = moment(
-        moment(hFn)
-          .add(i, "day")
-          .format("YYYY-MM-DD") + " 07:00:00",
-      ).format("X");
-      $.when(
-        $.get("/produccionhora/" + x1i + "/" + x1f, function(d) {
-          d1.splice(i, 0, d.data.count);
-        }),
-        $.get("/produccionhora/" + x2i + "/" + x2f, function(d) {
-          d2.splice(i, 0, d.data.count);
-        }),
-        $.get("/produccionhora/" + x3i + "/" + x3f, function(d) {
-          d3.splice(i, 0, d.data.count);
-        }),
-      ).then(function() {
-        graficaProduccion(d1, d2, d3);
-      });
-    }
-  }
+ 
 
   // ── Gráfica por semana ──
   var myChart2;
-  function produccionPorsemana() {
-    let datosSemana = [],
-      numSemana = [],
-      datos = [];
-    for (let i = 9; i >= 0; i--) {
-      let fecha = moment()
-        .startOf("week")
-        .subtract(i, "weeks");
-      let fechainicial = fecha.format("X");
-      let fechafinal = moment()
-        .endOf("week")
-        .subtract(i, "weeks")
-        .format("X");
-      numSemana.splice(9 - i, 0, moment(fecha).week());
-      $.when(
-        $.get("/produccionhora/" + fechainicial + "/" + fechafinal, function(
-          info,
-        ) {
-          datos.push({ semana: moment(fecha).week(), valor: info.data.count });
-        }),
-      ).then(function() {
-        if (datos.length === 10) {
-          for (let i = 0; i < numSemana.length; i++)
-            for (let j = 0; j < datos.length; j++)
-              if (numSemana[i] === datos[j].semana)
-                datosSemana.push(datos[j].valor);
-          $("#mejorSemana").text(Math.max(...datosSemana));
-          $("#semanaActual").text(datosSemana[datosSemana.length - 1]);
-          graficaProduccionsemana(datosSemana, numSemana);
-        }
-      });
-    }
-  }
+
 
   function graficaProduccionsemana(datosSemana, numSemana) {
     if (myChart2) myChart2.destroy();
@@ -491,7 +389,7 @@ $(document).ready(function() {
             },
           ],
         },
-        options: chartOptions(function() {
+        options: chartOptions(function () {
           $("#loadingSemana").hide();
         }),
       });
