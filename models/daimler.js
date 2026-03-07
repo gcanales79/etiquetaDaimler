@@ -22,6 +22,15 @@ module.exports = function (sequelize, DataTypes) {
     },
     
     
+  },{
+    indexes:[
+    {
+      name: 'idx_createdAt_desc',
+      fields: ['createdAt'],
+      using: 'BTREE',
+      order: 'DESC' // Indica que el índice ya esté ordenado de forma descendente
+    }
+    ]
   });
 
 
