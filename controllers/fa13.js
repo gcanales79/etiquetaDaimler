@@ -8,109 +8,63 @@ const client = require("twilio")(accountSid, authToken);
 
 
 //Add a new label
-function addSerial(req, res) {
+async function addSerial(req, res) {
   const { serial } = req.body;
-  if (checkAfterColon(serial)) {
-    let numero_parte = serial.substring(
-      serial.indexOf("P") + 1,
-      serial.indexOf("P") + 9
-    );
-    //console.log(numero_parte);
-    //console.log(-1*serial.length+14)
-    //!Aqui iria desde donde se quiere tomar numero de serie a partir de la derecha
-    //let numero_serie=serial.slice(-14);
-    //console.log(`El numero de serie es ${numero_serie}`);
-    db.Numeropt.findOne({
+
+  if (!checkAfterColon(serial)) {
+    return res.send({ code: "400", message: "Formato de etiqueta incorrecto" });
+  }
+
+  try {
+    const numero_parte = serial.substring(serial.indexOf("P") + 1, serial.indexOf("P") + 9);
+    const numero_serie = serial.slice(-14);
+
+    const partResponse = await db.Numeropt.findOne({
       where: {
-        linea: {
-          [Op.eq]: "FA-13",
-        },
-        numero_parte: {
-          [Op.eq]: numero_parte,
-        },
+        linea: "FA-13", // Cambiado para FA13
+        numero_parte: numero_parte,
       },
-    })
-      .then((response) => {
-        //console.log(response)
-        if (!response) {
-          return res.send({
-            code: "400",
-            message: "El número de parte no esta dado de alta en la línea",
-          });
-        } else {
-          //res.status(200).send({code:"200", message:"Número encontrado" })
-          /*if(serial.length!=parseInt(response.largo_etiqueta)){
-                return res.send({code:"400", message: "Etiqueta no tiene el largo correcto"})
-              }*/
-          /*else{*/
-          //!Cambiar esto si se utilizan los datos del NP
-          //let numero_parte=serial.substring(parseInt(response.izq_etiqueta),parseInt(response.izq_etiqueta)+parseInt(response.largo_numero_parte));
-          //let numero_serie=serial.slice(-1*parseInt(response.der_etiqueta))
-          let numero_serie = serial.slice(-14);
-          db.Fa13.create({
-            serial: serial,
-            numero_parte: numero_parte,
-            numero_serie: numero_serie,
-          })
-            .then((serialStored) => {
-              if (!serialStored) {
-                console.log("Error en crear el NP");
-                return res.send({ code: "500", message: "Error de servidor" });
-              } else {
-                res.send({
-                  code: "200",
-                  serialStored: serialStored,
-                  message: "Etiqueta correcta",
-                });
-              }
-            })
-            .catch((err) => {
-              //res.status(500).send({code:"500", message:"Error de servidor",err:err})
-              for (let i = 0; i < err.errors.length; i++) {
-                if (err.errors[i].message == "numero_serie must be unique") {
-                  db.Fa13.update(
-                    {
-                      repetida: true,
-                    },
-                    {
-                      where: {
-                        serial: serial,
-                      },
-                    }
-                  )
-                    .then((labelUpdate) => {
-                      if (!labelUpdate) {
-                        return res.send({
-                          code: "400",
-                          message: "Etiqueta no encontrada",
-                        });
-                      } else {
-                        return res.send({
-                          code: "400",
-                          message: "Numero de serie repetido",
-                        });
-                      }
-                    })
-                    .catch((err) => {
-                      console.log(err);
-                      return res.send({
-                        code: "500",
-                        message: "Error del servidor",
-                      });
-                    });
-                } else {
-                  console.log(err.errors[i].message);
-                }
-              }
-            });
-          /*}*/
-        }
-      })
-      .catch((err) => {
-        res.send({ code: "500", message: "Error de servidor", err: err });
+      raw: true
+    });
+
+    if (!partResponse) {
+      return res.send({
+        code: "400",
+        message: "Número de parte no válido para la línea FA-13",
       });
-  } else {
-    res.send({code:"400",message:"La etiqueta no tiene el formato correcto"})
+    }
+
+    try {
+      const serialStored = await db.Fa13.create({
+        serial: serial,
+        numero_parte: numero_parte,
+        numero_serie: numero_serie,
+      });
+
+      return res.send({
+        code: "200",
+        serialStored: serialStored,
+        message: "Etiqueta procesada exitosamente en FA-13",
+      });
+
+    } catch (err) {
+      if (err.name === 'SequelizeUniqueConstraintError') {
+        await db.Fa13.update(
+          { repetida: true },
+          { where: { numero_serie: numero_serie } }
+        );
+        
+        return res.send({
+          code: "400",
+          message: "Este número de serie ya existe en FA-13",
+        });
+      }
+      throw err;
+    }
+
+  } catch (error) {
+    console.error("Error en FA13 addSerial:", error);
+    return res.status(500).send({ code: "500", message: "Error de servidor" });
   }
 }
 
