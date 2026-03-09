@@ -19,12 +19,12 @@ $(document).ready(function () {
     if (typeof ES_ADMIN !== 'undefined' && ES_ADMIN) {
         
         let timerInactividad;
-        const TIEMPO_ESPERA = 60000; // 1 minuto
+        const TIEMPO_ESPERA = 300000; // 5 minuto
 
         function iniciarReloj() {
             clearTimeout(timerInactividad);
             timerInactividad = setTimeout(() => {
-                console.log("Admin inactivo: Actualizando datos...");
+                //console.log("Admin inactivo: Actualizando datos...");
                 actualizarTodosLosDashboards();
                 iniciarReloj(); // Reiniciamos para la siguiente hora
             }, TIEMPO_ESPERA);
@@ -39,9 +39,9 @@ $(document).ready(function () {
             iniciarReloj(); 
         });
 
-        console.log("🚀 Sistema de auto-refresco activado para Administrador.");
+        //console.log("🚀 Sistema de auto-refresco activado para Administrador.");
     } else {
-        console.log("🔒 Modo Operador: Refresco automático deshabilitado.");
+        //console.log("🔒 Modo Operador: Refresco automático deshabilitado.");
     }
 
 

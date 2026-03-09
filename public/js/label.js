@@ -14,6 +14,35 @@ $(document).ready(function () {
   const TZ_DATA = "America/Monterrey|LMT CST CDT|6F.g 60 50|0121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-1UQG0 2FjC0 1nX0 i6p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 1fB0 WL0 1fB0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0|41e5";
   moment.tz.add(TZ_DATA);
 
+  // Solo configuramos el temporizador si la variable ES_ADMIN es verdadera
+    if (typeof ES_ADMIN !== 'undefined' && ES_ADMIN) {
+        
+        let timerInactividad;
+        const TIEMPO_ESPERA = 300000; // 5 minuto
+
+        function iniciarReloj() {
+            clearTimeout(timerInactividad);
+            timerInactividad = setTimeout(() => {
+                //console.log("Admin inactivo: Actualizando datos...");
+                actualizarTodosLosDashboards();
+                iniciarReloj(); // Reiniciamos para la siguiente hora
+            }, TIEMPO_ESPERA);
+        }
+
+        // Iniciamos el proceso
+        iniciarReloj();
+
+        // Si el admin empieza a escribir en el buscador o en el serial,
+        // pausamos el refresco para no interrumpir su trabajo.
+        $(document).on("keyup click", function() {
+            iniciarReloj(); 
+        });
+
+        //console.log("🚀 Sistema de auto-refresco activado para Administrador.");
+    } else {
+        //console.log("🔒 Modo Operador: Refresco automático deshabilitado.");
+    }
+
   // Inicialización
   actualizarDashboards();
 
