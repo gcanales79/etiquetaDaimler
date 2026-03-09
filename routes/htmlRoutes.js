@@ -173,8 +173,11 @@ module.exports = function(app) {
     ) {
       res.status(200);
       db.Fa9.findAll({
+         attributes:["id","serial","createdAt"],
         limit: 6,
         order: [["createdAt", "DESC"]],
+         raw:true,
+        nest:true
       }).then(function(response) {
         let jsfile = [
           {
@@ -191,7 +194,10 @@ module.exports = function(app) {
           etiqueta: response,
           jsfile: jsfile,
         });
-      });
+      }).catch(err=>{
+        console.log("Error al cargar la página de producción:", err);
+        res.status("500").render("404");
+      });;
     } else {
       res.render("404");
     }
