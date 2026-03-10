@@ -86,12 +86,19 @@ $(document).ready(function () {
         });
 
         // 2. Renderizar Producción por hora
-        const produccion = data.produccionHora.sort((a, b) => b.fecha > a.fecha ? -1 : a.fecha > b.fecha ? 1 : 0);
+       // Explicación: Number() asegura que comparemos matemáticamente. 
+        // a - b garantiza un orden Ascendente estricto (de más antiguo a más reciente).
+        const produccion = data.produccionHora.sort((a, b) => Number(a.fecha) - Number(b.fecha));
+        
         $tablaHora.empty();
+        
         produccion.forEach(prod => {
           let hora = moment.unix(prod.fecha).format("h:mm a");
           let horafinal = moment.unix(prod.fecha).add(1, "hour").format("h:mm a");
-          $tablaHora.prepend(`<tr><th scope='row'>${hora} a ${horafinal}</th><td>${prod.producidas}</td></tr>`);
+          
+          // Explicación: Cambiamos prepend() por append() para respetar el orden visual natural
+          // insertando los renglones uno debajo del otro.
+          $tablaHora.append(`<tr><th scope='row'>${hora} a ${horafinal}</th><td>${prod.producidas}</td></tr>`);
         });
 
         // 3. Renderizar Gráfica de Turnos

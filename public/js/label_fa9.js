@@ -12,34 +12,34 @@ $(document).ready(function () {
   const TZ_DATA = "America/Monterrey|LMT CST CDT|6F.g 60 50|0121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-1UQG0 2FjC0 1nX0 i6p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 1fB0 WL0 1fB0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0|41e5";
   moment.tz.add(TZ_DATA); // Inyectamos la zona horaria antes de usarla
 
-   // Solo configuramos el temporizador si la variable ES_ADMIN es verdadera
-    if (typeof ES_ADMIN !== 'undefined' && ES_ADMIN) {
-        
-        let timerInactividad;
-        const TIEMPO_ESPERA = 300000; // 5 minuto
+  // Solo configuramos el temporizador si la variable ES_ADMIN es verdadera
+  if (typeof ES_ADMIN !== 'undefined' && ES_ADMIN) {
 
-        function iniciarReloj() {
-            clearTimeout(timerInactividad);
-            timerInactividad = setTimeout(() => {
-                //console.log("Admin inactivo: Actualizando datos...");
-                actualizarTodosLosDashboards();
-                iniciarReloj(); // Reiniciamos para la siguiente hora
-            }, TIEMPO_ESPERA);
-        }
+    let timerInactividad;
+    const TIEMPO_ESPERA = 300000; // 5 minuto
 
-        // Iniciamos el proceso
-        iniciarReloj();
-
-        // Si el admin empieza a escribir en el buscador o en el serial,
-        // pausamos el refresco para no interrumpir su trabajo.
-        $(document).on("keyup click", function() {
-            iniciarReloj(); 
-        });
-
-        //console.log("🚀 Sistema de auto-refresco activado para Administrador.");
-    } else {
-        //console.log("🔒 Modo Operador: Refresco automático deshabilitado.");
+    function iniciarReloj() {
+      clearTimeout(timerInactividad);
+      timerInactividad = setTimeout(() => {
+        //console.log("Admin inactivo: Actualizando datos...");
+        actualizarTodosLosDashboards();
+        iniciarReloj(); // Reiniciamos para la siguiente hora
+      }, TIEMPO_ESPERA);
     }
+
+    // Iniciamos el proceso
+    iniciarReloj();
+
+    // Si el admin empieza a escribir en el buscador o en el serial,
+    // pausamos el refresco para no interrumpir su trabajo.
+    $(document).on("keyup click", function () {
+      iniciarReloj();
+    });
+
+    //console.log("🚀 Sistema de auto-refresco activado para Administrador.");
+  } else {
+    //console.log("🔒 Modo Operador: Refresco automático deshabilitado.");
+  }
 
   // Inicialización
   actualizarDashboards();
@@ -64,7 +64,7 @@ $(document).ready(function () {
         data.ultimas6.forEach(item => {
           const resultadoIcono = item.repetida ? "fa fa-ban ban" : "fa fa-check-circle check";
           const fechaCreacion = moment(item.createdAt).tz("America/Monterrey").format("DD/MM/YYYY hh:mm:ss a");
-          
+
           $tablaDe6.prepend(`
             <tr>
               <th scope='row'>${item.numero_serie}</th>
@@ -75,12 +75,19 @@ $(document).ready(function () {
         });
 
         // 2. Renderizar Producción por hora
-        const produccion = data.produccionHora.sort((a, b) => b.fecha > a.fecha ? -1 : a.fecha > b.fecha ? 1 : 0);
+        // Explicación: Number() asegura que comparemos matemáticamente. 
+        // a - b garantiza un orden Ascendente estricto (de más antiguo a más reciente).
+        const produccion = data.produccionHora.sort((a, b) => Number(a.fecha) - Number(b.fecha));
+
         $tablaHora.empty();
+
         produccion.forEach(prod => {
           let hora = moment.unix(prod.fecha).format("h:mm a");
           let horafinal = moment.unix(prod.fecha).add(1, "hour").format("h:mm a");
-          $tablaHora.prepend(`<tr><th scope='row'>${hora} a ${horafinal}</th><td>${prod.producidas}</td></tr>`);
+
+          // Explicación: Cambiamos prepend() por append() para respetar el orden visual natural
+          // insertando los renglones uno debajo del otro.
+          $tablaHora.append(`<tr><th scope='row'>${hora} a ${horafinal}</th><td>${prod.producidas}</td></tr>`);
         });
 
         // 3. Renderizar Gráfica de Turnos
@@ -161,9 +168,9 @@ $(document).ready(function () {
     getLast6();
   });
 
- 
 
- 
+
+
 
   // Helpers de tiempo y gráfica... (turnoActual, diaActual, chartColors, chartOptions se mantienen igual)
   function turnoActual() {
