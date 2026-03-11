@@ -1483,6 +1483,10 @@ module.exports = function(app) {
   //Add Serial FA-1
   app.post("/api/fa1/serial", Fa1Controller.addSerial);
 
+   // ⭐ NUEVA RUTA MAESTRA PARA DASHBOARD:
+
+  app.get("/api/fa1/dashboard-master", isAuthenticated, Fa1Controller.getDashboardMaster);
+
   // ⭐ NUEVA RUTA MAESTRA PARA DASHBOARD:
   app.get("/api/fa11/dashboard-master", isAuthenticated,Fa11Controller.getDashboardMaster);
 
