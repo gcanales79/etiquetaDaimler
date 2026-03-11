@@ -17,6 +17,8 @@ async function addSerial(req, res) {
 
   try {
     const numero_parte = serial.substring(serial.indexOf("P") + 1, serial.indexOf("P") + 9);
+
+    let sufijoEscaneado = serial.charAt(serial.indexOf("P") - 1)
     
     // 1. Búsqueda optimizada del Número de Parte
     const response = await db.Numeropt.findOne({
@@ -27,6 +29,26 @@ async function addSerial(req, res) {
     if (!response) {
       return res.send({ code: "400", message: "Número de parte no dado de alta" });
     }
+
+    // -----------------------------------------------------------------
+    // 🚀 VALIDACIÓN DEL SUFIJO 
+    // -----------------------------------------------------------------
+    const sufijoEsperado = response.sufijo_esperado;
+
+    // Si la base de datos dice que SÍ lleva un sufijo (no es null ni vacío)
+    if (sufijoEsperado && sufijoEsperado.trim() !== "") {
+      
+      // Comparamos el que leyó el escáner contra el que está en la BD
+      if (sufijoEscaneado !== sufijoEsperado) {
+        
+        // Rechazo inmediato sin procesar la base de datos
+        return res.send({
+          code: "400",
+          message: `Error: Etiqueta incorrecta. El escáner leyó '${sufijoEscaneado}', pero la pieza ${numero_parte} debe llevar la letra '${sufijoEsperado}'.`
+        });
+      }
+    }
+    // -----------------------------------------------------------------
 
     const numero_serie = serial.slice(-14);
 
@@ -44,7 +66,7 @@ async function addSerial(req, res) {
       // 3. Manejo de duplicados optimizado
       if (err.name === 'SequelizeUniqueConstraintError') {
         // Marcamos como repetida usando el numero_serie (que es el índice único)
-        await db.Fa9.update(
+        await db.Fa1.update(
           { repetida: true },
           { where: { numero_serie: numero_serie } } // <--- Usar el índice único es mucho más rápido
         );

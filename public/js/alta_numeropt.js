@@ -31,6 +31,8 @@ $(document).ready(function() {
             lineNumber = $("<td>").addClass("align-middle");
             lineNumber.text(data[i].linea);
 
+            sufijo = $("<td>").text(data[i].sufijo_esperado || "-");
+
             actionPartNumber = $("<td>").addClass("align-middle text-center");
 
             // Botones como template strings para que el SVG renderice correctamente
@@ -61,6 +63,7 @@ $(document).ready(function() {
 
             newItem.append(partNumber);
             newItem.append(lineNumber);
+            newItem.append(sufijo);
             newItem.append(actionPartNumber);
             $("#partNumberList").append(newItem);
           }
@@ -104,6 +107,7 @@ $(document).ready(function() {
           $("#modalPartNumberCenter").attr("type", "Update");
           $("#partNumber").val(partNumber.numero_parte);
           $("#lineName").val(partNumber.linea);
+          $("#sufijoEsperado").val(partNumber.sufijo_esperado);
           $("#modalPartNumberCenter").modal("show");
         }
       });
@@ -196,6 +200,10 @@ $(document).ready(function() {
     let linea = $("#lineName").find(":selected").val();
     if (linea === "Escoge una línea") linea = "";
 
+    let sufijo_esperado = $("#sufijoEsperado").val().trim();
+
+    console.log("Frontend - Sufijo capturado:", sufijo_esperado);
+
     let buttonType = $("#modalPartNumberCenter").attr("type");
     let pageNum = $(this).find("#createPartNumber").attr("page");
     let partNumberId = $(this).find("#createPartNumber").attr("partNumberId");
@@ -203,7 +211,7 @@ $(document).ready(function() {
     if (numero_parte.length === 0 || linea.length === 0) return;
 
     if (buttonType == "Create") {
-      $.post("/add-part-number", { numero_parte, linea }).then((data) => {
+      $.post("/add-part-number", { numero_parte, linea,sufijo_esperado }).then((data) => {
         const { code, message } = data;
         $("#modalPartNumberCenter").modal("hide");
         $("#partNumberForm")[0].reset();
@@ -216,7 +224,7 @@ $(document).ready(function() {
         url: `/update-part-number/${partNumberId}`,
         type: "PUT",
         contentType: "application/json",
-        data: JSON.stringify({ numero_parte, linea }),
+        data: JSON.stringify({ numero_parte, linea,sufijo_esperado }),
         success: function(data) {
           const { code, message } = data;
           if (code !== "200") {

@@ -1283,9 +1283,12 @@ module.exports = function(app) {
   app.post(
     "/add-part-number",
     /*isAuthenticated,*/ (req, res) => {
+      console.log("Backend - Datos recibidos del frontend:", req.body);
+
       const {
         numero_parte,
         linea,
+        sufijo_esperado,
         izq_etiqueta,
         der_etiqueta,
         largo_etiqueta,
@@ -1316,6 +1319,7 @@ module.exports = function(app) {
               db.Numeropt.create({
                 numero_parte: numero_parte,
                 linea: linea,
+                sufijo_esperado: sufijo_esperado,
                 largo_etiqueta: largo_etiqueta,
                 izq_etiqueta: izq_etiqueta,
                 der_etiqueta: der_etiqueta,
@@ -1429,15 +1433,12 @@ module.exports = function(app) {
   //Edit Part Number by id
   app.put("/update-part-number/:id", isAuthenticated, (req, res) => {
     const { id } = req.params;
-    const { numero_parte, linea } = req.body;
+    const { numero_parte, linea,sufijo_esperado } = req.body;
     db.Numeropt.update(
       {
         numero_parte: numero_parte,
         linea: linea,
-        largo_etiqueta: largo_etiqueta,
-        izq_etiqueta: izq_etiqueta,
-        der_etiqueta: der_etiqueta,
-        largo_numero_parte: numero_parte.length,
+        sufijo_esperado: sufijo_esperado,
       },
       {
         where: {

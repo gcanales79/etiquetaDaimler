@@ -8,6 +8,9 @@ module.exports = function (sequelize, DataTypes) {
         type: DataTypes.STRING,
         allowNull:false,
       },
+      sufijo_esperado: {
+        type: DataTypes.STRING,
+      },
       largo_etiqueta:{
         type:DataTypes.STRING,
       },
