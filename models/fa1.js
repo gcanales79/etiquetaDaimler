@@ -8,7 +8,6 @@ module.exports = function (sequelize, DataTypes) {
       numero_parte: DataTypes.STRING,
       numero_serie:{
         type: DataTypes.STRING,
-        unique: true,
       },
       largo_etiqueta:{
         type:DataTypes.STRING,

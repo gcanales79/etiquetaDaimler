@@ -24,10 +24,10 @@ async function addSerial(req, res) {
     // 2. Búsqueda del Número de Parte optimizada (uso de raw: true)
     const partResponse = await db.Numeropt.findOne({
       where: {
-        linea: "FA-11", // Cambiado para FA11
+        linea: "FA-11",
         numero_parte: numero_parte,
       },
-      raw: true // Evita la sobrecarga de crear una instancia completa
+      raw: true 
     });
 
     if (!partResponse) {
@@ -37,36 +37,51 @@ async function addSerial(req, res) {
       });
     }
 
-    try {
-      // 3. Intento de creación del registro
-      const serialStored = await db.Fa11.create({
-        serial: serial,
-        numero_parte: numero_parte,
-        numero_serie: numero_serie,
-      });
+    // 3. BUSCAMOS HISTORIAL: Verificamos si este número de serie ya existe
+    const existingLabels = await db.Fa11.findAll({
+      where: { numero_serie: numero_serie },
+      raw: true // Usamos raw para que sea más rápido
+    });
 
-      return res.send({
-        code: "200",
-        serialStored: serialStored,
-        message: "Etiqueta correcta (FA-11)",
-      });
+    const esRepetida = existingLabels.length > 0;
+    let horasPrevias = "";
 
-    } catch (err) {
-      // 4. Manejo eficiente de duplicados
-      if (err.name === 'SequelizeUniqueConstraintError') {
-        // Actualización usando el índice único (numero_serie) para máxima velocidad
-        await db.Fa11.update(
-          { repetida: true },
-          { where: { numero_serie: numero_serie } }
-        );
-        
-        return res.send({
-          code: "400",
-          message: "Número de serie repetido en FA-11",
-        });
-      }
-      throw err; // Lanza otros tipos de errores al catch principal
+    if (esRepetida) {
+      // Si existen registros, extraemos sus fechas y las formateamos a tu zona horaria
+      horasPrevias = existingLabels
+        .map(label => moment(label.createdAt).tz("America/Monterrey").format("DD/MM/YYYY HH:mm:ss"))
+        .join(" y ");
     }
+
+    // 4. SIEMPRE CREAMOS EL REGISTRO (para mantener el historial de la falla)
+    const serialStored = await db.Fa11.create({
+      serial: serial,
+      numero_parte: numero_parte,
+      numero_serie: numero_serie,
+      repetida: esRepetida // Si esRepetida es true, nace marcado con el 1 en SQL
+    });
+
+    // 5. RESPUESTA Y ACTUALIZACIÓN CONDICIONAL
+    if (esRepetida) {
+      // Actualizamos los registros viejos para garantizar que todos digan repetida = true (1)
+      await db.Fa11.update(
+        { repetida: true },
+        { where: { numero_serie: numero_serie } }
+      );
+
+      // Enviamos el código 400 para que tu frontend arroje la alerta roja
+      return res.send({
+        code: "400",
+        message: `Número de serie repetido. Se escaneó previamente el: ${horasPrevias}`,
+      });
+    }
+
+    // Si no era repetida, flujo normal exitoso
+    return res.send({
+      code: "200",
+      serialStored: serialStored,
+      message: "Etiqueta correcta (FA-11)",
+    });
 
   } catch (error) {
     console.error("Error en FA11 addSerial:", error);

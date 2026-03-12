@@ -11,60 +11,81 @@ const client = require("twilio")(accountSid, authToken);
 async function addSerial(req, res) {
   const { serial } = req.body;
 
+  // 1. Validación rápida de formato
   if (!checkAfterColon(serial)) {
-    return res.send({ code: "400", message: "Formato de etiqueta incorrecto" });
+    return res.send({ code: "400", message: "La etiqueta no tiene el formato correcto" });
   }
 
   try {
+    // Extracción de datos del serial
     const numero_parte = serial.substring(serial.indexOf("P") + 1, serial.indexOf("P") + 9);
     const numero_serie = serial.slice(-14);
 
+    // 2. Búsqueda del Número de Parte optimizada (uso de raw: true)
     const partResponse = await db.Numeropt.findOne({
       where: {
-        linea: "FA-13", // Cambiado para FA13
+        linea: "FA-13",
         numero_parte: numero_parte,
       },
-      raw: true
+      raw: true 
     });
 
     if (!partResponse) {
       return res.send({
         code: "400",
-        message: "Número de parte no válido para la línea FA-13",
+        message: "El número de parte no está dado de alta en la línea FA-13",
       });
     }
 
-    try {
-      const serialStored = await db.Fa13.create({
-        serial: serial,
-        numero_parte: numero_parte,
-        numero_serie: numero_serie,
-      });
+    // 3. BUSCAMOS HISTORIAL: Verificamos si este número de serie ya existe
+    const existingLabels = await db.Fa13.findAll({
+      where: { numero_serie: numero_serie },
+      raw: true // Usamos raw para que sea más rápido
+    });
 
+    const esRepetida = existingLabels.length > 0;
+    let horasPrevias = "";
+
+    if (esRepetida) {
+      // Si existen registros, extraemos sus fechas y las formateamos a tu zona horaria
+      horasPrevias = existingLabels
+        .map(label => moment(label.createdAt).tz("America/Monterrey").format("DD/MM/YYYY HH:mm:ss"))
+        .join(" y ");
+    }
+
+    // 4. SIEMPRE CREAMOS EL REGISTRO (para mantener el historial de la falla)
+    const serialStored = await db.Fa13.create({
+      serial: serial,
+      numero_parte: numero_parte,
+      numero_serie: numero_serie,
+      repetida: esRepetida // Si esRepetida es true, nace marcado con el 1 en SQL
+    });
+
+    // 5. RESPUESTA Y ACTUALIZACIÓN CONDICIONAL
+    if (esRepetida) {
+      // Actualizamos los registros viejos para garantizar que todos digan repetida = true (1)
+      await db.Fa13.update(
+        { repetida: true },
+        { where: { numero_serie: numero_serie } }
+      );
+
+      // Enviamos el código 400 para que tu frontend arroje la alerta roja
       return res.send({
-        code: "200",
-        serialStored: serialStored,
-        message: "Etiqueta procesada exitosamente en FA-13",
+        code: "400",
+        message: `Número de serie repetido. Se escaneó previamente el: ${horasPrevias}`,
       });
-
-    } catch (err) {
-      if (err.name === 'SequelizeUniqueConstraintError') {
-        await db.Fa13.update(
-          { repetida: true },
-          { where: { numero_serie: numero_serie } }
-        );
-        
-        return res.send({
-          code: "400",
-          message: "Este número de serie ya existe en FA-13",
-        });
-      }
-      throw err;
     }
+
+    // Si no era repetida, flujo normal exitoso
+    return res.send({
+      code: "200",
+      serialStored: serialStored,
+      message: "Etiqueta correcta FA-13",
+    });
 
   } catch (error) {
-    console.error("Error en FA13 addSerial:", error);
-    return res.status(500).send({ code: "500", message: "Error de servidor" });
+    console.error("Error en FA-13 addSerial:", error);
+    return res.status(500).send({ code: "500", message: "Error interno del servidor" });
   }
 }
 

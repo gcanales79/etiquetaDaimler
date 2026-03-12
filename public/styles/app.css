@@ -1820,3 +1820,11 @@ tbody > input[type="checkbox"] {
   background-repeat: no-repeat !important;
   background-position: right 12px center !important;
 }
+
+/* ── FIX: Evitar que el texto se parta en múltiples líneas ── */
+.fa-result__ok {
+  white-space: nowrap;
+  /* O si prefieres que el texto largo sí se divida pero STF-2 no: */
+  /* white-space: normal; */
+  /* word-break: keep-all; */
+}

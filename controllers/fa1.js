@@ -11,73 +11,81 @@ const client = require("twilio")(accountSid, authToken);
 async function addSerial(req, res) {
   const { serial } = req.body;
 
+  // 1. Validación rápida de formato
   if (!checkAfterColon(serial)) {
-    return res.send({ code: "400", message: "Formato incorrecto" });
+    return res.send({ code: "400", message: "La etiqueta no tiene el formato correcto" });
   }
 
   try {
+    // Extracción de datos del serial
     const numero_parte = serial.substring(serial.indexOf("P") + 1, serial.indexOf("P") + 9);
-
-    let sufijoEscaneado = serial.charAt(serial.indexOf("P") - 1)
-    
-    // 1. Búsqueda optimizada del Número de Parte
-    const response = await db.Numeropt.findOne({
-      where: { linea: "FA-1", numero_parte: numero_parte },
-      raw: true // <--- Optimización: no crea modelo Sequelize
-    });
-
-    if (!response) {
-      return res.send({ code: "400", message: "Número de parte no dado de alta" });
-    }
-
-    // -----------------------------------------------------------------
-    // 🚀 VALIDACIÓN DEL SUFIJO 
-    // -----------------------------------------------------------------
-    const sufijoEsperado = response.sufijo_esperado;
-
-    // Si la base de datos dice que SÍ lleva un sufijo (no es null ni vacío)
-    if (sufijoEsperado && sufijoEsperado.trim() !== "") {
-      
-      // Comparamos el que leyó el escáner contra el que está en la BD
-      if (sufijoEscaneado !== sufijoEsperado) {
-        
-        // Rechazo inmediato sin procesar la base de datos
-        return res.send({
-          code: "400",
-          message: `Error: Etiqueta incorrecta. El escáner leyó '${sufijoEscaneado}', pero la pieza ${numero_parte} debe llevar la letra '${sufijoEsperado}'.`
-        });
-      }
-    }
-    // -----------------------------------------------------------------
-
     const numero_serie = serial.slice(-14);
 
-    try {
-      // 2. Intento de creación
-      const serialStored = await db.Fa1.create({
-        serial: serial,
+    // 2. Búsqueda del Número de Parte optimizada (uso de raw: true)
+    const partResponse = await db.Numeropt.findOne({
+      where: {
+        linea: "FA-1",
         numero_parte: numero_parte,
-        numero_serie: numero_serie,
+      },
+      raw: true 
+    });
+
+    if (!partResponse) {
+      return res.send({
+        code: "400",
+        message: "El número de parte no está dado de alta en la línea FA-1",
       });
-
-      return res.send({ code: "200", serialStored, message: "Etiqueta correcta" });
-
-    } catch (err) {
-      // 3. Manejo de duplicados optimizado
-      if (err.name === 'SequelizeUniqueConstraintError') {
-        // Marcamos como repetida usando el numero_serie (que es el índice único)
-        await db.Fa1.update(
-          { repetida: true },
-          { where: { numero_serie: numero_serie } } // <--- Usar el índice único es mucho más rápido
-        );
-        return res.send({ code: "400", message: "Número de serie repetido" });
-      }
-      throw err; // Si es otro error, lo lanza al catch principal
     }
 
+    // 3. BUSCAMOS HISTORIAL: Verificamos si este número de serie ya existe
+    const existingLabels = await db.Fa1.findAll({
+      where: { numero_serie: numero_serie },
+      raw: true // Usamos raw para que sea más rápido
+    });
+
+    const esRepetida = existingLabels.length > 0;
+    let horasPrevias = "";
+
+    if (esRepetida) {
+      // Si existen registros, extraemos sus fechas y las formateamos a tu zona horaria
+      horasPrevias = existingLabels
+        .map(label => moment(label.createdAt).tz("America/Monterrey").format("DD/MM/YYYY HH:mm:ss"))
+        .join(" y ");
+    }
+
+    // 4. SIEMPRE CREAMOS EL REGISTRO (para mantener el historial de la falla)
+    const serialStored = await db.Fa1.create({
+      serial: serial,
+      numero_parte: numero_parte,
+      numero_serie: numero_serie,
+      repetida: esRepetida // Si esRepetida es true, nace marcado con el 1 en SQL
+    });
+
+    // 5. RESPUESTA Y ACTUALIZACIÓN CONDICIONAL
+    if (esRepetida) {
+      // Actualizamos los registros viejos para garantizar que todos digan repetida = true (1)
+      await db.Fa1.update(
+        { repetida: true },
+        { where: { numero_serie: numero_serie } }
+      );
+
+      // Enviamos el código 400 para que tu frontend arroje la alerta roja
+      return res.send({
+        code: "400",
+        message: `Número de serie repetido. Se escaneó previamente el: ${horasPrevias}`,
+      });
+    }
+
+    // Si no era repetida, flujo normal exitoso
+    return res.send({
+      code: "200",
+      serialStored: serialStored,
+      message: "Etiqueta correcta FA-1",
+    });
+
   } catch (error) {
-    console.error("Error crítico:", error);
-    return res.status(500).send({ code: "500", message: "Error de servidor" });
+    console.error("Error en FA-1 addSerial:", error);
+    return res.status(500).send({ code: "500", message: "Error interno del servidor" });
   }
 }
 
