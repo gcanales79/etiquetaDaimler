@@ -13,11 +13,12 @@ const client = twilio(
 
 // Map lines → tables
 const TABLES = {
-  daimler: "daimlers",
+  "daimler": "daimlers",
   "fa-1": "fa1s",
   "fa-9": "fa9s",
   "fa-11": "fa11s",
   "fa-13": "fa13s",
+  "stf-2":"stf2s"
 };
 
 // In-memory sessions
@@ -334,8 +335,8 @@ async function processProductionRequest(from, incomingText) {
 
     const askLineMsg =
       language === "es"
-        ? "¿De qué línea? (Daimler, FA-1, FA-9, FA-11, FA-13)"
-        : "Which line? (Daimler, FA-1, FA-9, FA-11, FA-13)";
+        ? "¿De qué línea? (Daimler, FA-1, FA-9, FA-11, FA-13, STF-2)"
+        : "Which line? (Daimler, FA-1, FA-9, FA-11, FA-13, STF-2)";
 
     await sendTextMessage(from, askLineMsg);
     return;

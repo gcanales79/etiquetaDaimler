@@ -203,6 +203,46 @@ module.exports = function(app) {
     }
   });
 
+    //Get STF-2
+  app.get("/produccion/stf2", isAuthenticated, function(req, res) {
+    //console.log(req.user)
+    if (
+      req.user.role === "admin" ||
+      req.user.role === "produccion" ||
+      req.user.role === "inspector"
+    ) {
+      res.status(200);
+      db.Stf2.findAll({
+         attributes:["id","serial","createdAt"],
+        limit: 6,
+        order: [["createdAt", "DESC"]],
+         raw:true,
+        nest:true
+      }).then(function(response) {
+        let jsfile = [
+          {
+            jsfile:
+              "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.3/Chart.js",
+          },
+          { jsfile: "/js/label_stf2.js" },
+        ];
+        res.render("produccionstf2", {
+          title: "Produccion STF-2",
+          active_produccion: {
+            Register: true,
+          },
+          etiqueta: response,
+          jsfile: jsfile,
+        });
+      }).catch(err=>{
+        console.log("Error al cargar la página de producción:", err);
+        res.status("500").render("404");
+      });;
+    } else {
+      res.render("404");
+    }
+  });
+
   //Get FA-11
   app.get("/produccion/fa11", isAuthenticated, function(req, res) {
     //console.log(req.user)

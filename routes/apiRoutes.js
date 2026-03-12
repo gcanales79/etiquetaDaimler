@@ -17,6 +17,7 @@ const Fa1Controller = require("../controllers/fa1");
 const Fa9Controller = require("../controllers/fa9");
 const Fa11Controller = require("../controllers/fa11");
 const Fa13Controller = require("../controllers/fa13");
+const Stf2Controller = require("../controllers/stf2");
 const PerfilController = require("../controllers/perfil");
 const { fa9, fa11, fa13 } = require("../models"); // Adjust if your models are imported differently
 const models = { fa9: fa9, fa11: fa11, fa13: fa13 };
@@ -1530,6 +1531,23 @@ module.exports = function(app) {
   );
 
   app.post("/fa11/reporte", Fa11Controller.productionReport);
+
+  //Add Serial STF2
+  app.post("/api/stf2/serial", isAuthenticated,Stf2Controller.addSerial);
+
+  //Find the last six pieces builts STF2
+   app.get("/api/stf2/all/tabla/seisetiquetas", isAuthenticated,Stf2Controller.getLastSixLabels);
+
+   //Production Report STF-2
+   app.get(
+    "/stf2/produccionhora/:fechainicial/:fechafinal",
+    Stf2Controller.productionPerHour,
+  );
+
+    // ⭐ NUEVA RUTA MAESTRA PARA DASHBOARD STF2:
+  app.get("/api/stf2/dashboard-master", isAuthenticated, Stf2Controller.getDashboardMaster);
+
+
 
   //Add Serial FA-13
   app.post("/api/fa13/serial", Fa13Controller.addSerial);

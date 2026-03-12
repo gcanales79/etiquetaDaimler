@@ -81,7 +81,7 @@ async function procesarReportes(turno) {
     return;
   }
 
-  const lineas = ["fa1", "fa9", "fa11", "fa13", "daimler"];
+  const lineas = ["fa1", "fa9", "fa11", "fa13", "daimler","stf2"];
 
   for (let linea of lineas) {
     try {
