@@ -20,6 +20,9 @@ async function addSerial(req, res) {
     const numero_parte = serial.substring(serial.indexOf("P") + 1, serial.indexOf("P") + 9);
     const numero_serie = serial.slice(-14);
 
+    // 🚀 NUEVO: Extraemos la letra que está justo antes de la "P" (Sufijo Escaneado)
+    let sufijoEscaneado = serial.charAt(serial.indexOf("P") - 1);
+
     // 2. Búsqueda del Número de Parte optimizada (uso de raw: true)
     const partResponse = await db.Numeropt.findOne({
       where: {
@@ -35,10 +38,29 @@ async function addSerial(req, res) {
         message: "El número de parte no está dado de alta en la línea FA-9",
       });
     }
+    // -----------------------------------------------------------------
+    // 🚀 VALIDACIÓN ESTRICTA DEL SUFIJO (Case-Sensitive)
+    // -----------------------------------------------------------------
+    const sufijoEsperado = partResponse.sufijo_esperado;
+
+    // Si la base de datos dice que SÍ lleva un sufijo (no es null ni vacío)
+    if (sufijoEsperado && sufijoEsperado.trim() !== "") {
+      
+      // Comparamos directamente. Respeta estricto mayúsculas y minúsculas.
+      if (sufijoEscaneado !== sufijoEsperado) {
+        
+        // Rechazamos la pieza inmediatamente sin guardarla ni checar si está repetida
+        return res.send({
+          code: "400",
+          message: `Error: Etiqueta incorrecta. El escáner leyó '${sufijoEscaneado}', pero la pieza ${numero_parte} debe llevar exactamente la letra '${sufijoEsperado}'.`
+        });
+      }
+    }
+    // -----------------------------------------------------------------
 
     // 3. BUSCAMOS HISTORIAL: Verificamos si este número de serie ya existe
     const existingLabels = await db.Fa9.findAll({
-      where: { numero_serie: numero_serie },
+      where: { numero_serie: numero_serie,numero_parte: numero_parte },
       raw: true // Usamos raw para que sea más rápido
     });
 
@@ -65,7 +87,7 @@ async function addSerial(req, res) {
       // Actualizamos los registros viejos para garantizar que todos digan repetida = true (1)
       await db.Fa9.update(
         { repetida: true },
-        { where: { numero_serie: numero_serie } }
+        { where: { numero_serie: numero_serie,numero_parte: numero_parte } }
       );
 
       // Enviamos el código 400 para que tu frontend arroje la alerta roja
