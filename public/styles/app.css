@@ -1275,6 +1275,12 @@ tbody > input[type="checkbox"] {
   content: none !important;
 }
 
+/* Solo para la tabla de últimas 6 etiquetas */
+#tablaDe6 td:nth-child(3) {
+  white-space: nowrap;
+}
+
+
 /* ── Anular ::before en tablas (herencia de styles.css) ── */
 .fa-table::before,
 .fa-table tbody::before,
