@@ -1,0 +1,210 @@
+{{!-- ══ FA-1 PRODUCTION LINE ══ --}}
+<div class="fa-page">
+
+  {{!-- ── PAGE HEADER ── --}}
+  <div class="fa-header">
+    <div class="fa-header__left">
+      <div class="fa-header__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </div>
+      <div>
+        <h1 class="fa-header__title">Línea FA-2</h1>
+        <p class="fa-header__sub">Línea de ensamble FA-2</p>
+      </div>
+    </div>
+    <a href="/produccion" class="fa-header__back">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+        <path d="M12 5l-5 5 5 5"/>
+      </svg>
+      Líneas
+    </a>
+  </div>
+
+  {{!-- ── KPI STRIP ── --}}
+  <div class="fa-kpi-strip">
+    <div class="fa-kpi">
+      <span class="fa-kpi__label">Mejor Semana</span>
+      <span class="fa-kpi__value" id="mejorSemana">—</span>
+      <span class="fa-kpi__unit">piezas</span>
+    </div>
+    <div class="fa-kpi fa-kpi--accent">
+      <span class="fa-kpi__label">Semana Actual</span>
+      <span class="fa-kpi__value" id="semanaActual">—</span>
+      <span class="fa-kpi__unit">piezas</span>
+    </div>
+    <div class="fa-kpi">
+      <span class="fa-kpi__label">Mejor Turno</span>
+      <span class="fa-kpi__value" id="mejorTurno">—</span>
+      <span class="fa-kpi__unit">piezas</span>
+    </div>
+    <div class="fa-kpi fa-kpi--accent">
+      <span class="fa-kpi__label">Turno Actual</span>
+      <span class="fa-kpi__value" id="turnoActual">—</span>
+      <span class="fa-kpi__unit">piezas</span>
+    </div>
+  </div>
+
+  {{!-- ── MAIN GRID ── --}}
+  <div class="fa-grid">
+
+    {{!-- LEFT COLUMN: scanner + result + last 6 + hour table --}}
+    <div class="fa-col fa-col--left">
+
+      {{!-- SCANNER CARD --}}
+      <div class="fa-card fa-card--scanner">
+        <div class="fa-card__head">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="18" height="18">
+            <path d="M3 5H2v3h1M3 19H2v-3h1M21 5h1v3h-1M21 19h1v-3h-1M7 3v18M12 3v18M17 3v18"/>
+          </svg>
+          Escanear Etiqueta
+        </div>
+        <div class="fa-card__body">
+          <div class="fa-scanner">
+            <input type="text" class="fa-scanner__input" autofocus="autofocus"
+              id="serialEtiqueta" placeholder="Escanea o ingresa el serial…">
+            <button class="fa-scanner__btn" type="button" id="submit">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              Revisar
+            </button>
+          </div>
+
+          {{!-- RESULT AREA --}}
+          <div class="fa-result" id="Resultado">
+            <div class="fa-result__icon" id="logoResultado">
+              <span id="spanLogoResultado"></span>
+            </div>
+            <p class="fa-result__ok" id="mensajeResultadoBueno"></p>
+            <p class="fa-result__err" id="mensajeResultadoMalo"></p>
+            <div id="buttonResultado"></div>
+          </div>
+        </div>
+      </div>
+
+      {{!-- LAST 6 LABELS --}}
+      <div class="fa-card">
+        <div class="fa-card__head">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="18" height="18">
+            <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+            <rect x="9" y="3" width="6" height="4" rx="1"/>
+          </svg>
+          Últimas 6 Etiquetas
+        </div>
+        <div class="fa-card__body fa-card__body--flush">
+          <table class="fa-table">
+            <thead>
+              <tr>
+                <th>Serial</th>
+                <th>Estatus</th>
+                <th>Fecha y Hora</th>
+              </tr>
+            </thead>
+            <tbody id="tablaDe6"></tbody>
+          </table>
+        </div>
+      </div>
+
+      {{!-- PRODUCTION PER HOUR --}}
+      <div class="fa-card">
+        <div class="fa-card__head">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="18" height="18">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+          Producción Por Hora
+        </div>
+        <div class="fa-card__body fa-card__body--flush">
+          <table class="fa-table">
+            <thead>
+              <tr>
+                <th>Rango</th>
+                <th>Piezas</th>
+              </tr>
+            </thead>
+            <tbody id="tablaHora"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    {{!-- RIGHT COLUMN: charts --}}
+    <div class="fa-col fa-col--right">
+
+      {{!-- CHART: POR TURNO --}}
+      <div class="fa-card">
+        <div class="fa-card__head">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="18" height="18">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <path d="M3 9h18M9 21V9"/>
+          </svg>
+          Producción Por Turno — Semana Actual
+        </div>
+        <div class="fa-card__body">
+          <div id="loadingTurno" class="fa-loader">
+            <div class="fa-loader__spinner"></div>
+            <span>Cargando datos…</span>
+          </div>
+          <div class="fa-chart-wrap">
+            <canvas id="myChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      {{!-- CHART: POR SEMANA --}}
+      <div class="fa-card">
+        <div class="fa-card__head">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="18" height="18">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+          </svg>
+          Producción Por Semana — Últimas 10
+        </div>
+        <div class="fa-card__body">
+          <div id="loadingSemana" class="fa-loader">
+            <div class="fa-loader__spinner"></div>
+            <span>Cargando datos…</span>
+          </div>
+          <div class="fa-chart-wrap">
+            <canvas id="myChart2"></canvas>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+{{!-- ── MODAL: NP Diferente ── --}}
+<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content fa-modal">
+      <div class="fa-modal__header">
+        <div class="fa-modal__icon fa-modal__icon--warn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </div>
+        <div>
+          <h5 class="fa-modal__title" id="exampleModalLabel">NP Diferente Detectado</h5>
+          <p class="fa-modal__sub">Verificación requerida</p>
+        </div>
+        <button type="button" class="fa-modal__close" data-dismiss="modal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="fa-modal__body">
+        El número de parte de la etiqueta anterior y la nueva <strong>no coinciden</strong>. Si hubo un cambio de número de parte puedes proceder. De lo contrario, notifica al Ing. de Calidad y al Ing. de Producción y coloca las piezas en cuarentena.
+      </div>
+      <div class="fa-modal__footer">
+        <button type="button" class="fa-btn fa-btn--ghost" data-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>

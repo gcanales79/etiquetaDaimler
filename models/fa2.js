@@ -1,5 +1,5 @@
 module.exports = function (sequelize, DataTypes) {
-    var Stf2 = sequelize.define("Stf2", {
+    var Fa2 = sequelize.define("Fa2", {
       serial: DataTypes.STRING,
       repetida: {
         type: DataTypes.BOOLEAN,
@@ -17,10 +17,15 @@ module.exports = function (sequelize, DataTypes) {
       fields: ['createdAt'],
       using: 'BTREE',
       order: 'DESC' // Indica que el índice ya esté ordenado de forma descendente
+    },{
+        name: 'idx_fa2_serial_desc',
+      fields: ['serial'],
+      using: 'BTREE',
+      order: 'DESC' // Indica que el índice ya esté ordenado de forma descendente
     }
     ]
   });
   
   
-    return Stf2;
+    return Fa2;
   };

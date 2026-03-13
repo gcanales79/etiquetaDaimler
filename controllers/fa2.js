@@ -11,23 +11,32 @@ const client = require("twilio")(accountSid, authToken);
 async function addSerial(req, res) {
   const { serial } = req.body;
 
-  // 1. Validación rápida de formato
-  if (!checkAfterColon(serial)) {
-    return res.send({ code: "400", message: "La etiqueta no tiene el formato correcto" });
+  // 1. VALIDACIÓN RÁPIDA (Fail Fast)
+  // Como sabemos que la etiqueta SIEMPRE mide 28 caracteres y lleva nuestro # de proveedor,
+  // podemos rechazar instantáneamente cualquier etiqueta que no cumpla esto.
+  if (!serial || serial.length !== 28 || serial.substring(7, 13) !== "64221A") {
+    return res.send({ 
+      code: "400", 
+      message: "Formato incorrecto. La etiqueta no pertenece a FA-2 o está mal impresa." 
+    });
   }
 
   try {
-    // Extracción de datos del serial
-    const numero_parte = serial.substring(serial.indexOf("P") + 1, serial.indexOf("P") + 9);
-    const numero_serie = serial.slice(-14);
+    // -----------------------------------------------------------------
+    // 🚀 NUEVA EXTRACCIÓN POSICIONAL (FA-2)
+    // .substring(incluye_este_indice, detente_antes_de_este_indice)
+    // -----------------------------------------------------------------
+    const numero_parte = serial.substring(0, 7);
+    // El proveedor "64221A" está en serial.substring(7, 13), pero ya lo validamos arriba
+    const numero_serie = serial.substring(13, 19); 
+    const revision = serial.substring(19, 21);
+    const fecha_linea = serial.substring(21, 28);
+    // -----------------------------------------------------------------
 
-    // 🚀 NUEVO: Extraemos la letra que está justo antes de la "P" (Sufijo Escaneado)
-    let sufijoEscaneado = serial.charAt(serial.indexOf("P") - 1);
-
-    // 2. Búsqueda del Número de Parte optimizada (uso de raw: true)
+    // 2. BUSCAMOS EL NÚMERO DE PARTE
     const partResponse = await db.Numeropt.findOne({
       where: {
-        linea: "FA-1",
+        linea: "FA-2", // ⚠️ Importante: El administrador debe darlo de alta así
         numero_parte: numero_parte,
       },
       raw: true 
@@ -36,87 +45,73 @@ async function addSerial(req, res) {
     if (!partResponse) {
       return res.send({
         code: "400",
-        message: "El número de parte no está dado de alta en la línea FA-1",
+        message: `El número de parte ${numero_parte} no está dado de alta en la línea FA-2`,
       });
     }
 
-    // -----------------------------------------------------------------
-    // 🚀 VALIDACIÓN ESTRICTA DEL SUFIJO (Case-Sensitive)
-    // -----------------------------------------------------------------
-    const sufijoEsperado = partResponse.sufijo_esperado;
-
-    // Si la base de datos dice que SÍ lleva un sufijo (no es null ni vacío)
-    if (sufijoEsperado && sufijoEsperado.trim() !== "") {
-      
-      // Comparamos directamente. Respeta estricto mayúsculas y minúsculas.
-      if (sufijoEscaneado !== sufijoEsperado) {
-        
-        // Rechazamos la pieza inmediatamente sin guardarla ni checar si está repetida
-        return res.send({
-          code: "400",
-          message: `Error: Etiqueta incorrecta. El escáner leyó '${sufijoEscaneado}', pero la pieza ${numero_parte} debe llevar exactamente la letra '${sufijoEsperado}'.`
-        });
-      }
-    }
-    // -----------------------------------------------------------------
-
-    // 3. BUSCAMOS HISTORIAL: Verificamos si este número de serie ya existe
-    const existingLabels = await db.Fa1.findAll({
-      where: { numero_serie: numero_serie,numero_parte: numero_parte },
-      raw: true // Usamos raw para que sea más rápido
+    // 3. BUSCAMOS HISTORIAL (Evitando duplicados del mismo serial en el mismo NP)
+    const existingLabels = await db.Fa2.findAll({
+      where: { 
+        numero_serie: numero_serie,
+        numero_parte: numero_parte 
+      },
+      raw: true 
     });
 
     const esRepetida = existingLabels.length > 0;
     let horasPrevias = "";
 
     if (esRepetida) {
-      // Si existen registros, extraemos sus fechas y las formateamos a tu zona horaria
       horasPrevias = existingLabels
         .map(label => moment(label.createdAt).tz("America/Monterrey").format("DD/MM/YYYY HH:mm:ss"))
         .join(" y ");
     }
 
-    // 4. SIEMPRE CREAMOS EL REGISTRO (para mantener el historial de la falla)
-    const serialStored = await db.Fa1.create({
+    // 4. SIEMPRE CREAMOS EL REGISTRO
+    // Puedes crear nuevas columnas en tu tabla Fa2 si deseas guardar la 'revision' y 'fecha_linea'
+    const serialStored = await db.Fa2.create({
       serial: serial,
       numero_parte: numero_parte,
       numero_serie: numero_serie,
-      repetida: esRepetida // Si esRepetida es true, nace marcado con el 1 en SQL
+      repetida: esRepetida 
     });
 
     // 5. RESPUESTA Y ACTUALIZACIÓN CONDICIONAL
     if (esRepetida) {
-      // Actualizamos los registros viejos para garantizar que todos digan repetida = true (1)
-      await db.Fa1.update(
+      await db.Fa2.update(
         { repetida: true },
-        { where: { numero_serie: numero_serie,numero_parte: numero_parte } }
+        { 
+          where: { 
+            numero_serie: numero_serie,
+            numero_parte: numero_parte 
+          } 
+        }
       );
 
-      // Enviamos el código 400 para que tu frontend arroje la alerta roja
       return res.send({
         code: "400",
-        message: `Número de serie repetido. Se escaneó previamente el: ${horasPrevias}`,
+        message: `Número de serie repetido para la pieza ${numero_parte}. Se escaneó previamente el: ${horasPrevias}`,
       });
     }
 
-    // Si no era repetida, flujo normal exitoso
+    // Flujo normal exitoso
     return res.send({
       code: "200",
       serialStored: serialStored,
-      message: "Etiqueta correcta FA-1",
+      message: "Etiqueta correcta FA-2",
     });
 
   } catch (error) {
-    console.error("Error en FA-1 addSerial:", error);
+    console.error("Error en FA-2 addSerial:", error);
     return res.status(500).send({ code: "500", message: "Error interno del servidor" });
   }
 }
 
 //Fin the last six pieces produced
 function getLastSixLabels(req,res){
-        db.Fa1.count()
+        db.Fa2.count()
           .then((count) => {
-            db.Fa1.findAll({
+            db.Fa2.findAll({
               where: {
                 id: {
                   [Op.gte]: count * 0,
@@ -158,10 +153,10 @@ function productionPerHour (req, res) {
     //console.log(fechainicial)
     //console.log(fechafinal)
     //console.log(req.params.fechafinal)
-    db.Fa1.count()
+    db.Fa2.count()
       .then((count) => {
         // console.log(count)
-        db.Fa1.findAndCountAll({
+        db.Fa2.findAndCountAll({
           where: {
            /* id: {
               [Op.gte]: count * 0,
@@ -229,7 +224,7 @@ function productionReport (req, res) {
       .create({
         /*from: "whatsapp:" + process.env.TWILIO_PHONE, // From a valid Twilio number,
         body:
-          "La producción de la linea de FA-1 del turno de " +
+          "La producción de la linea de FA-2 del turno de " +
           req.body.turno +
           " fue de: " +
           req.body.piezasProducidas,
@@ -240,7 +235,7 @@ function productionReport (req, res) {
             to: "whatsapp:" + telefonos[i], // Text this number,
             messagingServiceSid: process.env.serviceSid,
             contentVariables:JSON.stringify({
-              1:'FA-1',
+              1:'FA-2',
               2: String(req.body.turno),
               3: String(req.body.piezasProducidas)
             })
@@ -285,7 +280,7 @@ async function getDashboardMaster(req, res) {
     const TZ = "America/Monterrey";
 
     // 1. Promesa: Últimas 6 etiquetas
-    const pLast6 = db.Fa1.findAll({
+    const pLast6 = db.Fa2.findAll({
       limit: 6,
       order: [["createdAt", "DESC"]],
     });
@@ -298,7 +293,7 @@ async function getDashboardMaster(req, res) {
       let finMty = moment().tz(TZ).startOf("hour").subtract(i - 1, "hour");
       
       // Al usar .toDate(), Sequelize traduce la zona horaria por nosotros sin fallar
-      let prom = db.Fa1.count({
+      let prom = db.Fa2.count({
         where: { createdAt: { [Op.gte]: inicioMty.toDate(), [Op.lt]: finMty.toDate() } },
         distinct: true, col: "serial"
       }).then(count => ({
@@ -331,9 +326,9 @@ async function getDashboardMaster(req, res) {
 
       // TIP: Usamos [Op.lt] (menor que) en lugar de [Op.lte] (menor o igual) para el fin del turno.
       // Así evitamos que si una pieza se escanea exactamente a las 15:00:00, se cuente en ambos turnos.
-      pTurnos.push(db.Fa1.count({ where: { createdAt: { [Op.gte]: t1Inicio, [Op.lt]: t1Fin } }, distinct: true, col: "serial" }).then(c => ({ turno: 1, dia: i, count: c })));
-      pTurnos.push(db.Fa1.count({ where: { createdAt: { [Op.gte]: t2Inicio, [Op.lt]: t2Fin } }, distinct: true, col: "serial" }).then(c => ({ turno: 2, dia: i, count: c })));
-      pTurnos.push(db.Fa1.count({ where: { createdAt: { [Op.gte]: t3Inicio, [Op.lt]: t3Fin } }, distinct: true, col: "serial" }).then(c => ({ turno: 3, dia: i, count: c })));
+      pTurnos.push(db.Fa2.count({ where: { createdAt: { [Op.gte]: t1Inicio, [Op.lt]: t1Fin } }, distinct: true, col: "serial" }).then(c => ({ turno: 1, dia: i, count: c })));
+      pTurnos.push(db.Fa2.count({ where: { createdAt: { [Op.gte]: t2Inicio, [Op.lt]: t2Fin } }, distinct: true, col: "serial" }).then(c => ({ turno: 2, dia: i, count: c })));
+      pTurnos.push(db.Fa2.count({ where: { createdAt: { [Op.gte]: t3Inicio, [Op.lt]: t3Fin } }, distinct: true, col: "serial" }).then(c => ({ turno: 3, dia: i, count: c })));
     }
 
     // 4. Promesas: Producción por semana (10 semanas)
@@ -354,7 +349,7 @@ async function getDashboardMaster(req, res) {
       // Obtenemos el número de semana (usamos el lunes para que cuadre con el calendario oficial)
       let numeroDeSemana = inicioSemana.clone().add(1, "days").week();
 
-      let prom = db.Fa1.count({
+      let prom = db.Fa2.count({
         where: { createdAt: { [Op.gte]: inicioSemana.toDate(), [Op.lt]: finSemana.toDate() } },
         distinct: true, col: "serial"
       }).then(count => ({
@@ -394,7 +389,7 @@ async function getDashboardMaster(req, res) {
     });
 
   } catch (error) {
-    console.error("Error en getDashboardMaster (FA-1):", error);
+    console.error("Error en getDashboardMaster (FA-2):", error);
     res.status(500).json({ code: "500", message: "Error interno cargando dashboards" });
   }
 }

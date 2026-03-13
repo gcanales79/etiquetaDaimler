@@ -3,18 +3,18 @@ var isAuthenticated = require("../config/middleware/isAuthenticated");
 const Sequelize = require("sequelize");
 const Op = Sequelize.Op;
 
-module.exports = function(app) {
+module.exports = function (app) {
   // Load index page
-  app.get("/", function(req, res) {
+  app.get("/", function (req, res) {
     res.status(200);
     console.log(req.flash("message"));
     db.Daimler.findAll({
       limit: 6,
       order: [["createdAt", "DESC"]],
-    }).then(function(dbDaimler) {
+    }).then(function (dbDaimler) {
       let jsfile = [{ jsfile: "/js/toastr.js" }, { jsfile: "/js/login.js" }];
       res.render("index", {
-        layout:"blank",
+        layout: "blank",
         title: "home",
         jsfile: jsfile,
         active_home: {
@@ -68,7 +68,7 @@ module.exports = function(app) {
   });
 
   //Get Production Home Page
-  app.get("/produccion", isAuthenticated, function(req, res) {
+  app.get("/produccion", isAuthenticated, function (req, res) {
     if (
       req.user.role === "admin" ||
       req.user.role === "produccion" ||
@@ -90,7 +90,7 @@ module.exports = function(app) {
   });
 
   //Get Mercedes report page
-  app.get("/produccion/daimler", isAuthenticated, function(req, res) {
+  app.get("/produccion/daimler", isAuthenticated, function (req, res) {
     //console.log(req.user)
     if (
       req.user.role === "admin" ||
@@ -99,12 +99,12 @@ module.exports = function(app) {
     ) {
       res.status(200);
       db.Daimler.findAll({
-        attributes:["id","serial","createdAt"],
+        attributes: ["id", "serial", "createdAt"],
         limit: 6,
         order: [["createdAt", "DESC"]],
-        raw:true,
-        nest:true
-      }).then(function(dbDaimler) {
+        raw: true,
+        nest: true
+      }).then(function (dbDaimler) {
         let jsfile = [
           {
             jsfile:
@@ -120,7 +120,7 @@ module.exports = function(app) {
           etiqueta: dbDaimler,
           jsfile: jsfile,
         });
-      }).catch(err=>{
+      }).catch(err => {
         console.log("Error al cargar la página de producción:", err);
         res.status("500").render("404");
       });
@@ -130,7 +130,7 @@ module.exports = function(app) {
   });
 
   //Get FA-1
-  app.get("/produccion/fa1", isAuthenticated, function(req, res) {
+  app.get("/produccion/fa1", isAuthenticated, function (req, res) {
     //console.log(req.user)
     if (
       req.user.role === "admin" ||
@@ -141,7 +141,7 @@ module.exports = function(app) {
       db.Fa1.findAll({
         limit: 6,
         order: [["createdAt", "DESC"]],
-      }).then(function(response) {
+      }).then(function (response) {
         let jsfile = [
           {
             jsfile:
@@ -163,8 +163,48 @@ module.exports = function(app) {
     }
   });
 
+  //Get FA-2
+  app.get("/produccion/fa2", isAuthenticated, function (req, res) {
+    //console.log(req.user)
+    if (
+      req.user.role === "admin" ||
+      req.user.role === "produccion" ||
+      req.user.role === "inspector"
+    ) {
+      res.status(200);
+      db.Fa2.findAll({
+        attributes: ["id", "serial", "createdAt"],
+        limit: 6,
+        order: [["createdAt", "DESC"]],
+        raw: true,
+        nest: true
+      }).then(function (response) {
+        let jsfile = [
+          {
+            jsfile:
+              "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.3/Chart.js",
+          },
+          { jsfile: "/js/label_fa2.js" },
+        ];
+        res.render("produccionfa2", {
+          title: "Produccion FA-2",
+          active_produccion: {
+            Register: true,
+          },
+          etiqueta: response,
+          jsfile: jsfile,
+        });
+      }).catch(err => {
+        console.log("Error al cargar la página de producción:", err);
+        res.status("500").render("404");
+      });;;
+    } else {
+      res.render("404");
+    }
+  });
+
   //Get FA-9
-  app.get("/produccion/fa9", isAuthenticated, function(req, res) {
+  app.get("/produccion/fa9", isAuthenticated, function (req, res) {
     //console.log(req.user)
     if (
       req.user.role === "admin" ||
@@ -173,12 +213,12 @@ module.exports = function(app) {
     ) {
       res.status(200);
       db.Fa9.findAll({
-         attributes:["id","serial","createdAt"],
+        attributes: ["id", "serial", "createdAt"],
         limit: 6,
         order: [["createdAt", "DESC"]],
-         raw:true,
-        nest:true
-      }).then(function(response) {
+        raw: true,
+        nest: true
+      }).then(function (response) {
         let jsfile = [
           {
             jsfile:
@@ -194,7 +234,7 @@ module.exports = function(app) {
           etiqueta: response,
           jsfile: jsfile,
         });
-      }).catch(err=>{
+      }).catch(err => {
         console.log("Error al cargar la página de producción:", err);
         res.status("500").render("404");
       });;
@@ -203,8 +243,8 @@ module.exports = function(app) {
     }
   });
 
-    //Get STF-2
-  app.get("/produccion/stf2", isAuthenticated, function(req, res) {
+  //Get STF-2
+  app.get("/produccion/stf2", isAuthenticated, function (req, res) {
     //console.log(req.user)
     if (
       req.user.role === "admin" ||
@@ -213,12 +253,12 @@ module.exports = function(app) {
     ) {
       res.status(200);
       db.Stf2.findAll({
-         attributes:["id","serial","createdAt"],
+        attributes: ["id", "serial", "createdAt"],
         limit: 6,
         order: [["createdAt", "DESC"]],
-         raw:true,
-        nest:true
-      }).then(function(response) {
+        raw: true,
+        nest: true
+      }).then(function (response) {
         let jsfile = [
           {
             jsfile:
@@ -234,7 +274,7 @@ module.exports = function(app) {
           etiqueta: response,
           jsfile: jsfile,
         });
-      }).catch(err=>{
+      }).catch(err => {
         console.log("Error al cargar la página de producción:", err);
         res.status("500").render("404");
       });;
@@ -244,7 +284,7 @@ module.exports = function(app) {
   });
 
   //Get FA-11
-  app.get("/produccion/fa11", isAuthenticated, function(req, res) {
+  app.get("/produccion/fa11", isAuthenticated, function (req, res) {
     //console.log(req.user)
     if (
       req.user.role === "admin" ||
@@ -255,7 +295,7 @@ module.exports = function(app) {
       db.Fa11.findAll({
         limit: 6,
         order: [["createdAt", "DESC"]],
-      }).then(function(response) {
+      }).then(function (response) {
         let jsfile = [
           {
             jsfile:
@@ -278,7 +318,7 @@ module.exports = function(app) {
   });
 
   //Get FA-13
-  app.get("/produccion/fa13", isAuthenticated, function(req, res) {
+  app.get("/produccion/fa13", isAuthenticated, function (req, res) {
     //console.log(req.user)
     if (
       req.user.role === "admin" ||
@@ -289,7 +329,7 @@ module.exports = function(app) {
       db.Fa13.findAll({
         limit: 6,
         order: [["createdAt", "DESC"]],
-      }).then(function(response) {
+      }).then(function (response) {
         let jsfile = [
           {
             jsfile:
@@ -312,7 +352,7 @@ module.exports = function(app) {
   });
 
   //Esto sirve para cambiar el CSS cuando entras a consulta, con el actvie_consulta
-  app.get("/consulta", isAuthenticated, function(req, res) {
+  app.get("/consulta", isAuthenticated, function (req, res) {
     if (req.user.role === "admin") {
       res.status(200);
       let jsfile = [{ jsfile: "/js/consulta.js" }];
@@ -324,7 +364,7 @@ module.exports = function(app) {
         },
         jsfile: jsfile,
         jsarchivo: jsarchivo,
-        serialBuscado:req .params.serie,
+        serialBuscado: req.params.serie,
       });
     } else {
       res.render("404");
@@ -332,7 +372,7 @@ module.exports = function(app) {
   });
 
   //Para cargar la pagina de registro manual
-  app.get("/pruebas", isAuthenticated, function(req, res) {
+  app.get("/pruebas", isAuthenticated, function (req, res) {
     if (req.user.role === "admin" || req.user.role === "produccion") {
       res.status(200);
       let jsfile = [{ jsfile: "/js/pruebas.js" }];
@@ -347,7 +387,7 @@ module.exports = function(app) {
   });
 
   //Este te permite ver los datos de una etiqueta en particular
-  app.get("/consulta/:serie", isAuthenticated, function(req, res) {
+  app.get("/consulta/:serie", isAuthenticated, function (req, res) {
     if (req.user.role === "admin") {
       db.Daimler.findAll({
         where: {
@@ -356,7 +396,7 @@ module.exports = function(app) {
             etiqueta_remplazada: req.params.serie,
           },
         },
-      }).then(function(dbDaimler) {
+      }).then(function (dbDaimler) {
         let jsfile = [{ jsfile: "/js/consulta.js" }];
         let jsarchivo = [{ jsarchivo: "https://cdn.datatables.net/1.10.20/js/jquery.dataTables.js" }];
         res.render("consulta", {
@@ -376,12 +416,12 @@ module.exports = function(app) {
   });
 
   //Cargar la tabla de registros
-  app.get("/tabla/:registros", isAuthenticated, function(req, res) {
+  app.get("/tabla/:registros", isAuthenticated, function (req, res) {
     if (req.user.role === "admin") {
       db.Daimler.findAll({
         limit: parseInt(req.params.registros),
         order: [["createdAt", "DESC"]],
-      }).then(function(dbDaimler) {
+      }).then(function (dbDaimler) {
         let jsfile = [{ jsfile: "/js/tabla.js" }];
         let jsarchivo = [
           {
@@ -407,7 +447,7 @@ module.exports = function(app) {
   });
 
   // Carga la pagina tabla
-  app.get("/tabla", isAuthenticated, function(req, res) {
+  app.get("/tabla", isAuthenticated, function (req, res) {
     if (req.user.role === "admin") {
       res.status(200);
       let jsfile = [{ jsfile: "/js/tabla.js" }];
@@ -431,7 +471,7 @@ module.exports = function(app) {
   });
 
   // Carga la pagina para dar de alta usuarios
-  app.get("/alta", isAuthenticated, function(req, res) {
+  app.get("/alta", isAuthenticated, function (req, res) {
     //console.log(res.locals.sessionFlash)
     //let message=res.locals.sessionFlash
     //console.log(message)
@@ -439,7 +479,7 @@ module.exports = function(app) {
       { jsfile: "/js/toastr.js" },
       { jsfile: "/js/pagination.js" },
       { jsfile: "/js/alta.js" },
-      {jsfile: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"},
+      { jsfile: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js" },
     ];
     if (req.user.role === "admin") {
       //console.log(res.locals.sessionFlash)
@@ -458,7 +498,7 @@ module.exports = function(app) {
   });
 
   //Carga la pagina para dar de alta los NP
-  app.get("/alta-numero-de-parte", isAuthenticated, function(req, res) {
+  app.get("/alta-numero-de-parte", isAuthenticated, function (req, res) {
     //console.log(res.locals.sessionFlash)
     //let message=res.locals.sessionFlash
     //console.log(message)
@@ -485,7 +525,7 @@ module.exports = function(app) {
 
   // Carga la pagina para buscar el serial
 
-  app.get("/buscar-serial", isAuthenticated, function(req, res) {
+  app.get("/buscar-serial", isAuthenticated, function (req, res) {
     //console.log(res.locals.sessionFlash)
     //let message=res.locals.sessionFlash
     //console.log(message)
@@ -511,7 +551,7 @@ module.exports = function(app) {
   });
 
   //Carga la pagina para dar de alta las lineas
-  app.get("/alta-linea", isAuthenticated, function(req, res) {
+  app.get("/alta-linea", isAuthenticated, function (req, res) {
     //console.log(res.locals.sessionFlash)
     //let message=res.locals.sessionFlash
     //console.log(message)
@@ -537,12 +577,12 @@ module.exports = function(app) {
   });
 
   // Load example page and pass in an example by id
-  app.get("/cambiar", isAuthenticated, function(req, res) {
+  app.get("/cambiar", isAuthenticated, function (req, res) {
     res.sendFile(path.join(__dirname, ".cambiar.html"));
   });
 
   //Load GP12 inspection page
-  app.get("/gp12", isAuthenticated, function(req, res) {
+  app.get("/gp12", isAuthenticated, function (req, res) {
     //console.log(req.user)
     if (req.user.role === "admin" || req.user.role === "inspector") {
       res.status(200);
@@ -561,7 +601,7 @@ module.exports = function(app) {
 
   //Cambiar contraseña
 
-  app.get("/reset/:token", function(req, res) {
+  app.get("/reset/:token", function (req, res) {
     db.User.findOne({
       where: {
         resetPasswordToken: req.params.token,
@@ -584,7 +624,7 @@ module.exports = function(app) {
   });
 
   // Render 404 page for any unmatched routes
-  app.get("*", function(req, res) {
+  app.get("*", function (req, res) {
     res.render("404");
   });
 };

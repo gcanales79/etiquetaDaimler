@@ -14,6 +14,7 @@ const sgMail = require("@sendgrid/mail");
 var isAuthenticated = require("../config/middleware/isAuthenticated");
 const LineController = require("../controllers/linea");
 const Fa1Controller = require("../controllers/fa1");
+const Fa2Controller = require("../controllers/fa2");
 const Fa9Controller = require("../controllers/fa9");
 const Fa11Controller = require("../controllers/fa11");
 const Fa13Controller = require("../controllers/fa13");
@@ -1546,6 +1547,25 @@ module.exports = function(app) {
 
     // ⭐ NUEVA RUTA MAESTRA PARA DASHBOARD STF2:
   app.get("/api/stf2/dashboard-master", isAuthenticated, Stf2Controller.getDashboardMaster);
+
+  //--------------Every Production Line
+    //Add Serial FA2
+  app.post("/api/fa2/serial", isAuthenticated,Fa2Controller.addSerial);
+
+  //Find the last six pieces builts FA2
+   app.get("/api/fa2/all/tabla/seisetiquetas", isAuthenticated,Fa2Controller.getLastSixLabels);
+
+   //Production Report FA-2
+   app.get(
+    "/fa2/produccionhora/:fechainicial/:fechafinal",
+    Fa2Controller.productionPerHour,
+  );
+
+    // ⭐ NUEVA RUTA MAESTRA PARA DASHBOARD FA2:
+  app.get("/api/fa2/dashboard-master", isAuthenticated, Fa2Controller.getDashboardMaster);
+
+
+  //-----End----
 
 
 
