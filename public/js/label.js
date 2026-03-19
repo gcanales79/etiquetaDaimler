@@ -119,6 +119,14 @@ $(document).ready(function () {
       });
   }
 
+  $serialInput.on("keypress", function (event) {
+    // Si la tecla presionada es "Enter" (código 13)
+    if (event.which === 13) {
+      event.preventDefault(); // Evitamos que la página se recargue accidentalmente
+      $btnSubmit.click();     // ¡Hacemos el clic por el operador automáticamente!
+    }
+  });
+
   // ── Submit serial ──
   // Usamos el nuevo endpoint /api/daimler/serial que hace TODO en el servidor:
   // busca si existe, marca repetida, crea registro y notifica por WhatsApp.
@@ -199,7 +207,8 @@ $(document).ready(function () {
             break;
         }
         // Actualizar dashboard solo si hay conexión exitosa
-        actualizarDashboards();
+      }).always(()=>{
+         actualizarDashboards();
       })
       .fail(() => {
         $msgMalo.text("Error de conexión. Intenta de nuevo.");

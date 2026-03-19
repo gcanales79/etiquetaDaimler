@@ -1548,7 +1548,7 @@ module.exports = function(app) {
     // ⭐ NUEVA RUTA MAESTRA PARA DASHBOARD STF2:
   app.get("/api/stf2/dashboard-master", isAuthenticated, Stf2Controller.getDashboardMaster);
 
-  //--------------Every Production Line
+  //--------------Every Production Line FA2
     //Add Serial FA2
   app.post("/api/fa2/serial", isAuthenticated,Fa2Controller.addSerial);
 

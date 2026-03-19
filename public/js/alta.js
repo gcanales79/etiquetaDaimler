@@ -8,6 +8,42 @@ $(document).ready(function() {
       "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/20.3.0/js/utils.min.js",
   });
 
+  // -------------------------------------------------------------
+  // 🚀 NUEVA FUNCIÓN: Cargar Líneas Dinámicamente para Alertas
+  // -------------------------------------------------------------
+  function cargarLineasParaAlertas() {
+    // Reutilizamos la ruta de tu backend que trae todas las líneas
+    $.get("/get-all-lines").then((response) => {
+      const $container = $("#alertasContainer");
+      $container.empty(); // Limpiamos por si acaso
+
+      if (response.code === "200" && response.data) {
+        
+        // Iteramos sobre cada línea que nos devolvió MySQL
+        response.data.forEach((lineaObj) => {
+          const nombreLinea = lineaObj.linea;
+          const valorBD = nombreLinea.toLowerCase().replace(/-/g, "");
+
+          // Construimos el HTML usando tus mismas clases CSS de diseño
+          const checkboxHtml = `
+            <label class="mf-check">
+              <input type="checkbox" class="alerta-checkbox" value="${valorBD}">
+              <span class="mf-check__box"></span>
+              <span class="mf-check__label">${nombreLinea}</span>
+            </label>
+          `;
+          
+          // Lo inyectamos en el modal
+          $container.append(checkboxHtml);
+        });
+      }
+    }).fail((err) => {
+      console.error("Error al cargar las líneas de la base de datos:", err);
+    });
+  }
+
+  cargarLineasParaAlertas();
+
   // ── Eliminar checkboxes que paginationjs inyecta en el DOM ──
   function removeStrayCheckboxes() {
     document.querySelectorAll("input[type='checkbox']").forEach((el) => {

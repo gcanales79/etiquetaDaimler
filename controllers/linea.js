@@ -106,28 +106,67 @@ function addLine (req, res) {
   }
 
   //Delete Part Number by id
-  function deleteLine (req, res) {
+  // Delete Line by id and update Users' alerts
+  async function deleteLine (req, res) {
     const { id } = req.params;
-    db.Linea.destroy({
-      where: {
-        id: {
-          [Op.eq]: id,
-        },
-      },
-    })
-      .then((lineDeleted) => {
-        if (!lineDeleted) {
-          res.status(404).send({ code: "404", message: "No se borro ninguna línea" });
-        } else {
-          res
-            .status(200)
-            .send({ code: "200", message: "Línea borrada exitosamente" });
-        }
-      })
-      .catch((err) => {
-        console.log(err);
-        res.status(500).send({ code: "200", message: "Error de servidor" });
+
+    try {
+      // 1. Buscamos la línea ANTES de borrarla para saber cómo se llamaba
+      const lineaABorrar = await db.Linea.findOne({
+        where: { id: { [Op.eq]: id } }
       });
+
+      if (!lineaABorrar) {
+        return res.status(404).send({ code: "404", message: "No se encontró ninguna línea" });
+      }
+
+      // 2. Limpiamos el nombre exactamente igual que en el frontend (ej. "FA-1" -> "fa1")
+      const alertaLimpia = lineaABorrar.linea.toLowerCase().replace(/-/g, "");
+
+      // 3. Borramos la línea de la base de datos
+      await db.Linea.destroy({
+        where: { id: { [Op.eq]: id } }
+      });
+
+      // 4. Buscamos a TODOS los usuarios que tengan esta línea en sus alertas
+      const usuariosAfectados = await db.User.findAll({
+        where: {
+          alertas: {
+            [Op.like]: `%${alertaLimpia}%` // Busca si "fa1" existe dentro del string
+          }
+        }
+      });
+
+      // 5. Iteramos sobre cada usuario para quitarle la alerta
+      for (let user of usuariosAfectados) {
+        if (user.alertas) {
+          // Convertimos "fa1,fa2,fa9" a un arreglo: ["fa1", "fa2", "fa9"]
+          let alertasArray = user.alertas.split(",");
+          
+          // Filtramos el arreglo quitando la que acabamos de borrar
+          alertasArray = alertasArray.filter(alerta => alerta !== alertaLimpia);
+          
+          // Volvemos a unir lo que quedó: "fa2,fa9"
+          let nuevasAlertas = alertasArray.join(",");
+
+          // Actualizamos al usuario silenciosamente
+          await db.User.update(
+            { alertas: nuevasAlertas },
+            { where: { id: user.id } }
+          );
+        }
+      }
+
+      // Finalizamos con éxito
+      return res.status(200).send({ 
+        code: "200", 
+        message: "Línea borrada y alertas de usuarios actualizadas exitosamente" 
+      });
+
+    } catch (err) {
+      console.log("Error al borrar línea o actualizar usuarios:", err);
+      return res.status(500).send({ code: "500", message: "Error de servidor" });
+    }
   }
 
   //Edit Part Number by id

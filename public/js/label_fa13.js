@@ -105,6 +105,15 @@ $(document).ready(function () {
         console.error("Error al cargar el Dashboard Maestro FA-13", error);
       });
   }
+
+  $serialInput.on("keypress", function (event) {
+    // Si la tecla presionada es "Enter" (código 13)
+    if (event.which === 13) {
+      event.preventDefault(); // Evitamos que la página se recargue accidentalmente
+      $btnSubmit.click();     // ¡Hacemos el clic por el operador automáticamente!
+    }
+  });
+  
   $("#submit").on("click", function (event) {
     event.preventDefault();
     $("#spanLogoResultado").removeClass("fa fa-ban ban");
