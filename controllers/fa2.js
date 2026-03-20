@@ -14,7 +14,7 @@ async function addSerial(req, res) {
   // 1. VALIDACIÓN RÁPIDA (Fail Fast)
   // Como sabemos que la etiqueta SIEMPRE mide 28 caracteres y lleva nuestro # de proveedor,
   // podemos rechazar instantáneamente cualquier etiqueta que no cumpla esto.
-  if (!serial || serial.length !== 28 || serial.substring(7, 13) !== "64221A") {
+  if (!serial || serial.length !== 36 || serial.substring(15, 21) !== "64221A") {
     return res.send({ 
       code: "400", 
       message: "Formato incorrecto. La etiqueta no pertenece a FA-2 o está mal impresa." 
@@ -26,11 +26,11 @@ async function addSerial(req, res) {
     // 🚀 NUEVA EXTRACCIÓN POSICIONAL (FA-2)
     // .substring(incluye_este_indice, detente_antes_de_este_indice)
     // -----------------------------------------------------------------
-    const numero_parte = serial.substring(0, 7);
+    const numero_parte = serial.substring(0, 15).trim();
     // El proveedor "64221A" está en serial.substring(7, 13), pero ya lo validamos arriba
-    const numero_serie = serial.substring(13, 19); 
-    const revision = serial.substring(19, 21);
-    const fecha_linea = serial.substring(21, 28);
+    const numero_serie = serial.substring(21, 27); 
+    const revision = serial.substring(27, 29);
+    const fecha_linea = serial.substring(29, 36);
     // -----------------------------------------------------------------
 
     // 2. BUSCAMOS EL NÚMERO DE PARTE
