@@ -94,16 +94,10 @@ $(document).ready(function () {
       });
   }
 
-  $serialInput.on("keypress", function (event) {
-    // Si la tecla presionada es "Enter" (código 13)
-    if (event.which === 13) {
-      event.preventDefault(); // Evitamos que la página se recargue accidentalmente
-      $btnSubmit.click();     // ¡Hacemos el clic por el operador automáticamente!
-    }
-  });
+
 
   // 5. Manejo de Eventos Principal
-  $btnSubmit.on("click", function (event) {
+  $("#formEscaneo").on("submit", function (event) {
     event.preventDefault();
     limpiarMensajes();
     

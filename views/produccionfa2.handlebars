@@ -62,16 +62,16 @@
           Escanear Etiqueta
         </div>
         <div class="fa-card__body">
-          <div class="fa-scanner">
+          <form class="fa-scanner" id="formEscaneo">
             <input type="text" class="fa-scanner__input" autofocus="autofocus"
               id="serialEtiqueta" placeholder="Escanea o ingresa el serial…">
-            <button class="fa-scanner__btn" type="button" id="submit">
+            <button class="fa-scanner__btn" type="submit" id="submit">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
                 <polyline points="20 6 9 17 4 12"/>
               </svg>
               Revisar
             </button>
-          </div>
+          </form>
 
           {{!-- RESULT AREA --}}
           <div class="fa-result" id="Resultado">
