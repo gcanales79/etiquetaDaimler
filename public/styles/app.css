@@ -418,7 +418,8 @@ html, body {
 /* ══════════════════════════════════════════════════
    RESPONSIVE
 ══════════════════════════════════════════════════ */
-@media (max-width: 768px) {
+@media (max-width: 991px) {
+  /* Navbar móvil */
   .katcon-nav__collapse {
     display: none !important;
     position: absolute;
@@ -430,6 +431,7 @@ html, body {
     align-items: flex-start;
     gap: 4px;
     box-shadow: 0 8px 24px rgba(15,23,42,.08);
+    z-index: 999;
   }
   .katcon-nav__collapse.show {
     display: flex !important;
@@ -440,17 +442,67 @@ html, body {
     width: 100%;
     gap: 2px;
   }
-  .katcon-nav__link { width: 100%; }
+  .katcon-nav__link { 
+    width: 100%; 
+    justify-content: flex-start;
+  }
   .katcon-nav__right {
     width: 100%;
     padding-top: 12px;
     border-top: 1px solid var(--slate-100);
     margin-top: 8px;
+    margin-left: 0;
   }
-  .katcon-nav__toggler { display: flex; }
+  .katcon-nav__toggler { 
+    display: flex;
+  }
+  
+  /* Ocultar logo type en pantallas pequeñas */
+  .katcon-nav__logotype {
+    display: none;
+  }
+
+  /* Header de páginas más compacto */
+  .fa-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  .fa-header__left {
+    width: 100%;
+  }
+  .fa-header__icon {
+    width: 44px;
+    height: 44px;
+  }
+  .fa-scanner__btn {
+    width: 100%;
+    justify-content: center;
+  }
 
   .prod-home__grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Tabla responsiva - scroll horizontal */
+  .fa-card__body--flush {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .fa-table {
+    min-width: 600px;
+  }
+  
+  /* Ajustar tamaño de fuente en móvil */
+  .fa-header__title {
+    font-size: 1.3rem;
+  }
+  
+  .fa-header__sub {
+    font-size: 0.75rem;
   }
 }
 
@@ -601,7 +653,11 @@ html, body {
 }
 .fa-card__head svg { color: var(--blue); flex-shrink: 0; }
 .fa-card__body { padding: 20px; }
-.fa-card__body--flush { padding: 0; }
+.fa-card__body--flush { 
+  padding: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
 
 /* ── SCANNER CARD ── */
 .fa-card--scanner .fa-card__body { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
@@ -721,6 +777,7 @@ html, body {
   width: 100%;
   border-collapse: collapse;
   font-size: .85rem;
+  min-width: 700px; /* Fuerza scroll horizontal en móvil */
 }
 .fa-table thead tr {
   background: var(--slate-50);
@@ -838,6 +895,21 @@ html, body {
 @media (max-width: 960px) {
   .fa-grid { grid-template-columns: 1fr; }
   .fa-kpi-strip { grid-template-columns: repeat(2, 1fr); }
+  
+  /* Indicador visual de que hay scroll horizontal */
+  .fa-card__body--flush::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 30px;
+    background: linear-gradient(to left, rgba(0,0,0,0.05), transparent);
+    pointer-events: none;
+  }
+  [data-theme="dark"] .fa-card__body--flush::after {
+    background: linear-gradient(to left, rgba(255,255,255,0.05), transparent);
+  }
 }
 @media (max-width: 560px) {
   .fa-kpi-strip { grid-template-columns: 1fr 1fr; }
