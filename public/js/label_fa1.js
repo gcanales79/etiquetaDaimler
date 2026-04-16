@@ -21,7 +21,7 @@ $(document).ready(function () {
     function iniciarReloj() {
       clearTimeout(timerInactividad);
       timerInactividad = setTimeout(() => {
-        actualizarTodosLosDashboards();
+        actualizarDashboards();
         iniciarReloj(); 
       }, TIEMPO_ESPERA);
     }

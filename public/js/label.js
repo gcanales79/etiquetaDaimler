@@ -24,7 +24,7 @@ $(document).ready(function () {
       clearTimeout(timerInactividad);
       timerInactividad = setTimeout(() => {
         //console.log("Admin inactivo: Actualizando datos...");
-        actualizarTodosLosDashboards();
+        actualizarDashboards();
         iniciarReloj(); // Reiniciamos para la siguiente hora
       }, TIEMPO_ESPERA);
     }
