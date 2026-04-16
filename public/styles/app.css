@@ -777,7 +777,6 @@ html, body {
   width: 100%;
   border-collapse: collapse;
   font-size: .85rem;
-  min-width: 700px; /* Fuerza scroll horizontal en móvil */
 }
 .fa-table thead tr {
   background: var(--slate-50);
