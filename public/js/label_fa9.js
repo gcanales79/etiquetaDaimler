@@ -138,7 +138,24 @@ $serialInput.on("keypress", function (event) {
 
           case "400":
             $spanLogo.addClass("fa fa-ban ban");
+            //$msgMalo.text(data.message);
+             // 1. Interceptamos el string y lo dividimos
+          if (data.message.includes("Serial:")) {
+            const partes = data.message.split("Serial:");
+            const textoAmigable = partes[0];
+            const serialTecnico = partes[1];
+
+            // 2. Inyectamos estructura HTML aislando el serial
+            $msgMalo.html(
+              `${textoAmigable} Serial: <br>
+               <span style="word-break: break-all; font-weight: bold; color: #555;">
+                 ${serialTecnico}
+               </span>`
+            );
+          } else {
+            // Fallback seguro si el error es distinto
             $msgMalo.text(data.message);
+          }
             const $newButton = $("<button>", {
               class: "btn btn-primary",
               type: "submit",

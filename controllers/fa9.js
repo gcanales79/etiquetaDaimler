@@ -12,7 +12,7 @@ async function addSerial(req, res) {
 
   // 1. Validación rápida de formato
   if (!checkAfterColon(serial)) {
-    return res.send({ code: "400", message: "La etiqueta no tiene el formato correcto" });
+    return res.send({ code: "400", message: "La etiqueta no tiene el formato correcto. Serial: " + serial });
   }
 
   try {

@@ -16,33 +16,33 @@ $(document).ready(function () {
 
 
   // Solo configuramos el temporizador si la variable ES_ADMIN es verdadera
-    if (typeof ES_ADMIN !== 'undefined' && ES_ADMIN) {
-        
-        let timerInactividad;
-        const TIEMPO_ESPERA = 300000; // 5 minuto
+  if (typeof ES_ADMIN !== 'undefined' && ES_ADMIN) {
 
-        function iniciarReloj() {
-            clearTimeout(timerInactividad);
-            timerInactividad = setTimeout(() => {
-                //console.log("Admin inactivo: Actualizando datos...");
-                actualizarDashboards();
-                iniciarReloj(); // Reiniciamos para la siguiente hora
-            }, TIEMPO_ESPERA);
-        }
+    let timerInactividad;
+    const TIEMPO_ESPERA = 300000; // 5 minuto
 
-        // Iniciamos el proceso
-        iniciarReloj();
-
-        // Si el admin empieza a escribir en el buscador o en el serial,
-        // pausamos el refresco para no interrumpir su trabajo.
-        $(document).on("keyup click", function() {
-            iniciarReloj(); 
-        });
-
-        //console.log("🚀 Sistema de auto-refresco activado para Administrador.");
-    } else {
-        //console.log("🔒 Modo Operador: Refresco automático deshabilitado.");
+    function iniciarReloj() {
+      clearTimeout(timerInactividad);
+      timerInactividad = setTimeout(() => {
+        //console.log("Admin inactivo: Actualizando datos...");
+        actualizarDashboards();
+        iniciarReloj(); // Reiniciamos para la siguiente hora
+      }, TIEMPO_ESPERA);
     }
+
+    // Iniciamos el proceso
+    iniciarReloj();
+
+    // Si el admin empieza a escribir en el buscador o en el serial,
+    // pausamos el refresco para no interrumpir su trabajo.
+    $(document).on("keyup click", function () {
+      iniciarReloj();
+    });
+
+    //console.log("🚀 Sistema de auto-refresco activado para Administrador.");
+  } else {
+    //console.log("🔒 Modo Operador: Refresco automático deshabilitado.");
+  }
 
 
 
@@ -86,16 +86,16 @@ $(document).ready(function () {
         });
 
         // 2. Renderizar Producción por hora
-       // Explicación: Number() asegura que comparemos matemáticamente. 
+        // Explicación: Number() asegura que comparemos matemáticamente. 
         // a - b garantiza un orden Ascendente estricto (de más antiguo a más reciente).
         const produccion = data.produccionHora.sort((a, b) => Number(a.fecha) - Number(b.fecha));
-        
+
         $tablaHora.empty();
-        
+
         produccion.forEach(prod => {
           let hora = moment.unix(prod.fecha).format("h:mm a");
           let horafinal = moment.unix(prod.fecha).add(1, "hour").format("h:mm a");
-          
+
           // Explicación: Cambiamos prepend() por append() para respetar el orden visual natural
           // insertando los renglones uno debajo del otro.
           $tablaHora.append(`<tr><th scope='row'>${hora} a ${horafinal}</th><td>${prod.producidas}</td></tr>`);
@@ -148,7 +148,26 @@ $(document).ready(function () {
 
         case "400":
           $spanLogo.addClass("fa fa-ban ban");
-          $msgMalo.text(data.message);
+          // 1. Interceptamos el string y lo dividimos
+          if (data.message.includes("Serial:")) {
+            const partes = data.message.split("Serial:");
+            const textoAmigable = partes[0];
+            const serialTecnico = partes[1];
+
+            // 2. Inyectamos estructura HTML aislando el serial
+            $msgMalo.html(
+              `${textoAmigable} Serial: <br>
+               <span style="word-break: break-all; font-weight: bold; color: #555;">
+                 ${serialTecnico}
+               </span>`
+            );
+          } else {
+            // Fallback seguro si el error es distinto
+            $msgMalo.text(data.message);
+          }
+
+
+          // $msgMalo.text(data.message);
 
           // Creación limpia del botón
           const $newButton = $("<button>", {
@@ -291,7 +310,7 @@ $(document).ready(function () {
 
   var myChart2;
 
- 
+
 
   function graficaProduccionsemana(datosSemana, numSemana) {
     if (myChart2) myChart2.destroy();
